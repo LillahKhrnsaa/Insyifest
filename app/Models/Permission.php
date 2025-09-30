@@ -8,6 +8,7 @@ class Permission extends SpatiePermission
 {
     protected $fillable = [
         'name',
+        'display_name',
         'guard_name',
     ];
 }
