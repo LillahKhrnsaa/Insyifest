@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Panel;
 
 class User extends Authenticatable
 {
@@ -13,11 +14,13 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'email',
         'phone',
         'birth_date',
         'gender',
         'password',
         'photo_path',
+        'active',
     ];
 
     protected $hidden = [
@@ -28,4 +31,16 @@ class User extends Authenticatable
         'birth_date' => 'date',
         'password' => 'hashed',
     ];
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return str_ends_with($this->email, '@cikampekswimming.gmail.com') 
+            && (
+                $this->hasRole('admin') || 
+                $this->hasRole('coach') || 
+                $this->hasRole('member') || 
+                $this->hasRole('staff') || 
+                $this->hasRole('owner')
+            );
+    }
 }

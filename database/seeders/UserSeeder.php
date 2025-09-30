@@ -11,11 +11,11 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['name' => 'Luthfi', 'phone' => '0811111111', 'gender' => 'MALE', 'role' => 'owner'],
-            ['name' => 'Adinda', 'phone' => '0822222222', 'gender' => 'FEMALE', 'role' => 'admin'],
-            ['name' => 'Alif', 'phone' => '0833333333', 'gender' => 'MALE', 'role' => 'coach'],
-            ['name' => 'Reihan', 'phone' => '0844444444', 'gender' => 'FEMALE', 'role' => 'member'],
-            ['name' => 'IT Team', 'phone' => '0855555555', 'gender' => 'MALE', 'role' => 'staff'],
+            ['name' => 'Luthfi', 'email' => 'owner@cikampekswimming.gmail.com', 'phone' => '0811111111', 'gender' => 'MALE', 'role' => 'owner'],
+            ['name' => 'Adinda', 'email' => 'admin@cikampekswimming.gmail.com', 'phone' => '0822222222', 'gender' => 'FEMALE', 'role' => 'admin'],
+            ['name' => 'Alif', 'email' => 'coach@cikampekswimming.gmail.com','phone' => '0833333333', 'gender' => 'MALE', 'role' => 'coach'],
+            ['name' => 'Reihan', 'email' => 'member@cikampekswimming.gmail.com','phone' => '0844444444', 'gender' => 'FEMALE', 'role' => 'member'],
+            ['name' => 'IT Team', 'email' => 'it@cikampekswimming.gmail.com', 'phone' => '0855555555', 'gender' => 'MALE', 'role' => 'staff'],
         ];
 
         foreach ($users as $data) {
@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
                 ['phone' => $data['phone']],
                 [
                     'name' => $data['name'],
+                    'email' =>$data['email'],
                     'gender' => $data['gender'],
                     'password' => Hash::make('1234567890'),
                 ]
