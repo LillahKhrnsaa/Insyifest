@@ -11,11 +11,11 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['name' => 'Owner User', 'phone' => '0811111111', 'gender' => 'MALE', 'role' => 'owner'],
-            ['name' => 'Admin User', 'phone' => '0822222222', 'gender' => 'FEMALE', 'role' => 'admin'],
-            ['name' => 'Coach User', 'phone' => '0833333333', 'gender' => 'MALE', 'role' => 'coach'],
-            ['name' => 'Member User', 'phone' => '0844444444', 'gender' => 'FEMALE', 'role' => 'member'],
-            ['name' => 'Staff User', 'phone' => '0855555555', 'gender' => 'MALE', 'role' => 'staff'],
+            ['name' => 'Luthfi', 'phone' => '0811111111', 'gender' => 'MALE', 'role' => 'owner'],
+            ['name' => 'Adinda', 'phone' => '0822222222', 'gender' => 'FEMALE', 'role' => 'admin'],
+            ['name' => 'Alif', 'phone' => '0833333333', 'gender' => 'MALE', 'role' => 'coach'],
+            ['name' => 'Reihan', 'phone' => '0844444444', 'gender' => 'FEMALE', 'role' => 'member'],
+            ['name' => 'IT Team', 'phone' => '0855555555', 'gender' => 'MALE', 'role' => 'staff'],
         ];
 
         foreach ($users as $data) {
@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => $data['name'],
                     'gender' => $data['gender'],
-                    'password' => Hash::make('password123'),
+                    'password' => Hash::make('1234567890'),
                 ]
             );
 
