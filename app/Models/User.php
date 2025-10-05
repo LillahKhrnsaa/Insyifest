@@ -21,6 +21,7 @@ class User extends Authenticatable
         'password',
         'photo_path',
         'active',
+        'role',
     ];
 
     protected $hidden = [
@@ -31,6 +32,19 @@ class User extends Authenticatable
         'birth_date' => 'date',
         'password' => 'hashed',
     ];
+
+    public function setRoleAttribute($value)
+    {
+        if ($value) {
+            $this->syncRoles([$value]); // Spatie sync
+        }
+    }
+
+    public function getRoleAttribute()
+    {
+        // kembalikan role pertama (karena cuma boleh 1)
+        return $this->roles->pluck('name')->first();
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
