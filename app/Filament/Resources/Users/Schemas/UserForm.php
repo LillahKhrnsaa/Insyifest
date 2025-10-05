@@ -102,11 +102,13 @@ class UserForm
                         FileUpload::make('photo_path')
                             ->label('Foto Profil')
                             ->image()
+                            ->disk('public')
                             ->directory('user-photos')
                             ->visibility('public')
-                            ->imageCropAspectRatio('1:1')
-                            ->imagePreviewHeight('100')
-                            ->maxSize(2048),
+                            ->previewable(true)
+                            ->downloadable(true)
+                            ->openable(true),
+
                     ])
                     ->collapsible()
                     ->compact()

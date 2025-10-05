@@ -28,12 +28,11 @@ class UsersTable
         return $table
             ->columns([
                 // 1. Foto Profil
-                ImageColumn::make('photo_path')
+                ImageColumn::make('photo_url') // pakai accessor, bukan langsung photo_path
                     ->label('Foto')
                     ->circular()
-                    ->defaultImageUrl(url('/images/default-avatar.png'))
-                    // ->size(40)
-                    ->alignCenter(),
+                    ->alignCenter()
+                    ->size(40),
 
                 // 2. Nama Lengkap
                 TextColumn::make('name')

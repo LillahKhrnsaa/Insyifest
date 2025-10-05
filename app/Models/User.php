@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
+use Illuminate\Support\Facades\Storage;
+
 
 class User extends Authenticatable
 {
@@ -45,6 +47,16 @@ class User extends Authenticatable
         // kembalikan role pertama (karena cuma boleh 1)
         return $this->roles->pluck('name')->first();
     }
+
+    public function getPhotoUrlAttribute(): string
+    {
+        if ($this->photo_path && Storage::disk('public')->exists($this->photo_path)) {
+            return Storage::url($this->photo_path);
+        }
+
+        return asset('images/default-avatar.png');
+    }
+
 
     public function canAccessPanel(Panel $panel): bool
     {
