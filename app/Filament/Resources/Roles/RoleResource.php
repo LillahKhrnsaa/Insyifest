@@ -22,6 +22,15 @@ class RoleResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-identification';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Users';
+    }
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

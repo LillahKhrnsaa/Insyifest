@@ -24,6 +24,16 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-user';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Users';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
