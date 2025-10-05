@@ -15,16 +15,16 @@ use Filament\Schemas\Components\Section;
 use Illuminate\Validation\Rules\Password;
 use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Support\Collection;
 
 class UserForm
 {
-    // Mempertahankan Schema $schema sesuai permintaan Anda
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->schema([
-                // === BAGIAN 1: INFORMASI AKUN (Nama, Email, Password, Role, Status) ===
+                // === BAGIAN 1: INFORMASI AKUN ===
                 Section::make('Informasi Akun')
                     ->description('Detail login dan akses pengguna di sistem.')
                     ->icon('heroicon-o-user-circle')
@@ -35,11 +35,9 @@ class UserForm
                             ->placeholder('Contoh: John Doe')
                             ->maxLength(255)
                             ->autofocus()
-                            ->live(onBlur: true) 
-                            // LOGIKA AUTO-FILL EMAIL
+                            ->live(onBlur: true)
                             ->afterStateUpdated(function (string $state, Set $set, Get $get) {
-                                // Hanya isi email otomatis jika email saat ini KOSONG (untuk menghindari overwrite saat Edit)
-                                if ($get('email') === null && $state) {
+                                if (empty($get('email')) && $state) {
                                     $baseEmail = Str::lower(str_replace(' ', '', $state));
                                     $set('email', $baseEmail . '@cikampekswimmingclub.gmail.com');
                                 }
@@ -51,7 +49,7 @@ class UserForm
                             ->label('Alamat Email')
                             ->email()
                             ->required()
-                            ->readonly() // Tetap ->readonly() sesuai kode yang Anda berikan
+                            ->readonly()
                             ->placeholder('contoh@cikampekswimmingclub.gmail.com')
                             ->unique('users', 'email', ignoreRecord: true)
                             ->prefixIcon('heroicon-o-envelope')
@@ -68,21 +66,19 @@ class UserForm
                                     ->dehydrated(fn ($state) => filled($state))
                                     ->minLength(8)
                                     ->revealable()
-                                    ->confirmed() 
-                                    ->live(onBlur: true)
-                                    ->validationAttribute('Password'),
+                                    ->confirmed()
+                                    ->live(onBlur: true),
 
                                 TextInput::make('password_confirmation')
                                     ->label('Konfirmasi Password')
                                     ->password()
                                     ->required(fn (string $operation): bool => $operation === 'create')
                                     ->dehydrated(false)
-                                    ->visible(fn (Get $get) => filled($get('password')) || $schema->getOperation() === 'create'),
+                                    ->visible(fn (string $operation, Get $get) => $operation === 'create' || filled($get('password'))),
                             ]),
 
                         Grid::make(2)
                             ->schema([
-                                // 4. Role Pengguna (Single Select) - PERBAIKAN UTAMA DI SINI
                                 Select::make('role')
                                     ->label('Role Pengguna')
                                     ->options(fn () => \App\Models\Role::pluck('display_name', 'name'))
@@ -90,7 +86,6 @@ class UserForm
                                     ->placeholder('Pilih role')
                                     ->columnSpan(1),
 
-                                // 5. Status Akun (Active)
                                 Toggle::make('active')
                                     ->label('Akun Aktif')
                                     ->onColor('success')
@@ -103,12 +98,21 @@ class UserForm
                                     ->default(now()),
                             ])
                             ->columnSpanFull(),
+
+                        FileUpload::make('photo_path')
+                            ->label('Foto Profil')
+                            ->image()
+                            ->directory('user-photos')
+                            ->visibility('public')
+                            ->imageCropAspectRatio('1:1')
+                            ->imagePreviewHeight('100')
+                            ->maxSize(2048),
                     ])
                     ->collapsible()
                     ->compact()
                     ->columnSpanFull(),
 
-                // === BAGIAN 2: INFORMASI PRIBADI (Phone, Gender, Birth Date) ===
+                // === BAGIAN 2: INFORMASI PRIBADI ===
                 Section::make('Informasi Pribadi')
                     ->description('Data diri anggota Cikampek Swimming Club.')
                     ->icon('heroicon-o-identification')
@@ -126,7 +130,10 @@ class UserForm
 
                                 Select::make('gender')
                                     ->label('Jenis Kelamin')
-                                    ->options(['MALE' => 'Laki-laki', 'FEMALE' => 'Perempuan'])
+                                    ->options([
+                                        'MALE' => 'Laki-laki',
+                                        'FEMALE' => 'Perempuan',
+                                    ])
                                     ->required()
                                     ->native(false)
                                     ->prefixIcon('heroicon-o-user'),

@@ -19,37 +19,46 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Spatie\Permission\PermissionRegistrar;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Actions\DeleteAction;
+use Filament\Tables\Columns\ImageColumn;
+
 class UsersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                // 1. Nama Lengkap (dari kolom 'name')
+                // 1. Foto Profil
+                ImageColumn::make('photo_path')
+                    ->label('Foto')
+                    ->circular()
+                    ->defaultImageUrl(url('/images/default-avatar.png'))
+                    // ->size(40)
+                    ->alignCenter(),
+
+                // 2. Nama Lengkap
                 TextColumn::make('name')
                     ->label('Nama Lengkap')
                     ->searchable()
                     ->sortable()
-                    ->weight('font-bold')
+                    ->weight('bold')
                     ->color('primary')
                     ->icon('heroicon-o-user-circle')
-                    ->tooltip('Nama lengkap pengguna')
-                    ->limit(20),
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(), // biar gak kepotong
 
-                // 2. Email
+                // 3. Email
                 TextColumn::make('email')
-                    ->label('Email Address')
+                    ->label('Email')
                     ->searchable()
                     ->sortable()
-                    ->color('gray-700')
                     ->icon('heroicon-o-envelope')
-                    ->iconColor('blue-500')
+                    ->iconColor('blue')
                     ->copyable()
                     ->copyMessage('Email disalin!')
-                    ->limit(25)
-                    ->toggleable(),
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(), // biar kalau panjang pecah baris
 
-                // 3. Nomor Telepon (BARU)
+                // 4. Nomor Telepon
                 TextColumn::make('phone')
                     ->label('Nomor Telepon')
                     ->searchable()
@@ -58,73 +67,71 @@ class UsersTable
                     ->color('success')
                     ->copyable()
                     ->copyMessage('Nomor telepon disalin!')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(),
 
-                // 4. Jenis Kelamin (BARU)
+                // 5. Jenis Kelamin
                 TextColumn::make('gender')
-                    ->label('Jenis Kelamin')
-                    ->sortable()
+                    ->label('Gender')
                     ->badge()
+                    ->alignCenter()
+                    ->sortable()
                     ->color(fn (string $state): string => match ($state) {
                         'MALE' => 'blue',
                         'FEMALE' => 'pink',
                         default => 'gray',
-                    })
-                    ->toggleable(),
+                    }),
 
-                // 5. Tanggal Lahir (BARU)
+                // 6. Tanggal Lahir
                 TextColumn::make('birth_date')
                     ->label('Tgl. Lahir')
-                    ->date('d F Y')
-                    ->sortable()
-                    ->icon('heroicon-o-cake')
-                    ->color('info')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->date('d M Y')
+                    ->alignCenter()
+                    ->sortable(),
 
-                // 6. Status Akun (dari kolom 'active')
+                // 7. Status Akun
                 ToggleColumn::make('active')
-                    ->label('Akun Aktif')
-                    ->tooltip('Klik untuk mengaktifkan/menonaktifkan akun')
+                    ->label('Aktif')
+                    ->alignCenter()
+                    ->tooltip('Klik untuk aktif/nonaktif')
                     ->onColor('success')
                     ->offColor('danger')
                     ->onIcon('heroicon-o-check-circle')
                     ->offIcon('heroicon-o-x-circle')
                     ->sortable(),
 
-                // 7. Role Pengguna
-                TextColumn::make('roles.display_name')
-                    ->label('Role Pengguna')
-                    ->sortable()
-                    ->searchable()
+                // 8. Role Pengguna (pakai accessor dari model)
+                TextColumn::make('role')
+                    ->label('Role')
                     ->badge()
+                    ->alignCenter()
                     ->colors([
-                        'Super Admin' => 'danger',
-                        'Owner' => 'primary',
-                        'Admin' => 'blue',
-                        'Coach' => 'warning',
-                        'Staff' => 'success',
-                        'Member' => 'gray',
+                        'super admin' => 'danger',
+                        'owner' => 'primary',
+                        'admin' => 'blue',
+                        'coach' => 'warning',
+                        'staff' => 'success',
+                        'member' => 'gray',
                     ])
-                    ->toggleable(),
+                    ->sortable()
+                    ->searchable(),
 
-                // 8. Dibuat
+                // 9. Dibuat
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y, H:i')
-                    ->sortable()
-                    ->icon('heroicon-o-calendar')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->alignCenter()
+                    ->sortable(),
 
-                // 9. Diupdate
+                // 10. Diupdate
                 TextColumn::make('updated_at')
                     ->label('Diupdate')
                     ->dateTime('d M Y, H:i')
-                    ->sortable()
-                    ->icon('heroicon-o-arrow-path')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->alignCenter()
+                    ->sortable(),
             ])
             ->filters([
-                //
+                // Bisa tambahin filter aktif / role kalau perlu
             ])
             ->recordActions([
                 Action::make('managePermissions')
@@ -140,9 +147,10 @@ class UsersTable
                     ->extraAttributes([
                         'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
                     ])
-
-                    // Schema untuk Modal Permissions
+                    
+                    // 1. Schema yang disederhanakan
                     ->schema(function (User $record) {
+                        // Ambil SEMUA permission yang ada, lalu kelompokkan
                         $permissions = Permission::query()->get()->groupBy(function ($permission) {
                             return explode('.', $permission->name)[1] ?? 'Lainnya';
                         });
@@ -154,14 +162,15 @@ class UsersTable
                                 return [$perm->id => Str::of($prefix)->replace('_', ' ')->ucfirst()];
                             })->toArray();
 
-                            $tabs[] = Tabs\Tab::make(Str::ucfirst($group))
+                            $tabs[] = Tab::make(Str::ucfirst($group))
                                 ->schema([
-                                    CheckboxList::make("permissions.{$group}")
+                                    CheckboxList::make("permissions.{$group}") // Gunakan nested key
                                         ->label(false)
                                         ->options($options)
                                         ->columns(2)
+                                        // ✅ Default-nya hanya mengambil direct permissions milik user
                                         ->default(
-                                            $record->permissions
+                                            $record->permissions // <-- Jauh lebih sederhana
                                                 ->whereIn('id', $perms->pluck('id'))
                                                 ->pluck('id')
                                                 ->toArray()
@@ -174,9 +183,10 @@ class UsersTable
                             Tabs::make('Permissions')->tabs($tabs)->columnSpanFull(),
                         ];
                     })
-
-                    // Action saat disubmit
+                    
+                    // 2. Action yang disederhanakan
                     ->action(function (User $record, array $data): void {
+                        // Ambil semua ID dari semua tab
                         $selectedIds = collect($data['permissions'] ?? [])
                             ->flatten()
                             ->filter()
@@ -184,11 +194,12 @@ class UsersTable
                             ->unique()
                             ->toArray();
 
+                        // ✅ Langsung sinkronkan permission yang dipilih ke user
                         $record->syncPermissions($selectedIds);
 
+                        // Reset cache Spatie
                         app(PermissionRegistrar::class)->forgetCachedPermissions();
                     }),
-
                 ViewAction::make()
                     ->label('')
                     ->button()
@@ -219,7 +230,7 @@ class UsersTable
                     ->requiresConfirmation()
                     ->extraAttributes([
                         'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
-            ])
+                ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
@@ -227,13 +238,13 @@ class UsersTable
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->modalHeading('Hapus Multiple User')
+                        ->modalHeading('Hapus Beberapa User')
                         ->modalDescription('Yakin ingin menghapus {count} pengguna yang dipilih?')
-                        ->modalSubmitActionLabel('Hapus Semua')
+                        ->modalSubmitActionLabel('Hapus')
                         ->modalCancelActionLabel('Batal'),
                 ])
                 ->dropdownWidth('w-48')
-                ->button()
+                ->button() // Tampilkan sebagai button, bukan dropdown
                 ->label('')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
