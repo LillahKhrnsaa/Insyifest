@@ -40,6 +40,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Create Bank Accounts',  'display_name' => 'Create Bank Accounts'],
             ['name' => 'update.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Update Bank Accounts',  'display_name' => 'Update Bank Accounts'],
             ['name' => 'delete.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Delete Bank Accounts',  'display_name' => 'Delete Bank Accounts'],
+
+            // ==== TRAINING PACKAGES ====
+            ['name' => 'viewAny.training_packages', 'guard_name' => 'web', 'description' => 'Akses Viewany Training Packages', 'display_name' => 'Viewany Training Packages'],
+            ['name' => 'view.training_packages',    'guard_name' => 'web', 'description' => 'Akses View Training Packages',    'display_name' => 'View Training Packages'],
+            ['name' => 'create.training_packages',  'guard_name' => 'web', 'description' => 'Akses Create Training Packages',  'display_name' => 'Create Training Packages'],
+            ['name' => 'update.training_packages',  'guard_name' => 'web', 'description' => 'Akses Update Training Packages',  'display_name' => 'Update Training Packages'],
+            ['name' => 'delete.training_packages',  'guard_name' => 'web', 'description' => 'Akses Delete Training Packages',  'display_name' => 'Delete Training Packages'],
+
         ];
 
         $now = Carbon::now();
