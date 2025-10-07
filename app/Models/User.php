@@ -54,7 +54,7 @@ class User extends Authenticatable
             return Storage::url($this->photo_path);
         }
 
-        return asset('images/default-avatar.png');
+        return asset('');
     }
 
 

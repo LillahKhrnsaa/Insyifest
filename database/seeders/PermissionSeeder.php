@@ -15,11 +15,31 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // ==== ROLES ====
             ['name' => 'viewAny.roles', 'guard_name' => 'web', 'description' => 'Akses ViewAny Roles', 'display_name' => 'ViewAny Roles'],
-            ['name' => 'view.roles',    'guard_name' => 'web', 'description' => 'Akses View Roles',   'display_name' => 'View Roles'],
-            ['name' => 'create.roles',  'guard_name' => 'web', 'description' => 'Akses Create Roles', 'display_name' => 'Create Roles'],
-            ['name' => 'update.roles',  'guard_name' => 'web', 'description' => 'Akses Update Roles', 'display_name' => 'Update Roles'],
-            ['name' => 'delete.roles',  'guard_name' => 'web', 'description' => 'Akses Delete Roles', 'display_name' => 'Delete Roles'],
+            ['name' => 'view.roles',    'guard_name' => 'web', 'description' => 'Akses View Roles',    'display_name' => 'View Roles'],
+            ['name' => 'create.roles',  'guard_name' => 'web', 'description' => 'Akses Create Roles',  'display_name' => 'Create Roles'],
+            ['name' => 'update.roles',  'guard_name' => 'web', 'description' => 'Akses Update Roles',  'display_name' => 'Update Roles'],
+            ['name' => 'delete.roles',  'guard_name' => 'web', 'description' => 'Akses Delete Roles',  'display_name' => 'Delete Roles'],
 
+            // ==== PERMISSIONS ====
+            ['name' => 'viewAny.permissions', 'guard_name' => 'web', 'description' => 'Akses ViewAny Permissions', 'display_name' => 'ViewAny Permissions'],
+            ['name' => 'view.permissions',    'guard_name' => 'web', 'description' => 'Akses View Permissions',    'display_name' => 'View Permissions'],
+            ['name' => 'create.permissions',  'guard_name' => 'web', 'description' => 'Akses Create Permissions',  'display_name' => 'Create Permissions'],
+            ['name' => 'update.permissions',  'guard_name' => 'web', 'description' => 'Akses Update Permissions',  'display_name' => 'Update Permissions'],
+            ['name' => 'delete.permissions',  'guard_name' => 'web', 'description' => 'Akses Delete Permissions',  'display_name' => 'Delete Permissions'],
+
+            // ==== USERS ====
+            ['name' => 'viewAny.users', 'guard_name' => 'web', 'description' => 'Akses ViewAny Users', 'display_name' => 'ViewAny Users'],
+            ['name' => 'view.users',    'guard_name' => 'web', 'description' => 'Akses View Users',    'display_name' => 'View Users'],
+            ['name' => 'create.users',  'guard_name' => 'web', 'description' => 'Akses Create Users',  'display_name' => 'Create Users'],
+            ['name' => 'update.users',  'guard_name' => 'web', 'description' => 'Akses Update Users',  'display_name' => 'Update Users'],
+            ['name' => 'delete.users',  'guard_name' => 'web', 'description' => 'Akses Delete Users',  'display_name' => 'Delete Users'],
+
+            // ==== BANK ACCOUNTS ====
+            ['name' => 'viewAny.bank_accounts', 'guard_name' => 'web', 'description' => 'Akses ViewAny Bank Accounts', 'display_name' => 'ViewAny Bank Accounts'],
+            ['name' => 'view.bank_accounts',    'guard_name' => 'web', 'description' => 'Akses View Bank Accounts',    'display_name' => 'View Bank Accounts'],
+            ['name' => 'create.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Create Bank Accounts',  'display_name' => 'Create Bank Accounts'],
+            ['name' => 'update.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Update Bank Accounts',  'display_name' => 'Update Bank Accounts'],
+            ['name' => 'delete.bank_accounts',  'guard_name' => 'web', 'description' => 'Akses Delete Bank Accounts',  'display_name' => 'Delete Bank Accounts'],
         ];
 
         $now = Carbon::now();
@@ -37,10 +57,12 @@ class PermissionSeeder extends Seeder
             );
         }
 
-        $superAdmin = Role::firstOrCreate(
-            ['name' => 'super_admin', 'guard_name' => 'web'],
+        // Assign semua permission ke role "staff"
+        $staffRole = Role::firstOrCreate(
+            ['name' => 'staff', 'guard_name' => 'web'],
             ['created_at' => $now, 'updated_at' => $now]
         );
-        $superAdmin->syncPermissions(Permission::all());
+
+        $staffRole->syncPermissions(Permission::all());
     }
 }
