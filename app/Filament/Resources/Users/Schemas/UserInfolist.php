@@ -45,6 +45,16 @@ class UserInfolist
                                     ->copyable()
                                     ->label('Email')
                                     ->icon('heroicon-o-at-symbol'),
+                                    
+                                TextEntry::make('roles')
+                                    ->label('Role')
+                                    ->badge()
+                                    ->color('danger')
+                                    ->icon('heroicon-o-shield-check')
+                                    ->formatStateUsing(function (string $state, $record) {
+                                        return $record->roles->pluck('name')->map(fn($role) => ucfirst($role))->join(', ') ?: '-';
+                                    })
+                                    ->tooltip('Role dan permission pengguna.')
                             ])->columnSpanFull(),
                     ])->columnSpanFull()->collapsible(),
 

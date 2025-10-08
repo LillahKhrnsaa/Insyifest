@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Support\Collection;
+use app\Models\Role;
 
 class UserForm
 {
@@ -81,10 +82,25 @@ class UserForm
                             ->schema([
                                 Select::make('role')
                                     ->label('Role Pengguna')
-                                    ->options(fn () => \App\Models\Role::pluck('display_name', 'name'))
+                                    ->options(Role::pluck('display_name', 'name')) // <--- pakai display_name di sini
+                                    ->default(fn ($record) => $record?->roles?->first()?->name)
+                                    ->afterStateHydrated(function ($set, $record) {
+                                        $set('role', $record?->roles?->first()?->name);
+                                    })
+                                    ->afterStateUpdated(function ($state, $record) {
+                                        if ($record && filled($state)) {
+                                            $record->syncRoles([$state]);
+                                        }
+                                    })
+                                    ->dehydrated(false)
+                                    ->searchable()
+                                    ->native(false)
                                     ->required()
                                     ->placeholder('Pilih role')
-                                    ->columnSpan(1),
+                                    ->prefixIcon('heroicon-o-shield-check')
+                                    ->optionsLimit(10),
+
+
 
                                 Toggle::make('active')
                                     ->label('Akun Aktif')
