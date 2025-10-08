@@ -20,6 +20,7 @@ use Spatie\Permission\PermissionRegistrar;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Support\Facades\Storage;
 
 class UsersTable
 {
@@ -28,11 +29,14 @@ class UsersTable
         return $table
             ->columns([
                 // 1. Foto Profil
-                ImageColumn::make('photo_url') // pakai accessor, bukan langsung photo_path
+                ImageColumn::make('photo_path')
                     ->label('Foto')
                     ->circular()
                     ->alignCenter()
-                    ->size(40),
+                    ->imageHeight(40)
+                    ->width(40)
+                    ->disk('public'),
+
 
                 // 2. Nama Lengkap
                 TextColumn::make('name')
