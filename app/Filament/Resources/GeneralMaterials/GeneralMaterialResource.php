@@ -50,9 +50,6 @@ class GeneralMaterialResource extends Resource
     {
         return [
             'index' => ListGeneralMaterials::route('/'),
-            'create' => CreateGeneralMaterial::route('/create'),
-            'view' => ViewGeneralMaterial::route('/{record}'),
-            'edit' => EditGeneralMaterial::route('/{record}/edit'),
         ];
     }
 }
