@@ -54,6 +54,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.general_materials',  'guard_name' => 'web', 'description' => 'Akses Create General Materials',  'display_name' => 'Create General Materials'],
             ['name' => 'update.general_materials',  'guard_name' => 'web', 'description' => 'Akses Update General Materials',  'display_name' => 'Update General Materials'],
             ['name' => 'delete.general_materials',  'guard_name' => 'web', 'description' => 'Akses Delete General Materials',  'display_name' => 'Delete General Materials'],
+            
+            // ==== FORM EKSTERNALS ====
+            ['name' => 'viewAny.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Viewany Form Eksternals', 'display_name' => 'Viewany Form Eksternals'], 
+            ['name' => 'view.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses View Form Eksternals', 'display_name' => 'View Form Eksternals'], 
+            ['name' => 'create.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Create Form Eksternals', 'display_name' => 'Create Form Eksternals'], 
+            ['name' => 'update.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Update Form Eksternals', 'display_name' => 'Update Form Eksternals'], 
+            ['name' => 'delete.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Delete Form Eksternals', 'display_name' => 'Delete Form Eksternals'],
         ];
 
         $now = Carbon::now();
