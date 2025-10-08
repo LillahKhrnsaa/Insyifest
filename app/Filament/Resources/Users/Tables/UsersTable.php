@@ -122,14 +122,14 @@ class UsersTable
                 // 9. Dibuat
                 TextColumn::make('created_at')
                     ->label('Dibuat')
-                    ->dateTime('d M Y, H:i')
+                    ->dateTime('d M Y')
                     ->alignCenter()
                     ->sortable(),
 
                 // 10. Diupdate
                 TextColumn::make('updated_at')
                     ->label('Diupdate')
-                    ->dateTime('d M Y, H:i')
+                    ->dateTime('d M Y')
                     ->alignCenter()
                     ->sortable(),
             ])
