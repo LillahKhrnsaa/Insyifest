@@ -4,40 +4,38 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class GeneralMaterial extends Model
 {
     use HasFactory;
 
-    /**
-     * Nama tabel (opsional, kalau sesuai konvensi bisa di-skip)
-     */
     protected $table = 'general_materials';
 
-    /**
-     * Kolom yang boleh diisi (mass assignable)
-     */
     protected $fillable = [
         'title',
         'description',
         'file_path',
-        'uploaded_at',
+        'status',
     ];
 
-    /**
-     * Casting kolom ke tipe data tertentu
-     */
     protected $casts = [
-        'uploaded_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
+    // HAPUS $appends karena bikin CORS issue
+    // FileUpload Filament baca langsung dari 'file_path', bukan 'file_url'
+    // protected $appends = ['file_url'];
+
     /**
-     * Accessor untuk ambil URL file (kalau kamu simpan path di storage)
+     * Accessor untuk ambil URL file lengkap (untuk display di tempat lain)
      */
     public function getFileUrlAttribute(): ?string
     {
-        return $this->file_path
-            ? asset('storage/' . $this->file_path)
-            : null;
+        if ($this->file_path && Storage::disk('public')->exists($this->file_path)) {
+            return Storage::url($this->file_path);
+        }
+        return null;
     }
 }

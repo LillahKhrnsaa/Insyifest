@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('general_materials', function (Blueprint $table) {
-                    $table->id();
-                    $table->string('title');
-                    $table->text('description')->nullable();
-                    $table->string('file_path')->nullable();
-                    $table->timestamp('uploaded_at')->useCurrent();
-                    $table->timestamps();
-                });
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('file_path')->nullable();
+            $table->enum('status', ['active', 'archived'])->default('active');
+            $table->timestamps(); // created_at & updated_at
+        });
     }
 
     /**

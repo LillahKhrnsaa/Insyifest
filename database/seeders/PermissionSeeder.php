@@ -48,6 +48,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'update.training_packages',  'guard_name' => 'web', 'description' => 'Akses Update Training Packages',  'display_name' => 'Update Training Packages'],
             ['name' => 'delete.training_packages',  'guard_name' => 'web', 'description' => 'Akses Delete Training Packages',  'display_name' => 'Delete Training Packages'],
 
+            // ==== GENERAL MATERIALS ====
+            ['name' => 'viewAny.general_materials', 'guard_name' => 'web', 'description' => 'Akses Viewany General Materials', 'display_name' => 'Viewany General Materials'],
+            ['name' => 'view.general_materials',    'guard_name' => 'web', 'description' => 'Akses View General Materials',    'display_name' => 'View General Materials'],
+            ['name' => 'create.general_materials',  'guard_name' => 'web', 'description' => 'Akses Create General Materials',  'display_name' => 'Create General Materials'],
+            ['name' => 'update.general_materials',  'guard_name' => 'web', 'description' => 'Akses Update General Materials',  'display_name' => 'Update General Materials'],
+            ['name' => 'delete.general_materials',  'guard_name' => 'web', 'description' => 'Akses Delete General Materials',  'display_name' => 'Delete General Materials'],
         ];
 
         $now = Carbon::now();

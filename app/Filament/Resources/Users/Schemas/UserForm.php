@@ -20,7 +20,7 @@ use Illuminate\Support\Collection;
 
 class UserForm
 {
-    public static function configure(Schema $schema): Schema
+     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->schema([
@@ -105,9 +105,17 @@ class UserForm
                             ->disk('public')
                             ->directory('user-photos')
                             ->visibility('public')
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([
+                                '1:1',
+                                '4:3',
+                            ])
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/webp'])
+                            ->maxSize(5120) // 5MB
                             ->previewable(true)
                             ->downloadable(true)
-                            ->openable(true),
+                            ->openable(true)
+                            ->columnSpanFull(),
 
                     ])
                     ->collapsible()

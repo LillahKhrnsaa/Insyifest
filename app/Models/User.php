@@ -9,7 +9,6 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
 use Illuminate\Support\Facades\Storage;
 
-
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
@@ -35,28 +34,31 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // PENTING: Tambahkan ini agar Filament bisa load file di form edit
+    protected $appends = ['photo_url'];
+
     public function setRoleAttribute($value)
     {
         if ($value) {
-            $this->syncRoles([$value]); // Spatie sync
+            $this->syncRoles([$value]);
         }
     }
 
     public function getRoleAttribute()
     {
-        // kembalikan role pertama (karena cuma boleh 1)
         return $this->roles->pluck('name')->first();
     }
 
-    public function getPhotoUrlAttribute(): string
+    // Accessor untuk mendapatkan URL lengkap (untuk display di tempat lain)
+    public function getPhotoUrlAttribute(): ?string
     {
         if ($this->photo_path && Storage::disk('public')->exists($this->photo_path)) {
-            return Storage::url($this->photo_path);
+            // Paksa pakai APP_URL dari config agar konsisten
+            return config('app.url') . Storage::url($this->photo_path);
         }
 
-        return asset('');
+        return null;
     }
-
 
     public function canAccessPanel(Panel $panel): bool
     {
