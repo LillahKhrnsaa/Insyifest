@@ -18,6 +18,7 @@ class Coach extends Model
     protected $fillable = [
         'user_id',
         'bio',
+        'training_schedule_id',
     ];
 
     // Helper untuk dapetin nama coach
@@ -37,5 +38,10 @@ class Coach extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function trainingSchedule(): BelongsTo
+    {
+        return $this->belongsTo(TrainingSchedule::class);
     }
 }

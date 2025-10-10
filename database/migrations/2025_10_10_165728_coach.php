@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('coaches', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
-                $table->text('bio')->nullable();
-                $table->timestamps();
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
+            $table->foreignId('training_schedule_id')
+                ->nullable()
+                ->constrained('training_schedules')
+                ->nullOnDelete();
+            $table->text('bio')->nullable();
+            $table->timestamps();
         });
+
     }
 
     /**
