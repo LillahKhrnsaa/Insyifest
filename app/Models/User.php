@@ -8,6 +8,8 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 class User extends Authenticatable
 {
@@ -70,5 +72,10 @@ class User extends Authenticatable
                 $this->hasRole('staff') || 
                 $this->hasRole('owner')
             );
+    }
+
+    public function coach(): HasOne
+    {
+        return $this->hasOne(Coach::class);
     }
 }

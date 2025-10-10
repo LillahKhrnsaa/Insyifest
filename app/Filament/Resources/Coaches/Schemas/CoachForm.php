@@ -1,25 +1,22 @@
 <?php
 
-namespace App\Filament\Resources\Users\Schemas;
+namespace App\Filament\Resources\Coaches\Schemas;
 
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Support\Str;     
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
-use Illuminate\Support\Str;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Hidden;
-use Filament\Schemas\Components\Section;
-use Illuminate\Validation\Rules\Password;
-use Filament\Schemas\Components\Grid;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\FileUpload;
-use Illuminate\Support\Collection;
-use app\Models\Role;
-
-class UserForm
+use Illuminate\Database\Eloquent\Model;
+class CoachForm
 {
     public static function configure(Schema $schema): Schema
     {
@@ -27,7 +24,7 @@ class UserForm
             ->schema([
                 // === BAGIAN 1: INFORMASI AKUN ===
                 Section::make('Informasi Akun')
-                    ->description('Detail login dan akses pengguna di sistem.')
+                    ->description('Detail login dan akses coach di sistem.')
                     ->icon('heroicon-o-user-circle')
                     ->schema([
                         TextInput::make('name')
@@ -52,7 +49,6 @@ class UserForm
                             ->required()
                             ->readonly()
                             ->placeholder('contoh@cikampekswimmingclub.gmail.com')
-                            ->unique('users', 'email', ignoreRecord: true)
                             ->prefixIcon('heroicon-o-envelope')
                             ->helperText('Otomatis terisi berdasarkan nama.')
                             ->extraAttributes(['class' => 'focus:border-primary-500'])
@@ -78,30 +74,12 @@ class UserForm
                                     ->visible(fn (string $operation, Get $get) => $operation === 'create' || filled($get('password'))),
                             ]),
 
+                        // Role otomatis jadi coach (hidden)
+                        Hidden::make('role')
+                            ->default('coach'),
+
                         Grid::make(2)
                             ->schema([
-                                Select::make('role')
-                                    ->label('Role Pengguna')
-                                    ->options(Role::pluck('display_name', 'name')) // <--- pakai display_name di sini
-                                    ->default(fn ($record) => $record?->roles?->first()?->name)
-                                    ->afterStateHydrated(function ($set, $record) {
-                                        $set('role', $record?->roles?->first()?->name);
-                                    })
-                                    ->afterStateUpdated(function ($state, $record) {
-                                        if ($record && filled($state)) {
-                                            $record->syncRoles([$state]);
-                                        }
-                                    })
-                                    ->dehydrated(false)
-                                    ->searchable()
-                                    ->native(false)
-                                    ->required()
-                                    ->placeholder('Pilih role')
-                                    ->prefixIcon('heroicon-o-shield-check')
-                                    ->optionsLimit(10),
-
-
-
                                 Toggle::make('active')
                                     ->label('Akun Aktif')
                                     ->onColor('success')
@@ -119,7 +97,7 @@ class UserForm
                             ->label('Foto Profil')
                             ->image()
                             ->disk('public')
-                            ->directory('user-photos')
+                            ->directory('coach-photos')
                             ->visibility('public')
                             ->imageEditor()
                             ->imageEditorAspectRatios([
@@ -140,7 +118,7 @@ class UserForm
 
                 // === BAGIAN 2: INFORMASI PRIBADI ===
                 Section::make('Informasi Pribadi')
-                    ->description('Data diri anggota Cikampek Swimming Club.')
+                    ->description('Data diri coach.')
                     ->icon('heroicon-o-identification')
                     ->schema([
                         Grid::make(3)
@@ -150,7 +128,6 @@ class UserForm
                                     ->tel()
                                     ->required()
                                     ->placeholder('Contoh: 081234567890')
-                                    ->unique('users', 'phone', ignoreRecord: true)
                                     ->prefixIcon('heroicon-o-phone')
                                     ->maxLength(15),
 
@@ -173,6 +150,22 @@ class UserForm
                                     ->placeholder('Pilih tanggal')
                                     ->prefixIcon('heroicon-o-cake'),
                             ]),
+                    ])
+                    ->collapsible()
+                    ->compact()
+                    ->columnSpanFull(),
+
+                // === BAGIAN 3: INFORMASI COACH ===
+                Section::make('Informasi Coach')
+                    ->description('Detail keahlian dan pengalaman coach.')
+                    ->icon('heroicon-o-academic-cap')
+                    ->schema([
+                        Textarea::make('bio')
+                            ->label('Biografi')
+                            ->placeholder('Ceritakan tentang pengalaman dan keahlian coach...')
+                            ->rows(4)
+                            ->maxLength(1000)
+                            ->columnSpanFull(),
                     ])
                     ->collapsible()
                     ->compact()

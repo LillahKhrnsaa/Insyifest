@@ -61,6 +61,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Create Form Eksternals', 'display_name' => 'Create Form Eksternals'], 
             ['name' => 'update.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Update Form Eksternals', 'display_name' => 'Update Form Eksternals'], 
             ['name' => 'delete.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Delete Form Eksternals', 'display_name' => 'Delete Form Eksternals'],
+
+            // ==== COACHES ====
+            ['name' => 'viewAny.coaches', 'guard_name' => 'web', 'description' => 'Akses Viewany Coaches', 'display_name' => 'Viewany Coaches'],
+            ['name' => 'view.coaches', 'guard_name' => 'web', 'description' => 'Akses View Coaches', 'display_name' => 'View Coaches'],
+            ['name' => 'create.coaches', 'guard_name' => 'web', 'description' => 'Akses Create Coaches', 'display_name' => 'Create Coaches'],
+            ['name' => 'update.coaches', 'guard_name' => 'web', 'description' => 'Akses Update Coaches', 'display_name' => 'Update Coaches'],
+            ['name' => 'delete.coaches', 'guard_name' => 'web', 'description' => 'Akses Delete Coaches', 'display_name' => 'Delete Coaches'],
+
         ];
 
         $now = Carbon::now();

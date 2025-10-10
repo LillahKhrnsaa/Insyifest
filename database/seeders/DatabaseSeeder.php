@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             BankAccountSeeder::class,
             TrainingPackageSeeder::class,
             GeneralMaterialSeeder::class,
+            CoachSeeder::class,
         ]);
     }
 }
