@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\User;
 
 class Coach extends Model
 {
@@ -18,7 +20,6 @@ class Coach extends Model
     protected $fillable = [
         'user_id',
         'bio',
-        'training_schedule_id',
     ];
 
     // Helper untuk dapetin nama coach
@@ -40,8 +41,13 @@ class Coach extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function trainingSchedule(): BelongsTo
+    public function schedules(): BelongsToMany
     {
-        return $this->belongsTo(TrainingSchedule::class);
+        return $this->belongsToMany(
+            TrainingSchedule::class, 
+            'coach_training_schedule', 
+            'coach_id', 
+            'training_schedule_id'
+        )->withTimestamps();
     }
 }

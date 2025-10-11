@@ -13,6 +13,11 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use App\Models\Coach;
+use App\Models\TrainingSchedule;
+use Illuminate\Support\Facades\Auth;
 
 class CoachesTable
 {
@@ -210,6 +215,41 @@ class CoachesTable
                         // Hapus user terkait juga
                         $record->user?->delete();
                     }),
+
+                Action::make('assignSchedule')
+                    ->label('Atur Jadwal')
+                    ->icon('heroicon-o-calendar-days')
+                    ->form([
+                        Select::make('schedules')
+                            ->label('Jadwal Latihan')
+                            ->placeholder('Pilih jadwal yang diajar')
+                            ->options(TrainingSchedule::pluck('day', 'id')->map(function ($day, $id) {
+                                // Tampilkan hari dengan terjemahan (seperti di table)
+                                $translatedDay = match ($day) {
+                                    'MONDAY' => 'Senin',
+                                    'TUESDAY' => 'Selasa',
+                                    'WEDNESDAY' => 'Rabu',
+                                    'THURSDAY' => 'Kamis',
+                                    'FRIDAY' => 'Jumat',
+                                    'SATURDAY' => 'Sabtu',
+                                    'SUNDAY' => 'Minggu',
+                                    default => $day,
+                                };
+                                // Tambahkan ID dan Place untuk kejelasan di Select
+                                $schedule = TrainingSchedule::find($id);
+                                return "{$translatedDay} - {$schedule->time} ({$schedule->place})";
+                            }))
+                            ->multiple() // Relasi Many-to-Many
+                            ->preload()
+                            // ✅ PERBAIKAN: DEFAULT VALUE
+                            ->default(fn (Coach $record) => $record->schedules->pluck('id')->toArray()),
+                    ])
+                    ->action(function (Coach $record, array $data): void {
+                        // Sinkronkan (sync) relasi schedules dengan data yang dipilih
+                        $record->schedules()->sync($data['schedules']);
+                    })
+                    // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
+                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'super_admin'])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
