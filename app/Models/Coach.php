@@ -50,4 +50,15 @@ class Coach extends Model
             'training_schedule_id'
         )->withTimestamps();
     }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Member::class,
+            'member_training_assignments',
+            'coach_id',
+            'member_id'
+        )->withTimestamps();
+    }
+
 }
