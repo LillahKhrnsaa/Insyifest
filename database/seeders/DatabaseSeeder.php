@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\PaymentHistory;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
             BankAccountSeeder::class,
             TrainingPackageSeeder::class,
             GeneralMaterialSeeder::class,
+            MemberSeeder::class,
+            PaymentHistorySeeder::class,
         ]);
     }
 }

@@ -61,6 +61,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Create Form Eksternals', 'display_name' => 'Create Form Eksternals'], 
             ['name' => 'update.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Update Form Eksternals', 'display_name' => 'Update Form Eksternals'], 
             ['name' => 'delete.form_eksternals', 'guard_name' => 'web', 'description' => 'Akses Delete Form Eksternals', 'display_name' => 'Delete Form Eksternals'],
+
+            // ==== PAYMENT HISTORIES ====
+            ['name' => 'viewAny.payment_histories','guard_name' => 'web','description' => 'Akses Viewany Payment Histories','display_name' => 'Viewany Payment Histories',],
+            ['name' => 'view.payment_histories','guard_name' => 'web','description' => 'Akses View Payment Histories','display_name' => 'View Payment Histories',],
+            ['name' => 'create.payment_histories','guard_name' => 'web','description' => 'Akses Create Payment Histories','display_name' => 'Create Payment Histories',],
+            ['name' => 'update.payment_histories','guard_name' => 'web','description' => 'Akses Update Payment Histories','display_name' => 'Update Payment Histories',],
+            ['name' => 'delete.payment_histories','guard_name' => 'web','description' => 'Akses Delete Payment Histories','display_name' => 'Delete Payment Histories',],
         ];
 
         $now = Carbon::now();

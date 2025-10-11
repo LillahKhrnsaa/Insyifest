@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\PaymentHistory;
+use App\Policies\PaymentHistoryPolicy;
+
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider

@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasRoles;
 
@@ -62,13 +64,23 @@ class User extends Authenticatable
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return str_ends_with($this->email, '@cikampekswimming.gmail.com') 
-            && (
-                $this->hasRole('admin') || 
-                $this->hasRole('coach') || 
-                $this->hasRole('member') || 
-                $this->hasRole('staff') || 
-                $this->hasRole('owner')
-            );
+        return $this->hasAnyRole(['admin', 'coach', 'member', 'staff', 'owner']);
     }
+
+    public function member(): HasOne
+    {
+        return $this->hasOne(Member::class);
+    }
+
+    public function readNotifications()
+    {
+        return $this->notifications()->whereNotNull('read_at');
+    }
+
+    public function unreadNotifications()
+    {
+        // Pastikan tetap hanya notifikasi tanpa read_at
+        return $this->notifications()->whereNull('read_at');
+    }
+
 }
