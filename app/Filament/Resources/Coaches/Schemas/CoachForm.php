@@ -16,6 +16,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
+
 class CoachForm
 {
     public static function configure(Schema $schema): Schema
