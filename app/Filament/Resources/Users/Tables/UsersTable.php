@@ -20,6 +20,7 @@ use Spatie\Permission\PermissionRegistrar;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Storage;
 
 class UsersTable
@@ -137,102 +138,103 @@ class UsersTable
                 // Bisa tambahin filter aktif / role kalau perlu
             ])
             ->recordActions([
-                Action::make('managePermissions')
-                    ->label('')
-                    ->tooltip('Manage Direct Permissions')
-                    ->icon('heroicon-o-key')
-                    ->color('warning')
-                    ->visible(fn () => Auth::user()?->hasRole('staff'))
-                    ->button()
-                    ->modalHeading('Manage Direct Permissions')
-                    ->modalSubmitActionLabel('Simpan')
-                    ->modalCancelActionLabel('Batal')
-                    ->extraAttributes([
-                        'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
+                ActionGroup::make([
+                    Action::make('managePermissions')
+                        ->label('Atur Permissions')
+                        ->tooltip('Manage Direct Permissions')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->visible(fn () => Auth::user()?->hasRole('staff'))
+                        ->modalHeading('Manage Direct Permissions')
+                        ->modalSubmitActionLabel('Simpan')
+                        ->modalCancelActionLabel('Batal')
+                        ->extraAttributes([
+                            'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
+                        ])
+                        
+                        // 1. Schema yang disederhanakan
+                        ->schema(function (User $record) {
+                            // Ambil SEMUA permission yang ada, lalu kelompokkan
+                            $permissions = Permission::query()->get()->groupBy(function ($permission) {
+                                return explode('.', $permission->name)[1] ?? 'Lainnya';
+                            });
+    
+                            $tabs = [];
+                            foreach ($permissions as $group => $perms) {
+                                $options = $perms->mapWithKeys(function ($perm) {
+                                    $prefix = explode('.', $perm->name)[0] ?? $perm->name;
+                                    return [$perm->id => Str::of($prefix)->replace('_', ' ')->ucfirst()];
+                                })->toArray();
+    
+                                $tabs[] = Tab::make(Str::ucfirst($group))
+                                    ->schema([
+                                        CheckboxList::make("permissions.{$group}") // Gunakan nested key
+                                            ->label(false)
+                                            ->options($options)
+                                            ->columns(2)
+                                            // ✅ Default-nya hanya mengambil direct permissions milik user
+                                            ->default(
+                                                $record->permissions // <-- Jauh lebih sederhana
+                                                    ->whereIn('id', $perms->pluck('id'))
+                                                    ->pluck('id')
+                                                    ->toArray()
+                                            )
+                                            ->rules(['nullable', 'array']),
+                                    ]);
+                            }
+    
+                            return [
+                                Tabs::make('Permissions')->tabs($tabs)->columnSpanFull(),
+                            ];
+                        })
+                        
+                        // 2. Action yang disederhanakan
+                        ->action(function (User $record, array $data): void {
+                            // Ambil semua ID dari semua tab
+                            $selectedIds = collect($data['permissions'] ?? [])
+                                ->flatten()
+                                ->filter()
+                                ->map(fn ($id) => (int)$id)
+                                ->unique()
+                                ->toArray();
+    
+                            // ✅ Langsung sinkronkan permission yang dipilih ke user
+                            $record->syncPermissions($selectedIds);
+    
+                            // Reset cache Spatie
+                            app(PermissionRegistrar::class)->forgetCachedPermissions();
+                        }),
+                    ViewAction::make()
+                        ->label('Lihat')
+                        ->tooltip('View details')
+                        ->icon('heroicon-o-eye')
+                        ->color('gray')
+                        ->size('sm')
+                        ->extraAttributes([
+                            'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2']),
+    
+                    EditAction::make()
+                        ->label('Edit')
+                        ->tooltip('Edit role')
+                        ->icon('heroicon-o-pencil-square')
+                        ->color('primary')
+                        ->size('sm')
+                        ->extraAttributes([
+                            'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2']),
+    
+                    DeleteAction::make()
+                        ->label('Delete')
+                        ->tooltip('Delete role')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->size('sm')
+                        ->requiresConfirmation()
+                        ->extraAttributes([
+                            'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
                     ])
-                    
-                    // 1. Schema yang disederhanakan
-                    ->schema(function (User $record) {
-                        // Ambil SEMUA permission yang ada, lalu kelompokkan
-                        $permissions = Permission::query()->get()->groupBy(function ($permission) {
-                            return explode('.', $permission->name)[1] ?? 'Lainnya';
-                        });
-
-                        $tabs = [];
-                        foreach ($permissions as $group => $perms) {
-                            $options = $perms->mapWithKeys(function ($perm) {
-                                $prefix = explode('.', $perm->name)[0] ?? $perm->name;
-                                return [$perm->id => Str::of($prefix)->replace('_', ' ')->ucfirst()];
-                            })->toArray();
-
-                            $tabs[] = Tab::make(Str::ucfirst($group))
-                                ->schema([
-                                    CheckboxList::make("permissions.{$group}") // Gunakan nested key
-                                        ->label(false)
-                                        ->options($options)
-                                        ->columns(2)
-                                        // ✅ Default-nya hanya mengambil direct permissions milik user
-                                        ->default(
-                                            $record->permissions // <-- Jauh lebih sederhana
-                                                ->whereIn('id', $perms->pluck('id'))
-                                                ->pluck('id')
-                                                ->toArray()
-                                        )
-                                        ->rules(['nullable', 'array']),
-                                ]);
-                        }
-
-                        return [
-                            Tabs::make('Permissions')->tabs($tabs)->columnSpanFull(),
-                        ];
-                    })
-                    
-                    // 2. Action yang disederhanakan
-                    ->action(function (User $record, array $data): void {
-                        // Ambil semua ID dari semua tab
-                        $selectedIds = collect($data['permissions'] ?? [])
-                            ->flatten()
-                            ->filter()
-                            ->map(fn ($id) => (int)$id)
-                            ->unique()
-                            ->toArray();
-
-                        // ✅ Langsung sinkronkan permission yang dipilih ke user
-                        $record->syncPermissions($selectedIds);
-
-                        // Reset cache Spatie
-                        app(PermissionRegistrar::class)->forgetCachedPermissions();
-                    }),
-                ViewAction::make()
+                    ->icon('heroicon-o-bars-4') // ini ikon burger menu (⋮)
                     ->label('')
                     ->button()
-                    ->tooltip('View details')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->size('sm')
-                    ->extraAttributes([
-                        'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2']),
-
-                EditAction::make()
-                    ->label('')
-                    ->button()
-                    ->tooltip('Edit role')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('primary')
-                    ->size('sm')
-                    ->extraAttributes([
-                        'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2']),
-
-                DeleteAction::make()
-                    ->label('')
-                    ->button()
-                    ->tooltip('Delete role')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->size('sm')
-                    ->requiresConfirmation()
-                    ->extraAttributes([
-                        'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
                 ])
             ->toolbarActions([
                 BulkActionGroup::make([

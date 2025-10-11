@@ -18,6 +18,16 @@ use Filament\Tables\Table;
 
 class TrainingScheduleResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-user';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Training';
+    }
+
     protected static ?string $model = TrainingSchedule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

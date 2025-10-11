@@ -101,9 +101,10 @@ class PaymentHistoryForm
                             ->label('Bukti Pembayaran')
                             ->directory('payment-proofs') // Simpan di storage/app/public/payment-proofs
                             ->image()
-                            ->imageEditor(),
+                            ->imageEditor()
+                            ->columnSpanFull(),
                         ])
-                    ])
+                    ])->columnSpanFull()
             ]);
     }
 }

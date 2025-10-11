@@ -18,6 +18,15 @@ use Filament\Tables\Table;
 
 class BankAccountResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-user';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Finance & Payment';
+    }
     protected static ?string $model = BankAccount::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
