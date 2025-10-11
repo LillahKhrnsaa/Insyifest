@@ -74,4 +74,11 @@ class Member extends Model
             'coach_id'
         )->withTimestamps();
     }
+
+    public function coachesSalary()
+    {
+        return $this->belongsToMany(Coach::class, 'member_training_assignments')
+                    ->withTimestamps();
+    }
+
 }
