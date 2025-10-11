@@ -23,6 +23,4 @@ class TrainingScheduleSeeder extends Seeder
             ]);
         }
     }
-
-    
 }
