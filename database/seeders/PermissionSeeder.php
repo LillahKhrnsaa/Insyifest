@@ -82,6 +82,20 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.payment_histories','guard_name' => 'web','description' => 'Akses Create Payment Histories','display_name' => 'Create Payment Histories',],
             ['name' => 'update.payment_histories','guard_name' => 'web','description' => 'Akses Update Payment Histories','display_name' => 'Update Payment Histories',],
             ['name' => 'delete.payment_histories','guard_name' => 'web','description' => 'Akses Delete Payment Histories','display_name' => 'Delete Payment Histories',],
+        
+            // ==== SALARIES ====
+            ['name' => 'viewAny.salaries','guard_name' => 'web','description' => 'Akses Viewany Salaries','display_name' => 'Viewany Salaries',],
+            ['name' => 'view.salaries','guard_name' => 'web','description' => 'Akses View Salaries','display_name' => 'View Salaries',],
+            ['name' => 'create.salaries','guard_name' => 'web','description' => 'Akses Create Salaries','display_name' => 'Create Salaries',],
+            ['name' => 'update.salaries','guard_name' => 'web','description' => 'Akses Update Salaries','display_name' => 'Update Salaries',],
+            ['name' => 'delete.salaries','guard_name' => 'web','description' => 'Akses Delete Salaries','display_name' => 'Delete Salaries',],
+
+            // ==== MEMBERS ====
+            ['name' => 'viewAny.members','guard_name' => 'web','description' => 'Akses Viewany Members','display_name' => 'Viewany Members',],
+            ['name' => 'view.members','guard_name' => 'web','description' => 'Akses View Members','display_name' => 'View Members',],
+            ['name' => 'create.members','guard_name' => 'web','description' => 'Akses Create Members','display_name' => 'Create Members',],
+            ['name' => 'update.members','guard_name' => 'web','description' => 'Akses Update Members','display_name' => 'Update Members',],
+            ['name' => 'delete.members','guard_name' => 'web','description' => 'Akses Delete Members','display_name' => 'Delete Members',],
         ];
 
         $now = Carbon::now();
