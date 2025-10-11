@@ -20,7 +20,12 @@ class TrainingPackageResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-clipboard-document';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Paket Latihan';
     }
 
     public static function getNavigationGroup(): ?string

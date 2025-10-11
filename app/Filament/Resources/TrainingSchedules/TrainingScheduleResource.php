@@ -20,7 +20,12 @@ class TrainingScheduleResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-calendar-days';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Jadwal Latihan';
     }
 
     public static function getNavigationGroup(): ?string

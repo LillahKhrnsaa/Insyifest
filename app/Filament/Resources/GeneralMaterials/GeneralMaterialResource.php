@@ -20,7 +20,12 @@ class GeneralMaterialResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-newspaper';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Post';
     }
 
     public static function getNavigationGroup(): ?string

@@ -20,7 +20,7 @@ class MemberResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-user-group';
     }
 
     public static function getNavigationGroup(): ?string

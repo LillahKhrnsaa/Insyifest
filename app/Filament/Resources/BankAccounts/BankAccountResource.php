@@ -20,7 +20,12 @@ class BankAccountResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-banknotes';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Bank';
     }
 
     public static function getNavigationGroup(): ?string

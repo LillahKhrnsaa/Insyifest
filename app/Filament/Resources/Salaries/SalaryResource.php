@@ -20,7 +20,12 @@ class SalaryResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-currency-dollar';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Gaji';
     }
 
     public static function getNavigationGroup(): ?string

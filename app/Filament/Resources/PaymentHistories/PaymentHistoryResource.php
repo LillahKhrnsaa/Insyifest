@@ -20,7 +20,7 @@ class PaymentHistoryResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-credit-card';
     }
 
     public static function getNavigationGroup(): ?string

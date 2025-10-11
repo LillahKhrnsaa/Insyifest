@@ -20,7 +20,12 @@ class FormEksternalResource extends Resource
 {
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-pencil-square';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Form';
     }
 
     public static function getNavigationGroup(): ?string

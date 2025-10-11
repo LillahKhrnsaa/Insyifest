@@ -21,7 +21,7 @@ class CoachResource extends Resource
 
     public static function getNavigationIcon(): ?string
     {
-        return 'heroicon-o-user';
+        return 'heroicon-o-user-circle';
     }
 
     public static function getNavigationGroup(): ?string
