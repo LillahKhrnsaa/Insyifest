@@ -50,4 +50,9 @@ class Coach extends Model
             'training_schedule_id'
         )->withTimestamps();
     }
+
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
 }
