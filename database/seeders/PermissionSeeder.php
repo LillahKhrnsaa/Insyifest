@@ -69,6 +69,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'update.coaches', 'guard_name' => 'web', 'description' => 'Akses Update Coaches', 'display_name' => 'Update Coaches'],
             ['name' => 'delete.coaches', 'guard_name' => 'web', 'description' => 'Akses Delete Coaches', 'display_name' => 'Delete Coaches'],
 
+            // ==== TRAINING SCHEDULES ====
+            ['name' => 'viewAny.training_schedules', 'guard_name' => 'web', 'description' => 'Akses Viewany Training Schedules', 'display_name' => 'Viewany Training Schedules'],
+            ['name' => 'view.training_schedules', 'guard_name' => 'web', 'description' => 'Akses View Training Schedules', 'display_name' => 'View Training Schedules'],
+            ['name' => 'create.training_schedules', 'guard_name' => 'web', 'description' => 'Akses Create Training Schedules', 'display_name' => 'Create Training Schedules'],
+            ['name' => 'update.training_schedules', 'guard_name' => 'web', 'description' => 'Akses Update Training Schedules', 'display_name' => 'Update Training Schedules'],
+            ['name' => 'delete.training_schedules', 'guard_name' => 'web', 'description' => 'Akses Delete Training Schedules', 'display_name' => 'Delete Training Schedules'],
+
         ];
 
         $now = Carbon::now();
