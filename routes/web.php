@@ -3,10 +3,13 @@
 use App\Http\Controllers\Auth\MemberRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormEksternalController;
+use App\Http\Controllers\LandingController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::get('/form/{slug}', [FormEksternalController::class, 'show'])->name('form.show');
 Route::post('/form/{slug}', [FormEksternalController::class, 'submit'])->name('form.submit');

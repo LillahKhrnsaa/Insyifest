@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -31,5 +32,11 @@ class TrainingSchedule extends Model
             'training_schedule_id', 
             'coach_id'
         )->withTimestamps();
+    }
+
+    public function coach(): BelongsTo
+    {
+        // 'coach_id' adalah foreign key di tabel training_schedules
+        return $this->belongsTo(Coach::class, 'coach_id');
     }
 }
