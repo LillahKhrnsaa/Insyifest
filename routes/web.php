@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\MemberRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormEksternalController;
@@ -26,3 +27,6 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 });
+
+Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
