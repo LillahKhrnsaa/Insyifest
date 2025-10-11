@@ -8,7 +8,14 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+
+use Filament\Notifications\Notification;
 
 class TrainingSchedulesTable
 {
@@ -75,6 +82,55 @@ class TrainingSchedulesTable
                 // Filter Hari bisa ditambahkan di sini nanti
             ])
             ->recordActions([
+                Action::make('viewCoaches')
+                    ->label('Lihat Coach')
+                    ->icon('heroicon-o-users')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Coach Bertugas')
+                    ->modalDescription(fn ($record) => $record->day . ' - ' . $record->time . ' - ' . $record->place)
+                    ->infolist(function ($record): array {
+                        if ($record->coaches->isEmpty()) {
+                            return [
+                                Section::make()
+                                    ->schema([
+                                        TextEntry::make('empty')
+                                            ->label('')
+                                            ->state('Belum ada coach yang ditugaskan untuk jadwal ini.')
+                                            ->color('warning'),
+                                    ]),
+                            ];
+                        }
+
+                        return [
+                            Section::make('Daftar Coach')
+                                ->schema([
+                                    RepeatableEntry::make('coaches')
+                                        ->label('')
+                                        ->schema([
+                                            TextEntry::make('name')
+                                                ->label('Nama Coach')
+                                                ->weight('bold')
+                                                ->icon('heroicon-o-user'),
+                                            TextEntry::make('email')
+                                                ->label('Email')
+                                                ->icon('heroicon-o-envelope')
+                                                ->copyable(),
+                                            TextEntry::make('bio')
+                                                ->label('Bio')
+                                                ->icon('heroicon-o-document-text')
+                                                ->default('-')
+                                                ->limit(150),
+                                        ])
+                                        ->columns(3)
+                                        ->columnSpanFull(),
+                                ])
+                                ->collapsible()
+                                ->collapsed(false),
+                        ];
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->slideOver(),
                 ViewAction::make()
                     ->label('')
                     ->button()
