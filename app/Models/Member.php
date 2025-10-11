@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Models\PaymentHistory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Member extends Model
 {
@@ -47,10 +48,30 @@ class Member extends Model
         return $this->hasMany(PaymentHistory::class);
     }
 
-     protected function userName(): Attribute
+    protected function userName(): Attribute
     {
         return Attribute::make(
             get: fn () => $this->user->name ?? 'N/A',
         );
+    }
+
+    public function assignedCoaches(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Coach::class, 
+            'member_training_assignments', 
+            'member_id', 
+            'coach_id'
+        )->withTimestamps();
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Coach::class,
+            'member_training_assignments',
+            'member_id',
+            'coach_id'
+        )->withTimestamps();
     }
 }

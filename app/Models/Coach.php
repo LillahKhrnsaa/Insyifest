@@ -55,4 +55,13 @@ class Coach extends Model
     {
         return $this->hasMany(Salary::class);
     }
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Member::class,
+            'member_training_assignments',
+            'coach_id',
+            'member_id'
+        )->withTimestamps();
+    }
 }

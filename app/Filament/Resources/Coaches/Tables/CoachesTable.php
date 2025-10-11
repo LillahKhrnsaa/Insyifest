@@ -18,6 +18,10 @@ use Filament\Forms\Components\Select;
 use App\Models\Coach;
 use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Member;
+use Filament\Schemas\Components\Section;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 
 class CoachesTable
 {
@@ -174,6 +178,90 @@ class CoachesTable
                     }),
             ])
             ->recordActions([
+                Action::make('viewMembers')
+                    ->label('Lihat Member')
+                    ->icon('heroicon-o-users')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Member yang Di-assign')
+                    ->modalDescription(fn ($record) => 'Coach: ' . ($record->name ?? '-'))
+                    ->infolist(function ($record): array {
+                        if ($record->members->isEmpty()) {
+                            return [
+                                Section::make()
+                                    ->schema([
+                                        TextEntry::make('empty')
+                                            ->label('')
+                                            ->state('Belum ada member yang di-assign ke coach ini.')
+                                            ->color('warning'),
+                                    ]),
+                            ];
+                        }
+
+                        return [
+                            Section::make('Daftar Member')
+                                ->schema([
+                                    RepeatableEntry::make('members')
+                                        ->label('')
+                                        ->schema([
+                                            TextEntry::make('user.name')
+                                                ->label('Nama Member')
+                                                ->weight('bold')
+                                                ->icon('heroicon-o-user')
+                                                ->default('-'),
+                                            TextEntry::make('user.email')
+                                                ->label('Email')
+                                                ->icon('heroicon-o-envelope')
+                                                ->copyable()
+                                                ->default('-'),
+                                            TextEntry::make('created_at')
+                                                ->label('Bergabung Sejak')
+                                                ->icon('heroicon-o-calendar')
+                                                ->dateTime('d M Y')
+                                                ->default('-'),
+                                        ])
+                                        ->columns(3)
+                                        ->columnSpanFull(),
+                                ])
+                                ->collapsible()
+                                ->collapsed(false),
+                        ];
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->slideOver()
+                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
+                Action::make('assignMember')
+                    ->label('Atur Member')
+                    ->icon('heroicon-o-users')
+                    ->form([
+                        Select::make('members')
+                            ->label('Member')
+                            ->placeholder('Pilih member yang akan dihandle')
+                            ->options(Member::query()
+                                ->with('user')
+                                ->get()
+                                ->mapWithKeys(function ($member) {
+                                    // Tampilkan nama member dengan email
+                                    $label = $member->user?->name ?? "Member #{$member->id}";
+                                    
+                                    if ($member->user?->email) {
+                                        $label .= " ({$member->user->email})";
+                                    }
+                                    
+                                    return [$member->id => $label];
+                                })
+                            )
+                            ->multiple() // Relasi Many-to-Many
+                            ->preload()
+                            ->searchable()
+                            // ✅ DEFAULT VALUE dari member yang sudah di-assign
+                            ->default(fn (Coach $record) => $record->members->pluck('id')->toArray()),
+                    ])
+                    ->action(function (Coach $record, array $data): void {
+                        // Sinkronkan (sync) relasi members dengan data yang dipilih
+                        $record->members()->sync($data['members']);
+                    })
+                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
                 ViewAction::make()
                     ->label('')
                     ->button()
@@ -249,7 +337,7 @@ class CoachesTable
                         $record->schedules()->sync($data['schedules']);
                     })
                     // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
-                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'super_admin'])),
+                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
