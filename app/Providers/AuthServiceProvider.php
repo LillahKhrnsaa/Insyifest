@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Member;
+use App\Policies\MemberPolicy;
+
 use App\Models\PaymentHistory;
 use App\Policies\PaymentHistoryPolicy;
 

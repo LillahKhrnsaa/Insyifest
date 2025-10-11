@@ -25,6 +25,14 @@ class Member extends Model
         'end_date',
     ];
 
+     protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
+
     /**
      * Get the user that owns the member profile.
      */
