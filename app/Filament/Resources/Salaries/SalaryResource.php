@@ -18,6 +18,21 @@ use Filament\Tables\Table;
 
 class SalaryResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-currency-dollar';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Gaji';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Finance & Payment';
+    }
+
     protected static ?string $model = Salary::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

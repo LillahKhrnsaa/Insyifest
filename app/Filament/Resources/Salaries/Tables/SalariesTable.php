@@ -13,6 +13,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Actions\DeleteAction;
 
 class SalariesTable
 {
@@ -138,13 +139,36 @@ class SalariesTable
                     }),
             ])
             ->recordActions([
-                // 👁️ View Action
                 ViewAction::make()
-                    ->icon('heroicon-o-eye'),
+                    ->label('')
+                    ->button()
+                    ->tooltip('View details')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->size('sm')
+                    ->extraAttributes([
+                        'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2']),
 
-                // ✏️ Edit Action
                 EditAction::make()
-                    ->icon('heroicon-o-pencil-square'),
+                    ->label('')
+                    ->button()
+                    ->tooltip('Edit')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->size('sm')
+                    ->extraAttributes([
+                        'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2']),
+
+                DeleteAction::make()
+                    ->label('')
+                    ->button()
+                    ->tooltip('Delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->size('sm')
+                    ->requiresConfirmation()
+                    ->extraAttributes([
+                        'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
 
                 // 📄 Export PDF Action
                 Action::make('exportPdf')

@@ -18,6 +18,15 @@ use Filament\Tables\Table;
 
 class PaymentHistoryResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-credit-card';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Finance & Payment';
+    }
     protected static ?string $model = PaymentHistory::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -50,9 +59,6 @@ class PaymentHistoryResource extends Resource
     {
         return [
             'index' => ListPaymentHistories::route('/'),
-            'create' => CreatePaymentHistory::route('/create'),
-            'view' => ViewPaymentHistory::route('/{record}'),
-            'edit' => EditPaymentHistory::route('/{record}/edit'),
         ];
     }
 }

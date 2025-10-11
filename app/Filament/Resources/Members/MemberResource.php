@@ -18,6 +18,16 @@ use Filament\Tables\Table;
 
 class MemberResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-user-group';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Training';
+    }
+
     protected static ?string $model = Member::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

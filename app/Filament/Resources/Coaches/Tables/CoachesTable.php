@@ -22,6 +22,7 @@ use App\Models\Member;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\ActionGroup;
 
 class CoachesTable
 {
@@ -178,166 +179,168 @@ class CoachesTable
                     }),
             ])
             ->recordActions([
-                Action::make('viewMembers')
-                    ->label('Lihat Member')
-                    ->icon('heroicon-o-users')
-                    ->color('info')
-                    ->modalHeading(fn ($record) => 'Member yang Di-assign')
-                    ->modalDescription(fn ($record) => 'Coach: ' . ($record->name ?? '-'))
-                    ->infolist(function ($record): array {
-                        if ($record->members->isEmpty()) {
-                            return [
-                                Section::make()
-                                    ->schema([
-                                        TextEntry::make('empty')
-                                            ->label('')
-                                            ->state('Belum ada member yang di-assign ke coach ini.')
-                                            ->color('warning'),
-                                    ]),
-                            ];
-                        }
-
-                        return [
-                            Section::make('Daftar Member')
-                                ->schema([
-                                    RepeatableEntry::make('members')
-                                        ->label('')
+                ActionGroup::make([
+                    Action::make('viewMembers')
+                        ->label('Lihat Member')
+                        ->icon('heroicon-o-users')
+                        ->color('info')
+                        ->modalHeading(fn ($record) => 'Member yang Di-assign')
+                        ->modalDescription(fn ($record) => 'Coach: ' . ($record->name ?? '-'))
+                        ->infolist(function ($record): array {
+                            if ($record->members->isEmpty()) {
+                                return [
+                                    Section::make()
                                         ->schema([
-                                            TextEntry::make('user.name')
-                                                ->label('Nama Member')
-                                                ->weight('bold')
-                                                ->icon('heroicon-o-user')
-                                                ->default('-'),
-                                            TextEntry::make('user.email')
-                                                ->label('Email')
-                                                ->icon('heroicon-o-envelope')
-                                                ->copyable()
-                                                ->default('-'),
-                                            TextEntry::make('created_at')
-                                                ->label('Bergabung Sejak')
-                                                ->icon('heroicon-o-calendar')
-                                                ->dateTime('d M Y')
-                                                ->default('-'),
-                                        ])
-                                        ->columns(3)
-                                        ->columnSpanFull(),
-                                ])
-                                ->collapsible()
-                                ->collapsed(false),
-                        ];
-                    })
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Tutup')
-                    ->slideOver()
-                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
-                Action::make('assignMember')
-                    ->label('Atur Member')
-                    ->icon('heroicon-o-users')
-                    ->form([
-                        Select::make('members')
-                            ->label('Member')
-                            ->placeholder('Pilih member yang akan dihandle')
-                            ->options(Member::query()
-                                ->with('user')
-                                ->get()
-                                ->mapWithKeys(function ($member) {
-                                    // Tampilkan nama member dengan email
-                                    $label = $member->user?->name ?? "Member #{$member->id}";
-                                    
-                                    if ($member->user?->email) {
-                                        $label .= " ({$member->user->email})";
-                                    }
-                                    
-                                    return [$member->id => $label];
-                                })
-                            )
-                            ->multiple() // Relasi Many-to-Many
-                            ->preload()
-                            ->searchable()
-                            // ✅ DEFAULT VALUE dari member yang sudah di-assign
-                            ->default(fn (Coach $record) => $record->members->pluck('id')->toArray()),
-                    ])
-                    ->action(function (Coach $record, array $data): void {
-                        // Sinkronkan (sync) relasi members dengan data yang dipilih
-                        $record->members()->sync($data['members']);
-                    })
-                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
-                ViewAction::make()
+                                            TextEntry::make('empty')
+                                                ->label('')
+                                                ->state('Belum ada member yang di-assign ke coach ini.')
+                                                ->color('warning'),
+                                        ]),
+                                ];
+                            }
+    
+                            return [
+                                Section::make('Daftar Member')
+                                    ->schema([
+                                        RepeatableEntry::make('members')
+                                            ->label('')
+                                            ->schema([
+                                                TextEntry::make('user.name')
+                                                    ->label('Nama Member')
+                                                    ->weight('bold')
+                                                    ->icon('heroicon-o-user')
+                                                    ->default('-'),
+                                                TextEntry::make('user.email')
+                                                    ->label('Email')
+                                                    ->icon('heroicon-o-envelope')
+                                                    ->copyable()
+                                                    ->default('-'),
+                                                TextEntry::make('created_at')
+                                                    ->label('Bergabung Sejak')
+                                                    ->icon('heroicon-o-calendar')
+                                                    ->dateTime('d M Y')
+                                                    ->default('-'),
+                                            ])
+                                            ->columns(3)
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsible()
+                                    ->collapsed(false),
+                            ];
+                        })
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Tutup')
+                        ->slideOver()
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
+                    Action::make('assignMember')
+                        ->label('Atur Member')
+                        ->icon('heroicon-o-users')
+                        ->form([
+                            Select::make('members')
+                                ->label('Member')
+                                ->placeholder('Pilih member yang akan dihandle')
+                                ->options(Member::query()
+                                    ->with('user')
+                                    ->get()
+                                    ->mapWithKeys(function ($member) {
+                                        // Tampilkan nama member dengan email
+                                        $label = $member->user?->name ?? "Member #{$member->id}";
+                                        
+                                        if ($member->user?->email) {
+                                            $label .= " ({$member->user->email})";
+                                        }
+                                        
+                                        return [$member->id => $label];
+                                    })
+                                )
+                                ->multiple() // Relasi Many-to-Many
+                                ->preload()
+                                ->searchable()
+                                // ✅ DEFAULT VALUE dari member yang sudah di-assign
+                                ->default(fn (Coach $record) => $record->members->pluck('id')->toArray()),
+                        ])
+                        ->action(function (Coach $record, array $data): void {
+                            // Sinkronkan (sync) relasi members dengan data yang dipilih
+                            $record->members()->sync($data['members']);
+                        })
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
+                    ViewAction::make()
+                        ->label('Lihat')
+                        ->tooltip('Lihat detail')
+                        ->icon('heroicon-o-eye')
+                        ->color('gray')
+                        ->size('sm')
+                        ->extraAttributes([
+                            'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2'
+                        ]),
+    
+                    EditAction::make()
+                        ->label('Edit')
+                        ->tooltip('Edit coach')
+                        ->icon('heroicon-o-pencil-square')
+                        ->color('primary')
+                        ->size('sm')
+                        ->extraAttributes([
+                            'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2'
+                        ]),
+    
+                    DeleteAction::make()
+                        ->label('Delete')
+                        ->tooltip('Hapus coach')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->size('sm')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus Coach')
+                        ->modalDescription('Yakin ingin menghapus coach ini? Data user terkait juga akan terhapus!')
+                        ->modalSubmitActionLabel('Hapus')
+                        ->modalCancelActionLabel('Batal')
+                        ->extraAttributes([
+                            'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2'
+                        ])
+                        ->before(function ($record) {
+                            // Hapus user terkait juga
+                            $record->user?->delete();
+                        }),
+    
+                    Action::make('assignSchedule')
+                        ->label('Atur Jadwal')
+                        ->icon('heroicon-o-calendar-days')
+                        ->form([
+                            Select::make('schedules')
+                                ->label('Jadwal Latihan')
+                                ->placeholder('Pilih jadwal yang diajar')
+                                ->options(TrainingSchedule::pluck('day', 'id')->map(function ($day, $id) {
+                                    // Tampilkan hari dengan terjemahan (seperti di table)
+                                    $translatedDay = match ($day) {
+                                        'MONDAY' => 'Senin',
+                                        'TUESDAY' => 'Selasa',
+                                        'WEDNESDAY' => 'Rabu',
+                                        'THURSDAY' => 'Kamis',
+                                        'FRIDAY' => 'Jumat',
+                                        'SATURDAY' => 'Sabtu',
+                                        'SUNDAY' => 'Minggu',
+                                        default => $day,
+                                    };
+                                    // Tambahkan ID dan Place untuk kejelasan di Select
+                                    $schedule = TrainingSchedule::find($id);
+                                    return "{$translatedDay} - {$schedule->time} ({$schedule->place})";
+                                }))
+                                ->multiple() // Relasi Many-to-Many
+                                ->preload()
+                                // ✅ PERBAIKAN: DEFAULT VALUE
+                                ->default(fn (Coach $record) => $record->schedules->pluck('id')->toArray()),
+                        ])
+                        ->action(function (Coach $record, array $data): void {
+                            // Sinkronkan (sync) relasi schedules dengan data yang dipilih
+                            $record->schedules()->sync($data['schedules']);
+                        })
+                        // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
+                ])
+                    ->icon('heroicon-o-bars-4') // ini ikon burger menu (⋮)
                     ->label('')
-                    ->button()
-                    ->tooltip('Lihat detail')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->size('sm')
-                    ->extraAttributes([
-                        'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2'
-                    ]),
-
-                EditAction::make()
-                    ->label('')
-                    ->button()
-                    ->tooltip('Edit coach')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('primary')
-                    ->size('sm')
-                    ->extraAttributes([
-                        'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2'
-                    ]),
-
-                DeleteAction::make()
-                    ->label('')
-                    ->button()
-                    ->tooltip('Hapus coach')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->size('sm')
-                    ->requiresConfirmation()
-                    ->modalHeading('Hapus Coach')
-                    ->modalDescription('Yakin ingin menghapus coach ini? Data user terkait juga akan terhapus!')
-                    ->modalSubmitActionLabel('Hapus')
-                    ->modalCancelActionLabel('Batal')
-                    ->extraAttributes([
-                        'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2'
-                    ])
-                    ->before(function ($record) {
-                        // Hapus user terkait juga
-                        $record->user?->delete();
-                    }),
-
-                Action::make('assignSchedule')
-                    ->label('Atur Jadwal')
-                    ->icon('heroicon-o-calendar-days')
-                    ->form([
-                        Select::make('schedules')
-                            ->label('Jadwal Latihan')
-                            ->placeholder('Pilih jadwal yang diajar')
-                            ->options(TrainingSchedule::pluck('day', 'id')->map(function ($day, $id) {
-                                // Tampilkan hari dengan terjemahan (seperti di table)
-                                $translatedDay = match ($day) {
-                                    'MONDAY' => 'Senin',
-                                    'TUESDAY' => 'Selasa',
-                                    'WEDNESDAY' => 'Rabu',
-                                    'THURSDAY' => 'Kamis',
-                                    'FRIDAY' => 'Jumat',
-                                    'SATURDAY' => 'Sabtu',
-                                    'SUNDAY' => 'Minggu',
-                                    default => $day,
-                                };
-                                // Tambahkan ID dan Place untuk kejelasan di Select
-                                $schedule = TrainingSchedule::find($id);
-                                return "{$translatedDay} - {$schedule->time} ({$schedule->place})";
-                            }))
-                            ->multiple() // Relasi Many-to-Many
-                            ->preload()
-                            // ✅ PERBAIKAN: DEFAULT VALUE
-                            ->default(fn (Coach $record) => $record->schedules->pluck('id')->toArray()),
-                    ])
-                    ->action(function (Coach $record, array $data): void {
-                        // Sinkronkan (sync) relasi schedules dengan data yang dipilih
-                        $record->schedules()->sync($data['schedules']);
-                    })
-                    // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
-                    ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
+                    ->button(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -25,22 +25,27 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandLogo(asset('images/logo.png')) // Path ke logo utama
+            ->brandLogoHeight('3rem')
+            ->favicon(asset('images/logo.png'))
+            ->brandName('Cikampek Swimming Club')
             ->authGuard('web')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
+            // ->pages([
+            //     Dashboard::class,
+            // ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
@@ -61,4 +66,6 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ]);
     }
+
+    
 }

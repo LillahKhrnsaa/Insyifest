@@ -18,6 +18,20 @@ use Filament\Tables\Table;
 
 class FormEksternalResource extends Resource
 {
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-pencil-square';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Form';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Form';
+    }
     protected static ?string $model = FormEksternal::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

@@ -18,6 +18,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 class CoachResource extends Resource
 {
+
+    public static function getNavigationIcon(): ?string
+    {
+        return 'heroicon-o-user-circle';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Training';
+    }
     protected static ?string $model = Coach::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
