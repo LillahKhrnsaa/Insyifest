@@ -87,34 +87,50 @@
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
     }">
     
-    <header x-data="{ open: false }" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <a href="{{ route('landing') }}" class="flex-shrink-0"><img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-14 w-auto"></a>
-                <div class="hidden md:flex md:items-center md:space-x-8">
-                    <a href="#keunggulan" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Keunggulan</a>
-                    <a href="#jadwal" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Jadwal</a>
-                    <a href="#paket" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Paket</a>
-                    <a href="#galeri" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Galeri</a> {{-- Link Baru --}}
-                    <a href="#berita" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Berita</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/admin" class="hidden md:inline-block bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-md">Login</a>
-                    <div class="md:hidden"><button @click="open = !open" class="p-2 rounded-md text-slate-700 focus:outline-none"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button></div>
+<header x-data="{ open: false }" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+            <a href="{{ route('landing') }}" class="flex-shrink-0">
+                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-14 w-auto">
+            </a>
+            <div class="hidden md:flex md:items-center md:space-x-8">
+                <!-- Link Home ditambahkan di sini -->
+                <a href="{{ route('landing') }}" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors flex items-center gap-1">Home</a>
+                <a href="{{ route('landing') }}#keunggulan" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Keunggulan</a>
+                <a href="{{ route('landing') }}#jadwal" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Jadwal</a>
+                <a href="{{ route('landing') }}#paket" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Paket</a>
+                <a href="{{ route('landing') }}#galeri" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Galeri</a>
+                <a href="{{ route('landing') }}#berita" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Berita</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/admin" class="hidden md:inline-block bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-md">Login</a>
+                <div class="md:hidden">
+                    <button @click="open = !open" class="p-2 rounded-md text-slate-700 focus:outline-none hover:bg-slate-100 transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
                 </div>
             </div>
-            <div x-show="open" @click.away="open = false" x-transition class="md:hidden bg-white rounded-b-lg py-2 shadow-lg" style="display: none;">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="#keunggulan" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Keunggulan</a>
-                    <a href="#jadwal" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Jadwal</a>
-                    <a href="#paket" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Paket</a>
-                    <a href="#galeri" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Galeri</a> {{-- Link Baru --}}
-                    <a href="#berita" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Berita</a>
-                    <a href="/admin" class="block text-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:from-cyan-400 hover:to-blue-500 mt-2 mx-2">Login Anggota</a>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div x-show="open" @click.away="open = false" x-transition class="md:hidden bg-white rounded-b-lg py-2 shadow-lg" style="display: none;">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <!-- Link Home untuk mobile -->
+                <a href="{{ route('landing') }}" @click="open = false" class="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Home</a>
+                <a href="{{ route('landing') }}#keunggulan" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Keunggulan</a>
+                <a href="{{ route('landing') }}#jadwal" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Jadwal</a>
+                <a href="{{ route('landing') }}#paket" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Paket</a>
+                <a href="{{ route('landing') }}#galeri" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Galeri</a>
+                <a href="{{ route('landing') }}#berita" @click="open = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100 transition-colors">Berita</a>
+                <div class="pt-2 border-t border-slate-200">
+                    <a href="/admin" class="block text-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all mt-2 mx-2">Login</a>
                 </div>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
 
     <main>@yield('content')</main>
 
