@@ -66,6 +66,8 @@ class CoachResource extends Resource
     {
         return [
             'index' => ListCoaches::route('/'),
+            'create' => CreateCoach::route('/create'),  // ✅ TAMBAH INI
+            'edit' => EditCoach::route('/{record}/edit'),
         ];
     }
 }
