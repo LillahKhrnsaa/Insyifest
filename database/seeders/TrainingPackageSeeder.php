@@ -12,22 +12,22 @@ class TrainingPackageSeeder extends Seeder
         DB::table('training_packages')->insert([
             [
                 'name' => 'Basic Training Package',
-                'price' => 199000.00,
-                'description' => 'Cocok untuk pemula yang ingin memahami dasar-dasar pelatihan.',
+                'price' => 200000.00,
+                'description' => '4x Pertemuan/bulan',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'name' => 'Advanced Training Package',
-                'price' => 499000.00,
-                'description' => 'Tingkatkan kemampuan dengan materi lanjutan dan sesi praktik intensif.',
+                'price' => 350000.00,
+                'description' => '8x Pertemuan/bulan',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'name' => 'Professional Training Package',
-                'price' => 999000.00,
-                'description' => 'Program eksklusif untuk profesional yang ingin sertifikasi dan mentoring pribadi.',
+                'price' => 40000.00,
+                'description' => '12x Pertemuan/bulan',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

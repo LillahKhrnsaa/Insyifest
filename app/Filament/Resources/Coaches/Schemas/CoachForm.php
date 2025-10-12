@@ -130,7 +130,8 @@ class CoachForm
                                     ->required()
                                     ->placeholder('Contoh: 081234567890')
                                     ->prefixIcon('heroicon-o-phone')
-                                    ->maxLength(15),
+                                    ->maxLength(15)
+                                    ->helperText('Masukkan nomor telepon unik yang belum pernah terdaftar.'),
 
                                 Select::make('gender')
                                     ->label('Jenis Kelamin')

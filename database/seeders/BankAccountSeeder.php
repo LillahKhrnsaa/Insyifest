@@ -18,22 +18,6 @@ class BankAccountSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
-                'bank_name' => 'Bank Mandiri',
-                'account_number' => '9876543210',
-                'account_holder' => 'Siti Nurhaliza',
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'bank_name' => 'Bank Negara Indonesia (BNI)',
-                'account_number' => '5558883332',
-                'account_holder' => 'Budi Santoso',
-                'is_active' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
         ]);
     }
 }

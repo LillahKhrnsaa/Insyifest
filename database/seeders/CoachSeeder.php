@@ -17,26 +17,98 @@ class CoachSeeder extends Seeder
         // Data untuk 3 coach baru
         $coachesData = [
             [
-                'name' => 'Budi Pelatih',
-                'email' => 'budi.coach@example.com',
-                'phone' => '081211112222',
-                'gender' => 'MALE',
-                'bio' => 'Pelatih renang gaya bebas dengan pengalaman 5 tahun.'
-            ],
-            [
-                'name' => 'Siti Pelatih',
-                'email' => 'siti.coach@example.com',
-                'phone' => '081233334444',
+                'name' => 'Asri Suci Alfiani',
+                'email' => 'asri.suci.alfiani@cikampekswimming.gmail.com',
+                'phone' => '085219301750',
                 'gender' => 'FEMALE',
-                'bio' => 'Spesialis gaya kupu-kupu dan teknik pernapasan.'
+                'bio' => ''
             ],
             [
-                'name' => 'Agus Pelatih',
-                'email' => 'agus.coach@example.com',
-                'phone' => '081255556666',
-                'gender' => 'MALE',
-                'bio' => 'Berfokus pada pembinaan atlet junior dan pemula.'
+                'name' => 'Kharisma',
+                'email' => 'kharisma@cikampekswimming.gmail.com',
+                'phone' => '081291846070',
+                'gender' => 'FEMALE',
+                'bio' => ''
             ],
+            [
+                'name' => 'Dony',
+                'email' => 'dony@cikampekswimming.gmail.com',
+                'phone' => '081292626315',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Fabiyan',
+                'email' => 'fabiyan@cikampekswimming.gmail.com',
+                'phone' => '089638534624',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Fauzan',
+                'email' => 'fauzan@cikampekswimming.gmail.com',
+                'phone' => '085723836894',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Endah',
+                'email' => 'endah@cikampekswimming.gmail.com',
+                'phone' => '08978683958',
+                'gender' => 'FEMALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Hafeed',
+                'email' => 'hafeed@cikampekswimming.gmail.com',
+                'phone' => '089657439609',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Salsa',
+                'email' => 'Salsa@cikampekswimming.gmail.com',
+                'phone' => '089539724070',
+                'gender' => 'FEMALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Iman Fala',
+                'email' => 'iman.fala@cikampekswimming.gmail.com',
+                'phone' => '082297010357',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Juan',
+                'email' => 'Juan@cikampekswimming.gmail.com',
+                'phone' => '089632305678',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Rindy',
+                'email' => 'Rindy@cikampekswimming.gmail.com',
+                'phone' => '085322328887',
+                'gender' => 'FEMALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Tegar',
+                'email' => 'tegar@cikampekswimming.gmail.com',
+                'phone' => '085886515053',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Riana',
+                'email' => 'Riana@cikampekswimming.gmail.com',
+                'phone' => '081292807172',
+                'gender' => 'FEMALE',
+                'bio' => ''
+            ],
+            
+
         ];
 
         foreach ($coachesData as $data) {
@@ -47,7 +119,7 @@ class CoachSeeder extends Seeder
                     'name' => $data['name'],
                     'phone' => $data['phone'],
                     'gender' => $data['gender'],
-                    'password' => Hash::make('password123'),
+                    'password' => Hash::make('1234567890'),
                 ]
             );
 
