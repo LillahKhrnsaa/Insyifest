@@ -1,104 +1,10 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrasi Member - Cikampek Swimming Club</title>
+@extends('layouts.app')
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=nunito:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+@section('title', 'Registrasi Member - Cikampek Swimming Club')
 
-    <style>
-        body { 
-            font-family: 'Nunito', sans-serif; 
-        }
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .fade-in.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
-</head>
-<body class="bg-gradient-to-br from-sky-50 to-cyan-50 min-h-screen">
-    <!-- Header -->
-<header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-    <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-20">
-            <a href="{{ route('landing') }}" class="flex-shrink-0">
-                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-14 w-auto">
-            </a>
-            <div class="hidden md:flex md:items-center md:space-x-8">
-                <!-- Link Home dengan icon -->
-                <a href="{{ route('landing') }}" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors flex items-center gap-2">Home</a>
-                <a href="{{ route('landing') }}#keunggulan" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Keunggulan</a>
-                <a href="{{ route('landing') }}#jadwal" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Jadwal</a>
-                <a href="{{ route('landing') }}#paket" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Paket</a>
-                <!-- Link Beranda tetap dipertahankan -->
-                <a href="{{ route('landing') }}" class="text-slate-600 hover:text-blue-500 font-semibold transition-colors">Beranda</a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="/admin" class="hidden md:inline-block bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-md">Login</a>
-                
-                <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button type="button" class="p-2 rounded-md text-slate-700 hover:text-blue-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" onclick="toggleMobileMenu()">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Mobile Menu -->
-        <div id="mobileMenu" class="md:hidden hidden bg-white rounded-b-lg py-2 shadow-lg">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="{{ route('landing') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Home</a>
-                <a href="{{ route('landing') }}#keunggulan" class="block px-3 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Keunggulan</a>
-                <a href="{{ route('landing') }}#jadwal" class="block px-3 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Jadwal</a>
-                <a href="{{ route('landing') }}#paket" class="block px-3 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Paket</a>
-                <a href="{{ route('landing') }}" class="block px-3 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Beranda</a>
-                <div class="pt-3 border-t border-slate-200 mt-2">
-                    <a href="/admin" class="block text-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-md">Login</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
-
-<script>
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    mobileMenu.classList.toggle('hidden');
-}
-
-// Close mobile menu when clicking outside
-document.addEventListener('click', function(event) {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const menuButton = document.querySelector('button[onclick="toggleMobileMenu()"]');
-    
-    if (!mobileMenu.contains(event.target) && !menuButton.contains(event.target)) {
-        mobileMenu.classList.add('hidden');
-    }
-});
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('#mobileMenu a').forEach(link => {
-    link.addEventListener('click', () => {
-        document.getElementById('mobileMenu').classList.add('hidden');
-    });
-});
-</script>
-
-    <!-- Main Content -->
-    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+@section('content')
+<div class="bg-gradient-to-br from-sky-50 to-cyan-50 min-h-screen pt-20">
+    <div class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-5">
             <div class="absolute top-10 left-10 w-40 h-40 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
@@ -312,48 +218,24 @@ document.querySelectorAll('#mobileMenu a').forEach(link => {
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Footer -->
-    <footer class="bg-gradient-to-br from-blue-600 to-cyan-700 text-white mt-20">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="text-center">
-                <img src="{{ asset('images/logocsc.png') }}" alt="Logo CSC" class="h-16 w-auto mx-auto mb-4">
-                <p class="text-blue-100 max-w-2xl mx-auto">Membentuk perenang berprestasi dengan dedikasi dan program latihan terbaik di Cikampek.</p>
-                <div class="mt-6 pt-6 border-t border-blue-500/30">
-                    <p class="text-blue-200">&copy; {{ date('Y') }} Cikampek Swimming Club. All Rights Reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Price calculation
-        document.getElementById('training_package_id').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const price = selectedOption.getAttribute('data-price');
-            const formattedPrice = new Intl.NumberFormat('id-ID', { 
-                style: 'currency', 
-                currency: 'IDR', 
-                minimumFractionDigits: 0 
-            }).format(price);
-            document.getElementById('total_price').textContent = formattedPrice;
-        });
-        
-        // Initialize price on page load
-        document.addEventListener('DOMContentLoaded', (event) => {
-            document.getElementById('training_package_id').dispatchEvent(new Event('change'));
-            
-            // Fade in animation
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-        });
-    </script>
-</body>
-</html>
+<script>
+    // Price calculation
+    document.getElementById('training_package_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const price = selectedOption.getAttribute('data-price');
+        const formattedPrice = new Intl.NumberFormat('id-ID', { 
+            style: 'currency', 
+            currency: 'IDR', 
+            minimumFractionDigits: 0 
+        }).format(price);
+        document.getElementById('total_price').textContent = formattedPrice;
+    });
+    
+    // Initialize price on page load
+    document.addEventListener('DOMContentLoaded', (event) => {
+        document.getElementById('training_package_id').dispatchEvent(new Event('change'));
+    });
+</script>
+@endsection

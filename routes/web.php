@@ -22,11 +22,7 @@ Route::get('/register/member', [MemberRegistrationController::class, 'create'])
 Route::post('/register/member', [MemberRegistrationController::class, 'store'])
     ->middleware('guest');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
-
-Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->name('logout');
+// Login routes for members
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
