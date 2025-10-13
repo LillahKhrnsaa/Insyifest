@@ -30,7 +30,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->authMiddleware([
+                Authenticate::class, // <-- Baris ini sudah cukup untuk melindungi panel
+            ])
             ->brandLogo(asset('images/logo.png')) // Path ke logo utama
             ->brandLogoHeight('3rem')
             ->favicon(asset('images/logo.png'))

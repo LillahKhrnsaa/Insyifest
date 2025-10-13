@@ -23,21 +23,25 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // 1. UBAH VALIDASI DARI 'email' MENJADI 'phone'
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'phone' => ['required', 'string'], // <-- DIUBAH DARI 'email'
             'password' => ['required'],
         ]);
 
+        // Proses otentikasi (Auth::attempt) akan otomatis menggunakan 'phone'
+        // karena $credentials sekarang berisi ['phone' => '...', 'password' => '...']
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             // Redirect semua user ke admin panel Filament
-            return redirect()->intended('/admin');
+            return redirect('/admin');
         }
 
+        // 2. UBAH PENANGANAN ERROR UNTUK 'phone'
         return back()->withErrors([
-            'email' => 'Email atau password yang diberikan tidak valid.',
-        ])->onlyInput('email');
+            'phone' => 'Nomor telepon atau password yang diberikan tidak valid.', // <-- DIUBAH
+        ])->onlyInput('phone'); // <-- DIUBAH
     }
 
     /**
@@ -48,9 +52,9 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('login');
+        // Redirect ke route yang BERNAMA 'login'
+        return redirect()->route('login'); 
     }
 }

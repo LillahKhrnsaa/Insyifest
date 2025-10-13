@@ -22,7 +22,10 @@ Route::get('/register/member', [MemberRegistrationController::class, 'create'])
 Route::post('/register/member', [MemberRegistrationController::class, 'store'])
     ->middleware('guest');
 
-// Login routes for members
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+// Route untuk menampilkan halaman login (GET request)
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login'); // <--- ini penting!
+
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
