@@ -18,93 +18,114 @@ class CoachSeeder extends Seeder
         $coachesData = [
             [
                 'name' => 'Asri Suci Alfiani',
-                'email' => 'asri.suci.alfiani@cikampekswimming.gmail.com',
+                'email' => 'asri.suci@cikampekswimming.gmail.com',
                 'phone' => '085219301750',
                 'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Kharisma',
-                'email' => 'kharisma@cikampekswimming.gmail.com',
+                'name' => 'Febri Maharatri Kharisma Amalia Suci',
+                'email' => 'febri.maharatri@cikampekswimming.gmail.com',
                 'phone' => '081291846070',
                 'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Dony',
-                'email' => 'dony@cikampekswimming.gmail.com',
+                'name' => 'Dony Adhi Nugroho Hidayat',
+                'email' => 'dony.adhi@cikampekswimming.gmail.com',
                 'phone' => '081292626315',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Fabiyan',
-                'email' => 'fabiyan@cikampekswimming.gmail.com',
+                'name' => 'Fabiyan Fahliyansyah',
+                'email' => 'fabiyan.fahliyansyah@cikampekswimming.gmail.com',
                 'phone' => '089638534624',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Fauzan',
-                'email' => 'fauzan@cikampekswimming.gmail.com',
-                'phone' => '085723836894',
+                'name' => 'Fauzan Noer Afrizal',
+                'email' => 'fauzan.noer@cikampekswimming.gmail.com',
+                'phone' => '08972703645',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Endah',
-                'email' => 'endah@cikampekswimming.gmail.com',
+                'name' => 'Endah Khairun Nissa',
+                'email' => 'endah.khairun@cikampekswimming.gmail.com',
                 'phone' => '08978683958',
                 'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Hafeed',
-                'email' => 'hafeed@cikampekswimming.gmail.com',
+                'name' => 'Mohammad Hafid Siddik',
+                'email' => 'mohammad.hafid@cikampekswimming.gmail.com',
                 'phone' => '089657439609',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Salsa',
-                'email' => 'Salsa@cikampekswimming.gmail.com',
+                'name' => 'Salsa Ramdiyani Eki Putri',
+                'email' => 'salsa.ramdiyani@cikampekswimming.gmail.com',
                 'phone' => '089539724070',
                 'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Iman Fala',
+                'name' => 'Iman Fala Handoko',
                 'email' => 'iman.fala@cikampekswimming.gmail.com',
                 'phone' => '082297010357',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Juan',
-                'email' => 'Juan@cikampekswimming.gmail.com',
+                'name' => 'Juan Njawi Wandhira',
+                'email' => 'juan.njawi@cikampekswimming.gmail.com',
                 'phone' => '089632305678',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Rindy',
-                'email' => 'Rindy@cikampekswimming.gmail.com',
+                'name' => 'Rindy Antika',
+                'email' => 'rindy.antika@cikampekswimming.gmail.com',
                 'phone' => '085322328887',
                 'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Tegar',
-                'email' => 'tegar@cikampekswimming.gmail.com',
+                'name' => 'Muhammad Tegar Satrio',
+                'email' => 'muhammad.tegar@cikampekswimming.gmail.com',
                 'phone' => '085886515053',
                 'gender' => 'MALE',
                 'bio' => ''
             ],
             [
-                'name' => 'Riana',
-                'email' => 'Riana@cikampekswimming.gmail.com',
-                'phone' => '081292807172',
+                'name' => 'Arsad Fany Ibrahim',
+                'email' => 'arsad.fany@cikampekswimming.gmail.com',
+                'phone' => '0895348074062',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Alif Ikrar Prabu',
+                'email' => 'alif.ikrar@cikampekswimming.gmail.com',
+                'phone' => '083804665952',
+                'gender' => 'MALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Adinda Putri Larasati',
+                'email' => 'adinda.putri@cikampekswimming.gmail.com',
+                'phone' => '085885060925',
                 'gender' => 'FEMALE',
+                'bio' => ''
+            ],
+            [
+                'name' => 'Moh Lutfi Adistira Wirawan',
+                'email' => 'moh.luthfi@cikampekswimming.gmail.com',
+                'phone' => '081293438506',
+                'gender' => 'MALE',
                 'bio' => ''
             ],
             
