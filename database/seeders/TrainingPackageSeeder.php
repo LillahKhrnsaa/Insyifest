@@ -27,7 +27,7 @@ class TrainingPackageSeeder extends Seeder
             [
                 'name' => 'Professional Training Package',
                 'price' => 40000.00,
-                'description' => '12x Pertemuan/bulan',
+                'description' => '12x Pertemuan/bulann',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
