@@ -5,6 +5,15 @@ namespace App\Filament\Pages;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Icons\Heroicon;
+use App\Filament\Widgets\BankAccountWidget;
+use App\Filament\Widgets\CoachWidget;
+use App\Filament\Widgets\MemberWidget;
+use App\Filament\Widgets\TrainingPackageWidget;
+use App\Filament\Widgets\TrainingScheduleWidget;
+use App\Filament\Widgets\FormWidget;
+use App\Filament\Widgets\PostWidget;
+
+
 
 class CustomDashboard extends BaseDashboard
 {
@@ -31,31 +40,31 @@ class CustomDashboard extends BaseDashboard
 
         // Cek permission per widget
         if ($user?->can('viewAny.bank_accounts')) {
-            $widgets[] = \App\Filament\Widgets\BankAccountWidget::class;
+            $widgets[] = BankAccountWidget::class;
         }
 
         if ($user?->can('viewAny.coaches')) {
-            $widgets[] = \App\Filament\Widgets\CoachWidget::class;
+            $widgets[] = CoachWidget::class;
         }
 
         if ($user?->can('viewAny.members')) {
-            $widgets[] = \App\Filament\Widgets\MemberWidget::class;
+            $widgets[] = MemberWidget::class;
         }
 
         if ($user?->can('viewAny.training_packages')) {
-            $widgets[] = \App\Filament\Widgets\TrainingPackageWidget::class;
+            $widgets[] = TrainingPackageWidget::class;
         }
 
         if ($user?->can('viewAny.training_schedules')) {
-            $widgets[] = \App\Filament\Widgets\TrainingScheduleWidget::class;
+            $widgets[] = TrainingScheduleWidget::class;
         }
 
         if ($user?->can('viewAny.form_eksternals')) {
-            $widgets[] = \App\Filament\Widgets\FormWidget::class;
+            $widgets[] = FormWidget::class;
         }
 
         if ($user?->can('viewAny.general_materials')) {
-            $widgets[] = \App\Filament\Widgets\PostWidget::class;
+            $widgets[] = PostWidget::class;
         }
 
         return $widgets;
