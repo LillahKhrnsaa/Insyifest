@@ -18,9 +18,6 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(Request $request): RedirectResponse
     {
         // 1. UBAH VALIDASI DARI 'email' MENJADI 'phone'
