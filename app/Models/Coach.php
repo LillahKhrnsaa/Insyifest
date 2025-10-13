@@ -33,13 +33,6 @@ class Coach extends Model
     {
         return $this->user?->email;
     }
-    /**
-     * Get the user that owns the coach profile.
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function schedules(): BelongsToMany
     {
@@ -70,5 +63,12 @@ class Coach extends Model
             'coach_id',
             'member_id'
         )->withTimestamps();
+    }
+
+    public function user(): BelongsTo
+    {
+        // Model ini 'milik' (belongsTo) User
+        // berdasarkan foreign key 'user_id'
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
