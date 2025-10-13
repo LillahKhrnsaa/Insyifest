@@ -4,7 +4,8 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Facades\Auth;
-use Filament\Support\Icons\Heroicon;
+
+// Import semua widget yang kamu punya
 use App\Filament\Widgets\BankAccountWidget;
 use App\Filament\Widgets\CoachWidget;
 use App\Filament\Widgets\MemberWidget;
@@ -13,11 +14,8 @@ use App\Filament\Widgets\TrainingScheduleWidget;
 use App\Filament\Widgets\FormWidget;
 use App\Filament\Widgets\PostWidget;
 
-
-
 class CustomDashboard extends BaseDashboard
 {
-
     public static function getNavigationIcon(): ?string
     {
         return 'heroicon-o-home';
@@ -28,17 +26,29 @@ class CustomDashboard extends BaseDashboard
         return 'Dashboard';
     }
 
+    /**
+     * Menentukan layout grid dashboard
+     */
+    public function getColumns(): array
+    {
+        // Responsif: mobile = 1 kolom, desktop = 3 kolom
+        return [
+            'default' => 1,
+            'md' => 2,
+            'xl' => 3,
+        ];
+    }
 
     /**
-     * 🧩 Menentukan daftar widget yang muncul di dashboard
-     * berdasarkan permission Spatie.
+     * 🧩 Daftar widget dengan pengecekan permission
      */
     public function getWidgets(): array
     {
         $user = Auth::user();
+
         $widgets = [];
 
-        // Cek permission per widget
+        // --- BARIS 1 ---
         if ($user?->can('viewAny.bank_accounts')) {
             $widgets[] = BankAccountWidget::class;
         }
@@ -51,6 +61,7 @@ class CustomDashboard extends BaseDashboard
             $widgets[] = MemberWidget::class;
         }
 
+        // --- BARIS 2 ---
         if ($user?->can('viewAny.training_packages')) {
             $widgets[] = TrainingPackageWidget::class;
         }
@@ -63,6 +74,7 @@ class CustomDashboard extends BaseDashboard
             $widgets[] = FormWidget::class;
         }
 
+        // --- BARIS 3 (full width) ---
         if ($user?->can('viewAny.general_materials')) {
             $widgets[] = PostWidget::class;
         }
@@ -71,8 +83,7 @@ class CustomDashboard extends BaseDashboard
     }
 
     /**
-     * 🔒 (Opsional) Tentukan siapa yang bisa akses dashboard ini.
-     * Misal: hanya user yang punya minimal satu permission viewAny.
+     * 🔒 Batasi akses Dashboard hanya untuk user dengan minimal satu permission
      */
     public static function canAccess(): bool
     {
