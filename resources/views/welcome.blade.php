@@ -133,7 +133,12 @@
                             <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-slate-800">{{ $schedule->day }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-base text-slate-600">{{ $schedule->time }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-base text-slate-600">{{ $schedule->place }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-slate-800">{{ $schedule->coach->user->name ?? 'N/A' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-slate-800">
+                                {{-- KETERANGAN: Mengubah cara mengambil nama pelatih.
+                                     Kita ambil pelatih PERTAMA dari relasi 'coaches' (jamak).
+                                     Tanda tanya (?) adalah optional chaining untuk mencegah error jika tidak ada user. --}}
+                                {{ $schedule->coaches->first()?->user?->name ?? 'N/A' }}
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -145,6 +150,7 @@
         </div>
     </div>
 </section>
+
 
 {{-- Paket --}}
 <section id="paket" class="py-10 sm:py-24 bg-gradient-to-b from-sky-50 to-cyan-50 relative overflow-hidden">
@@ -242,7 +248,7 @@
             // Anda bisa passing variabel dari controller ke view, lalu JSON encode di sini
             images: [
                 { src: '{{ asset("images/bgcsc.jpg") }}', alt: 'Latihan Bersama Timboi' },
-                { src: '{{ asset("images/IMG-20251010-WA0056.jpg") }}', alt: 'Juara Lomba' },
+                { src: '{{ asset("images/IMG-20251010-WA0056.jpg") }}', alt: 'Tengkorak Cup 2 TA 2025' },
                 { src: '{{ asset("images/IMG-20251010-WA0076.jpg") }}', alt: 'Rutinitas Latihan' },
                 { src: '{{ asset("images/IMG-20251010-WA0079.jpg") }}', alt: 'Tim CSC 2025' },
             ],

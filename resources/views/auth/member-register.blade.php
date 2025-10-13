@@ -13,12 +13,10 @@
         </div>
 
         <div class="w-full max-w-4xl p-8 sm:p-10 space-y-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/50 fade-in relative z-10">
-            <!-- Success Header -->
+            <!-- Header -->
             <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-lg mb-6">
-                    <svg class="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                    </svg>
+                <div class="mx-auto flex items-center justify-center h-20 w-15 rounded-2xl bg-gradient-to-brshadow-lg mb-6">
+                    <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-24 w-auto">
                 </div>
                 <h1 class="text-3xl font-extrabold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Form Pendaftaran Member Baru</h1>
                 <p class="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">Bergabunglah dengan keluarga besar Cikampek Swimming Club dan mulailah petualangan renang Anda!</p>
@@ -27,20 +25,12 @@
             <!-- Status Messages -->
             @if(session('status'))
                 <div class="p-6 text-center text-green-800 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl border border-green-200 shadow-sm" role="alert">
-                    <div class="flex items-center justify-center mb-3">
-                        <div class="flex-shrink-0">
-                            <svg class="h-8 w-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </div>
                     <p class="font-bold text-xl">🎉 Pendaftaran Berhasil! 🎉</p>
                     <p class="mt-2 text-green-700">{{ session('status') }}</p>
                 </div>
             @endif
-
             @if(session('error'))
-                <div class="p-4 text-center text-red-800 bg-gradient-to-r from-red-100 to-pink-100 rounded-2xl border border-red-200 font-medium" role="alert">
+                 <div class="p-4 text-center text-red-800 bg-gradient-to-r from-red-100 to-pink-100 rounded-2xl border border-red-200 font-medium" role="alert">
                     {{ session('error') }}
                 </div>
             @endif
@@ -58,31 +48,22 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap</label>
-                            <input id="name" name="name" type="text" required 
-                                   class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                   value="{{ old('name') }}"
-                                   placeholder="Masukkan nama lengkap">
+                            <input id="name" name="name" type="text" required class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm" value="{{ old('name') }}" placeholder="Masukkan nama lengkap">
                             @error('name') <p class="mt-2 text-sm text-red-600 font-medium">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="phone" class="block text-sm font-semibold text-slate-700 mb-2">Nomor Telepon (Orang Tua/Wali)</label>
-                            <input id="phone" name="phone" type="tel" required 
-                                   class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                   value="{{ old('phone') }}"
-                                   placeholder="Contoh: 081234567890">
+                            <input id="phone" name="phone" type="tel" required class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm" value="{{ old('phone') }}" placeholder="Contoh: 081234567890">
                             @error('phone') <p class="mt-2 text-sm text-red-600 font-medium">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="birth_date" class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Lahir</label>
-                            <input id="birth_date" name="birth_date" type="date" required 
-                                   class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                   value="{{ old('birth_date') }}">
+                            <input id="birth_date" name="birth_date" type="date" required class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm" value="{{ old('birth_date') }}">
                             @error('birth_date') <p class="mt-2 text-sm text-red-600 font-medium">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="gender" class="block text-sm font-semibold text-slate-700 mb-2">Jenis Kelamin</label>
-                            <select id="gender" name="gender" required 
-                                    class="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200">
+                            <select id="gender" name="gender" required class="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200">
                                 <option value="" disabled selected>Pilih Jenis Kelamin...</option>
                                 <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Laki-laki</option>
                                 <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Perempuan</option>
@@ -94,23 +75,19 @@
 
                 <!-- Section 2: Account Info -->
                 <fieldset class="space-y-6 p-6 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl border border-cyan-100">
-                    <legend class="text-xl font-bold text-cyan-700 flex items-center gap-3">
+                     <legend class="text-xl font-bold text-cyan-700 flex items-center gap-3">
                         <span class="bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold shadow-md">2</span>
                         Info Akun (Untuk Login Orang Tua/Wali)
                     </legend>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                            <input id="password" name="password" type="password" required 
-                                   class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                   placeholder="Minimal 8 karakter">
+                            <input id="password" name="password" type="password" required class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm" placeholder="Minimal 8 karakter">
                             @error('password') <p class="mt-2 text-sm text-red-600 font-medium">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="password_confirmation" class="block text-sm font-semibold text-slate-700 mb-2">Konfirmasi Password</label>
-                            <input id="password_confirmation" name="password_confirmation" type="password" required 
-                                   class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                   placeholder="Ketik ulang password">
+                            <input id="password_confirmation" name="password_confirmation" type="password" required class="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm" placeholder="Ketik ulang password">
                         </div>
                     </div>
                 </fieldset>
@@ -126,8 +103,7 @@
                         <div class="space-y-6">
                             <div>
                                 <label for="training_package_id" class="block text-sm font-semibold text-slate-700 mb-2">Pilih Paket Latihan</label>
-                                <select id="training_package_id" name="training_package_id" required 
-                                        class="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200">
+                                <select id="training_package_id" name="training_package_id" required class="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200">
                                     <option value="" data-price="0" disabled selected>Pilih Paket...</option>
                                     @foreach ($trainingPackages as $package)
                                         <option value="{{ $package->id }}" data-price="{{ $package->price }}" {{ old('training_package_id') == $package->id ? 'selected' : '' }}>
@@ -150,29 +126,27 @@
                         <div class="space-y-6">
                             <!-- Bank Accounts -->
                             <div class="p-6 border border-slate-200 rounded-xl bg-gradient-to-br from-white to-slate-50 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <svg class="h-5 w-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                                     </svg>
                                     Transfer Pembayaran
                                 </h3>
-                                <p class="text-sm text-slate-600 mb-4">Silakan transfer ke salah satu rekening berikut:</p>
-                                <div class="space-y-3">
-                                    @forelse ($bankAccounts as $account)
-                                        <div class="p-4 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <div class="flex justify-between items-start">
-                                                <div>
-                                                    <span class="font-bold text-slate-800">{{ $account->bank_name }}</span>
-                                                    <p class="text-lg font-mono text-cyan-700 mt-1">{{ $account->account_number }}</p>
-                                                    <p class="text-xs text-slate-500 mt-1">a.n. {{ $account->account_holder }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div class="text-center text-slate-500 py-4">
-                                            Tidak ada rekening tersedia saat ini.
-                                        </div>
-                                    @endforelse
+                                
+                                <div>
+                                    <label for="bank_account_id" class="block text-sm font-semibold text-slate-700 mb-2">Pilih Rekening Tujuan</label>
+                                    <select id="bank_account_id" name="bank_account_id" required class="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200" data-accounts='@json($bankAccounts)'>
+                                        <option value="" disabled selected>Pilih Rekening...</option>
+                                        @foreach ($bankAccounts as $account)
+                                            <option value="{{ $account->id }}" {{ old('bank_account_id') == $account->id ? 'selected' : '' }}>
+                                                {{ $account->bank_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <div id="selected_bank_details" class="mt-4">
+                                    {{-- Detail rekening akan muncul di sini --}}
                                 </div>
                             </div>
 
@@ -221,21 +195,80 @@
 </div>
 
 <script>
-    // Price calculation
-    document.getElementById('training_package_id').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const price = selectedOption.getAttribute('data-price');
-        const formattedPrice = new Intl.NumberFormat('id-ID', { 
-            style: 'currency', 
-            currency: 'IDR', 
-            minimumFractionDigits: 0 
-        }).format(price);
-        document.getElementById('total_price').textContent = formattedPrice;
-    });
-    
-    // Initialize price on page load
+    // Fungsi untuk menyalin nomor rekening
+    function copyAccountNumber(buttonElement) {
+        // Cari elemen span yang berisi nomor rekening di dalam parent yang sama
+        const textToCopy = buttonElement.previousElementSibling.innerText;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Berikan feedback visual jika berhasil
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = `
+                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                Tersalin!
+            `;
+            buttonElement.classList.add('bg-green-200', 'text-green-800');
+            buttonElement.classList.remove('bg-cyan-100', 'text-cyan-700', 'hover:bg-cyan-200');
+
+            setTimeout(() => {
+                buttonElement.innerHTML = originalText;
+                buttonElement.classList.remove('bg-green-200', 'text-green-800');
+                buttonElement.classList.add('bg-cyan-100', 'text-cyan-700', 'hover:bg-cyan-200');
+            }, 2000); // Kembalikan setelah 2 detik
+        }).catch(err => {
+            console.error('Gagal menyalin teks: ', err);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', (event) => {
-        document.getElementById('training_package_id').dispatchEvent(new Event('change'));
+        // --- SCRIPT UNTUK KALKULASI HARGA PAKET ---
+        const packageSelect = document.getElementById('training_package_id');
+        const priceDisplay = document.getElementById('total_price');
+
+        function updatePrice() {
+            const selectedOption = packageSelect.options[packageSelect.selectedIndex];
+            const price = selectedOption.getAttribute('data-price');
+            const formattedPrice = new Intl.NumberFormat('id-ID', { 
+                style: 'currency', 
+                currency: 'IDR', 
+                minimumFractionDigits: 0 
+            }).format(price);
+            priceDisplay.textContent = formattedPrice;
+        }
+        packageSelect.addEventListener('change', updatePrice);
+        updatePrice();
+
+        // --- SCRIPT UNTUK MENAMPILKAN DETAIL REKENING ---
+        const bankSelect = document.getElementById('bank_account_id');
+        const bankDetailsDisplay = document.getElementById('selected_bank_details');
+        const bankAccountsData = JSON.parse(bankSelect.dataset.accounts || '[]');
+
+        function updateBankDetails() {
+            const selectedId = bankSelect.value;
+            const selectedAccount = bankAccountsData.find(acc => acc.id == selectedId);
+            
+            if (selectedAccount) {
+                bankDetailsDisplay.innerHTML = `
+                    <div class="p-4 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
+                        <div>
+                            <span class="font-bold text-slate-800">${selectedAccount.bank_name}</span>
+                            <p class="text-xs text-slate-500 mt-1">a.n. ${selectedAccount.account_holder}</p>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-md">
+                            <span class="text-lg font-mono text-cyan-700">${selectedAccount.account_number}</span>
+                            <button type="button" onclick="copyAccountNumber(this)" class="flex items-center px-3 py-1 text-xs font-semibold text-cyan-700 bg-cyan-100 hover:bg-cyan-200 rounded-md transition-all duration-200">
+                                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                Salin
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bankDetailsDisplay.innerHTML = '';
+            }
+        }
+        bankSelect.addEventListener('change', updateBankDetails);
+        updateBankDetails();
     });
 </script>
 @endsection

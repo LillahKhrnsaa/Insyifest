@@ -6,69 +6,45 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Ditambahkan untuk relasi Salary
 
 class Coach extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'bio',
     ];
 
-    // Helper untuk dapetin nama coach
-    public function getNameAttribute(): ?string
-    {
-        return $this->user?->name;
-    }
-
-    // Helper untuk dapetin email coach
-    public function getEmailAttribute(): ?string
-    {
-        return $this->user?->email;
-    }
-
-    public function schedules(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            TrainingSchedule::class, 
-            'coach_training_schedule', 
-            'coach_id', 
-            'training_schedule_id'
-        )->withTimestamps();
-    }
-
-    public function salaries()
-    {
-        return $this->hasMany(Salary::class);
-    }
-
-    public function membersSalary()
-    {
-        return $this->belongsToMany(Member::class, 'member_training_assignments')
-                    ->withTimestamps();
-    }
-
-    public function members(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Member::class,
-            'member_training_assignments',
-            'coach_id',
-            'member_id'
-        )->withTimestamps();
-    }
-
     public function user(): BelongsTo
     {
-        // Model ini 'milik' (belongsTo) User
-        // berdasarkan foreign key 'user_id'
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * KETERANGAN: Ini adalah SATU-SATUNYA relasi ke TrainingSchedule yang benar.
+     * Relasi Many-to-Many ke TrainingSchedule.
+     * Seorang pelatih bisa memiliki banyak jadwal latihan.
+     */
+    public function trainingSchedules(): BelongsToMany
+    {
+        return $this->belongsToMany(TrainingSchedule::class, 'coach_training_schedule')->withTimestamps();
+    }
+
+    /**
+     * Relasi ke Member melalui tabel pivot member_training_assignments.
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(Member::class, 'member_training_assignments')->withTimestamps();
+    }
+
+    /**
+     * Relasi ke Salary.
+     */
+    public function salaries(): HasMany
+    {
+        return $this->hasMany(Salary::class);
     }
 }

@@ -4,10 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
 
 class TrainingSchedule extends Model
 {
@@ -22,21 +19,12 @@ class TrainingSchedule extends Model
     ];
 
     /**
-     * Relasi: satu jadwal bisa dimiliki banyak coach
+     * KETERANGAN: Ini adalah SATU-SATUNYA relasi ke Coach yang benar.
+     * Relasi Many-to-Many ke Coach melalui tabel pivot.
+     * Satu jadwal latihan bisa memiliki beberapa pelatih.
      */
     public function coaches(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Coach::class, 
-            'coach_training_schedule', 
-            'training_schedule_id', 
-            'coach_id'
-        )->withTimestamps();
-    }
-
-    public function coach(): BelongsTo
-    {
-        // 'coach_id' adalah foreign key di tabel training_schedules
-        return $this->belongsTo(Coach::class, 'coach_id');
+        return $this->belongsToMany(Coach::class, 'coach_training_schedule')->withTimestamps();
     }
 }

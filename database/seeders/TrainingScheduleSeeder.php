@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\TrainingSchedule;
+use App\Models\Coach; // 1. PASTIKAN MODEL COACH DI-IMPORT
+use Illuminate\Support\Facades\DB;
 
 class TrainingScheduleSeeder extends Seeder
 {
@@ -13,6 +14,20 @@ class TrainingScheduleSeeder extends Seeder
      */
     public function run(): void
     {
+        // KOSONGKAN TABEL DULU AGAR TIDAK DUPLIKAT JIKA SEEDER DIJALANKAN ULANG
+        TrainingSchedule::query()->delete();
+        DB::table('coach_training_schedule')->truncate();
+
+
+        // 2. AMBIL DATA PELATIH YANG SUDAH ADA.
+        // Kita ambil semua pelatih, jika tidak ada, seeder tidak akan jalan.
+        $coaches = Coach::all();
+
+        if ($coaches->isEmpty()) {
+            $this->command->info('Tidak ada data pelatih ditemukan. Silakan jalankan CoachSeeder terlebih dahulu.');
+            return;
+        }
+
         $data = [
             ['day' => 'SENIN',  'time' => '14:00:00', 'place' => 'Pucung'],
             ['day' => 'SELASA', 'time' => '15:30:00', 'place' => 'Pucung'],
@@ -30,7 +45,13 @@ class TrainingScheduleSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
-            TrainingSchedule::create($item);
+            // Buat jadwal baru
+            $schedule = TrainingSchedule::create($item);
+
+            // 3. HUBUNGKAN JADWAL DENGAN PELATIH
+            // Kita akan hubungkan setiap jadwal dengan pelatih secara acak sebagai contoh.
+            // 'attach' akan mengisi data ke tabel pivot coach_training_schedule.
+            $schedule->coaches()->attach($coaches->random()->id);
         }
     }
 }

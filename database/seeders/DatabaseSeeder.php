@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             BankAccountSeeder::class,
             TrainingPackageSeeder::class,
-            TrainingScheduleSeeder::class,
             CoachSeeder::class,
+            TrainingScheduleSeeder::class,
             MemberSeeder::class,
         ]);
     }
