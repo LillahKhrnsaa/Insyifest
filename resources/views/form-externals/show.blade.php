@@ -22,6 +22,7 @@
                 <h1 class="text-4xl font-extrabold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                     {{ $form->title }}
                 </h1>
+                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-24 w-auto">
                 @if($form->description)
                     <p class="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">{{ $form->description }}</p>
                 @endif
