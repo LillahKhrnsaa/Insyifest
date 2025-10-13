@@ -8,6 +8,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class TrainingScheduleWidget extends BaseWidget
 {
+    public function getColumnSpan(): int|array|string
+    {
+        return 1; // atau 'full', 'half', 2, dsb.
+    }
+
     protected function getStats(): array
     {
         return [

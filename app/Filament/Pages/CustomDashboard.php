@@ -70,14 +70,16 @@ class CustomDashboard extends BaseDashboard
             $widgets[] = TrainingScheduleWidget::class;
         }
 
+        if ($user?->can('viewAny.general_materials')) {
+            $widgets[] = PostWidget::class;
+        }
+
         if ($user?->can('viewAny.form_eksternals')) {
             $widgets[] = FormWidget::class;
         }
 
         // --- BARIS 3 (full width) ---
-        if ($user?->can('viewAny.general_materials')) {
-            $widgets[] = PostWidget::class;
-        }
+        
 
         return $widgets;
     }
