@@ -19,6 +19,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Models\User;
+use App\Filament\Pages\CustomDashboard;
+use Filament\Pages;
 use Filament\Notifications\Notification;
 
 class AdminPanelProvider extends PanelProvider
@@ -39,6 +41,9 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Cikampek Swimming Club')
             ->authGuard('web')
             ->databaseNotifications()
+            ->pages([
+                \App\Filament\Pages\CustomDashboard::class,
+            ])
             ->databaseNotificationsPolling('30s')
             ->colors([
                 'primary' => Color::Blue,
