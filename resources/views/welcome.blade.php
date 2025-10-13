@@ -304,7 +304,7 @@
                              src="{{ asset('images/luthfi.jpg') }}" 
                              alt="Luthfi">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Lutfhi A.W
+                            Moh Lutfi Adistira Wirawan
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Owner
@@ -334,7 +334,7 @@
                              src="{{ asset('images/fauzan.jpg') }}" 
                              alt="Fauzan">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Fauzan
+                            Fauzan Noer Afrizal
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -349,7 +349,7 @@
                              src="{{ asset('images/doni.jpg') }}" 
                              alt="Doni">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Doni
+                            Dony Adhi Nugroho Hidayat
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -379,7 +379,7 @@
                              src="{{ asset('images/endah.jpg') }}" 
                              alt="Endah">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Endah
+                            Endah Khairun Nissa
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -394,7 +394,7 @@
                              src="{{ asset('images/fabiyan.jpg') }}" 
                              alt="Fabiyan">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Fabiyan
+                            Fabiyan Fahliyansyah
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -409,7 +409,7 @@
                              src="{{ asset('images/juan.jpg') }}" 
                              alt="Juan">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Juan
+                            Juan Djawi Wandhira
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -424,7 +424,7 @@
                              src="{{ asset('images/iman.jpg') }}" 
                              alt="Iman">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Iman
+                            Iman Fala Handoko
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -439,7 +439,7 @@
                              src="{{ asset('images/salsa.jpg') }}" 
                              alt="Salsa">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Salsa
+                            Salsa Ramdiyani Eki Putri
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
@@ -454,7 +454,7 @@
                              src="{{ asset('images/jangkung.jpg') }}" 
                              alt="Hafeed">
                         <h3 class="mt-6 text-lg sm:text-xl font-bold text-slate-900">
-                            Hafeed
+                             Mohammad Hafid Siddik
                         </h3>
                         <p class="mt-1 text-sm sm:text-base font-semibold text-blue-600">
                             Coach
