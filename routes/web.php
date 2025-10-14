@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\MemberRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormEksternalController;
 use App\Http\Controllers\LandingController;
+// use App\Http\Controllers\CoachDashboardController;
+
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -33,3 +35,8 @@ Route::get('/login', [AuthenticatedSessionController::class, 'create'])
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
+
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/coach-dashboard', [CoachDashboardController::class, 'index'])
+//         ->name('coach.dashboard');
+// });

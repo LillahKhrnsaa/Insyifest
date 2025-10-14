@@ -4,8 +4,8 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Facades\Auth;
-
-// Import semua widget yang kamu punya
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\View as ViewFacade;
 use App\Filament\Widgets\BankAccountWidget;
 use App\Filament\Widgets\CoachWidget;
 use App\Filament\Widgets\MemberWidget;
@@ -13,6 +13,7 @@ use App\Filament\Widgets\TrainingPackageWidget;
 use App\Filament\Widgets\TrainingScheduleWidget;
 use App\Filament\Widgets\FormWidget;
 use App\Filament\Widgets\PostWidget;
+use App\Models\Coach;
 
 class CustomDashboard extends BaseDashboard
 {
@@ -26,12 +27,8 @@ class CustomDashboard extends BaseDashboard
         return 'Dashboard';
     }
 
-    /**
-     * Menentukan layout grid dashboard
-     */
     public function getColumns(): array
     {
-        // Responsif: mobile = 1 kolom, desktop = 3 kolom
         return [
             'default' => 1,
             'md' => 2,
@@ -39,66 +36,80 @@ class CustomDashboard extends BaseDashboard
         ];
     }
 
-    /**
-     * 🧩 Daftar widget dengan pengecekan permission
-     */
     public function getWidgets(): array
     {
         $user = Auth::user();
-
         $widgets = [];
 
-        // --- BARIS 1 ---
         if ($user?->can('viewAny.bank_accounts')) {
             $widgets[] = BankAccountWidget::class;
         }
-
         if ($user?->can('viewAny.coaches')) {
             $widgets[] = CoachWidget::class;
         }
-
         if ($user?->can('viewAny.members')) {
             $widgets[] = MemberWidget::class;
         }
-
-        // --- BARIS 2 ---
         if ($user?->can('viewAny.training_packages')) {
             $widgets[] = TrainingPackageWidget::class;
         }
-
         if ($user?->can('viewAny.training_schedules')) {
             $widgets[] = TrainingScheduleWidget::class;
         }
-
         if ($user?->can('viewAny.general_materials')) {
             $widgets[] = PostWidget::class;
         }
-
         if ($user?->can('viewAny.form_eksternals')) {
             $widgets[] = FormWidget::class;
         }
 
-        // --- BARIS 3 (full width) ---
-        
-
         return $widgets;
     }
 
-    /**
-     * 🔒 Batasi akses Dashboard hanya untuk user dengan minimal satu permission
-     */
     public static function canAccess(): bool
+    {
+        return Auth::check();
+    }
+
+    // Ganti dari protected jadi PUBLIC
+    public function getView(): string
     {
         $user = Auth::user();
 
-        return $user && $user->hasAnyPermission([
-            'viewAny.bank_accounts',
-            'viewAny.coaches',
-            'viewAny.members',
-            'viewAny.training_packages',
-            'viewAny.training_schedules',
-            'viewAny.form_eksternals',
-            'viewAny.general_materials',
-        ]);
+        if ($user->hasRole('coach')) {
+            return 'filament.pages.coach-dashboard';
+        }
+
+        if ($user->hasRole('member')) {
+            return 'filament.pages.dashboard-member';
+        }
+
+        return parent::getView();
+    }
+
+    // Ganti dari protected jadi PUBLIC
+    public function getViewData(): array
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('coach')) {
+            $coach = Coach::with(['user', 'members.user', 'trainingSchedules'])
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            return [
+                'coach' => $coach,
+                'totalMembers' => $coach->members->count(),
+                'activeMembers' => $coach->members->where('status', 'AKTIF')->count(),
+                'inactiveMembers' => $coach->members->where('status', 'TIDAK_AKTIF')->count(),
+                'totalSchedules' => $coach->trainingSchedules->count(),
+            ];
+        }
+
+        if ($user->hasRole('member')) {
+            return [];
+        }
+
+        return parent::getViewData();
     }
 }

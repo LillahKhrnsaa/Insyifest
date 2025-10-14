@@ -22,6 +22,10 @@ class Coach extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function schedules(): BelongsToMany
+    {
+        return $this->trainingSchedules();
+    }
     /**
      * KETERANGAN: Ini adalah SATU-SATUNYA relasi ke TrainingSchedule yang benar.
      * Relasi Many-to-Many ke TrainingSchedule.
