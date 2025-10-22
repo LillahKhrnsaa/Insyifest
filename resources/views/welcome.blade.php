@@ -21,7 +21,7 @@
             Cikampek Swimming Club <br class="hidden sm:block"> 
             <span class="bg-gradient-to-r from-cyan-300 to-blue-200 bg-clip-text text-transparent">Long Term Atlet Development</span>
         </h1>
-        <a href="{{ route('member.register.store') }}"
+        <a href="{{ route('member.register.create') }}"
            class="mt-8 sm:mt-10 inline-block bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold py-3 sm:py-4 px-8 sm:px-12 rounded-full hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-xl transform hover:-translate-y-1 hover:shadow-2xl text-base sm:text-lg md:text-xl">
             Daftar Sekarang!
         </a>
@@ -172,7 +172,7 @@
                     <h3 class="text-2xl font-bold text-slate-900 mb-4">{{ $package->name }}</h3>
                     <p class="text-5xl font-extrabold bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent my-4">Rp {{ number_format($package->price, 0, ',', '.') }}</p>
                     <p class="text-slate-600 mb-8 flex-grow">{{ $package->description }}</p>
-                    <a href="{{ route('member.register.store') }}" class="mt-auto w-full inline-block bg-gradient-to-r from-slate-800 to-slate-900 text-white px-6 py-3 rounded-full font-bold hover:from-slate-700 hover:to-slate-800 transition-all shadow-md">
+                    <a href="{{ route('member.register.create') }}" class="mt-auto w-full inline-block bg-gradient-to-r from-slate-800 to-slate-900 text-white px-6 py-3 rounded-full font-bold hover:from-slate-700 hover:to-slate-800 transition-all shadow-md">
                         Pilih Paket Ini
                     </a>
                 </div>
