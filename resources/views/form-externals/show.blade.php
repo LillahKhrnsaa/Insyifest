@@ -1,10 +1,16 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $form->title }}</title>
+    {{-- Pastikan Anda sudah memanggil Tailwind CSS dan Alpine.js di sini atau di layout utama --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-100">
 
-@section('title', $form->title)
-
-@section('content')
-{{-- Latar belakang gradien dan elemen dekoratif --}}
-<div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 min-h-screen pt-20">
+<div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 min-h-screen">
     <div class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         
         {{-- Pola Latar Belakang Animasi --}}
@@ -15,11 +21,11 @@
         </div>
 
         {{-- Kontainer Utama Form dengan Efek Kaca --}}
-        <div class="w-full max-w-4xl p-8 sm:p-10 space-y-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/50 relative z-10">
+        <div class="w-100 max-w-4xl p-8 sm:p-10 space-y-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/50 relative z-10 my-10">
             
             {{-- Header Form --}}
             <div class="text-center">
-                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-24 w-auto">
+                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Form" class="h-24 w-auto mx-auto mb-6">
                 <h1 class="text-4xl font-extrabold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                     {{ $form->title }}
                 </h1>
@@ -31,7 +37,7 @@
             {{-- Pesan Sukses --}}
             @if(session('success'))
                 <div class="p-6 text-center text-green-800 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl border border-green-200 shadow-sm" role="alert">
-                    <p class="font-bold text-xl">🎉 Berhasil Terkirim! 🎉</p>
+                    <p class="font-bold text-xl">Berhasil Terkirim!</p>
                     <p class="mt-2 text-green-700">{{ session('success') }}</p>
                 </div>
             @endif
@@ -39,7 +45,6 @@
             {{-- Form --}}
             <form action="{{ route('form.submit', $form->slug) }}" method="POST" enctype="multipart/form-data" class="mt-8 space-y-8">
                 @csrf
-
                 <div class="space-y-6">
                 @foreach ($form->fields as $field)
                     <div>
@@ -132,7 +137,6 @@
                                 @break
 
                             @case('file')
-                                {{-- Input file gaya baru, memerlukan Alpine.js --}}
                                 <div x-data="{ fileName: '' }">
                                     <div class="mt-2 flex justify-center rounded-xl border-2 border-dashed border-slate-300 px-6 py-10 transition-all duration-200 hover:border-indigo-400 hover:bg-indigo-50/50">
                                         <div class="text-center">
@@ -168,17 +172,30 @@
                 @endforeach
                 </div>
 
-                {{-- Tombol Submit --}}
-                <div class="pt-6">
+                {{-- Tombol Aksi --}}
+                <div class="pt-6 flex flex-col sm:flex-row items-center gap-4">
+                    
+                    {{-- Tombol Kembali --}}
+                    <a href="{{ url('/admin/form-eksternals') }}" class="group relative flex w-full justify-center rounded-full border-2 border-slate-400 bg-transparent py-4 px-6 text-lg font-bold text-slate-600 hover:bg-slate-100 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all duration-300">
+                        <svg class="h-6 w-6 mr-3 transition-transform group-hover:-translate-x-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        Kembali
+                    </a>
+
+                    {{-- Tombol Submit --}}
                     <button type="submit" class="group relative flex w-full justify-center rounded-full border border-transparent bg-gradient-to-r from-purple-600 to-indigo-600 py-4 px-6 text-lg font-bold text-white hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                         <svg class="h-6 w-6 mr-3 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Kirim Jawaban
+                        Kirim
                     </button>
+                
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endsection
+
+</body>
+</html>
