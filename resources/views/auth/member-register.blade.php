@@ -36,7 +36,7 @@
             @endif
 
             <!-- Registration Form -->
-            <form class="mt-8 space-y-10" action="{{ route('member.register.store') }}" method="POST" enctype="multipart/form-data">
+            <form class="mt-8 space-y-10" action="{{ route('member.register.create') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <!-- Section 1: Personal Data -->
