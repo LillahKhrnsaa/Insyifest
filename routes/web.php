@@ -16,11 +16,15 @@ Route::get('/form/{slug}', [FormEksternalController::class, 'show'])->name('form
 Route::post('/form/{slug}', [FormEksternalController::class, 'submit'])->name('form.submit');
 
 // Rute untuk menampilkan form registrasi member
+// Rute GET untuk MENAMPILKAN form, diberi nama 'create'
 Route::get('/register/member', [MemberRegistrationController::class, 'create'])
     ->middleware('guest')
-    ->name('member.register.store');
+    ->name('member.register.create'); // <--- NAMA DIUBAH
+
+// Rute POST untuk MENYIMPAN data, diberi nama 'store'
 Route::post('/register/member', [MemberRegistrationController::class, 'store'])
-    ->middleware('guest');
+    ->middleware('guest')
+    ->name('member.register.store'); // <--- NAMA DITAMBAHKAN
 
 // Route untuk menampilkan halaman login (GET request)
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])
