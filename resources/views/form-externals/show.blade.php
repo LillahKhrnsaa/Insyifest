@@ -176,7 +176,7 @@
                 <div class="pt-6 flex flex-col sm:flex-row items-center gap-4">
                     
                     {{-- Tombol Kembali --}}
-                    <a href="{{ url('/admin/form-eksternals') }}" class="group relative flex w-full justify-center rounded-full border-2 border-slate-400 bg-transparent py-4 px-6 text-lg font-bold text-slate-600 hover:bg-slate-100 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all duration-300">
+                    <a href="{{ url('/') }}" class="group relative flex w-full justify-center rounded-full border-2 border-slate-400 bg-transparent py-4 px-6 text-lg font-bold text-slate-600 hover:bg-slate-100 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all duration-300">
                         <svg class="h-6 w-6 mr-3 transition-transform group-hover:-translate-x-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                         </svg>

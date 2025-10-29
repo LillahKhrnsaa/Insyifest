@@ -20,4 +20,12 @@ class TrainingPackage extends Model
     {
         return $this->hasMany(Member::class);
     }
+
+    /**
+     * Riwayat absensi yang terkait dengan jadwal ini.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'schedule_id');
+    }
 }

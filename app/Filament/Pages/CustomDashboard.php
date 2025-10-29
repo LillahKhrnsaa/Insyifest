@@ -70,46 +70,4 @@ class CustomDashboard extends BaseDashboard
     {
         return Auth::check();
     }
-
-    // Ganti dari protected jadi PUBLIC
-    public function getView(): string
-    {
-        $user = Auth::user();
-
-        if ($user->hasRole('coach')) {
-            return 'filament.pages.coach-dashboard';
-        }
-
-        if ($user->hasRole('member')) {
-            return 'filament.pages.dashboard-member';
-        }
-
-        return parent::getView();
-    }
-
-    // Ganti dari protected jadi PUBLIC
-    public function getViewData(): array
-    {
-        $user = Auth::user();
-
-        if ($user->hasRole('coach')) {
-            $coach = Coach::with(['user', 'members.user', 'trainingSchedules'])
-                ->where('user_id', $user->id)
-                ->firstOrFail();
-
-            return [
-                'coach' => $coach,
-                'totalMembers' => $coach->members->count(),
-                'activeMembers' => $coach->members->where('status', 'AKTIF')->count(),
-                'inactiveMembers' => $coach->members->where('status', 'TIDAK_AKTIF')->count(),
-                'totalSchedules' => $coach->trainingSchedules->count(),
-            ];
-        }
-
-        if ($user->hasRole('member')) {
-            return [];
-        }
-
-        return parent::getViewData();
-    }
 }

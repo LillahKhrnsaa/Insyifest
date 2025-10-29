@@ -9,9 +9,10 @@
         <h1 class="text-2xl font-bold mb-2">Form Tidak Aktif</h1>
         <p class="text-purple-200">Form <span class="font-semibold text-white">"{{ $form->title }}"</span> saat ini belum dapat diakses.  
         Silakan coba lagi nanti.</p>
-        <a href="/" class="mt-6 inline-block bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg hover:bg-purple-100 transition">
+        <a href="{{ route('landing') }}" class="mt-6 inline-block bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg hover:bg-purple-100 transition">
             Kembali ke Beranda
         </a>
+
     </div>
 </div>
 @endsection

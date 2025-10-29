@@ -51,4 +51,12 @@ class Coach extends Model
     {
         return $this->hasMany(Salary::class);
     }
+
+    /**
+     * Riwayat absensi yang telah dibuat oleh coach ini.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

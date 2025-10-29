@@ -142,7 +142,7 @@ class SalariesTable
                 ViewAction::make()
                     ->label('')
                     ->button()
-                    ->tooltip('View details')
+                    ->tooltip('Lihat')
                     ->icon('heroicon-o-eye')
                     ->color('gray')
                     ->size('sm')
@@ -172,7 +172,9 @@ class SalariesTable
 
                 // 📄 Export PDF Action
                 Action::make('exportPdf')
-                    ->label('Export PDF')
+                    ->label(' ')
+                    ->button()
+                    ->tooltip('Print')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('danger')
                     ->action(function ($record) {

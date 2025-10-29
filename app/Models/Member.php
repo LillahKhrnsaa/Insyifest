@@ -89,4 +89,13 @@ class Member extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Riwayat absensi dimana member ini hadir.
+     * (via tabel 'attendance_members')
+     */
+    public function attendances(): BelongsToMany
+    {
+        return $this->belongsToMany(Attendance::class, 'attendance_members')->withTimestamps();
+    }
+
 }
