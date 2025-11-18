@@ -1,8 +1,13 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cikampek Swimming Club</title>
+    @vite('resources/css/app.css')
+</head>
+<body>
 
-@section('title', 'Login - Cikampek Swimming Club')
-
-@section('content')
 <div class="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
     <div class="absolute inset-0 overflow-hidden">
         <div class="absolute -top-40 -right-32 w-80 h-80 bg-cyan-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-float-slow"></div>
@@ -33,14 +38,10 @@
                 @if($errors->any())
                     <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm" role="alert">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-red-800">{{ $errors->first() }}</p>
-                            </div>
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+                            </svg>
+                            <p class="ml-3 text-sm font-medium text-red-800">{{ $errors->first() }}</p>
                         </div>
                     </div>
                 @endif
@@ -48,14 +49,10 @@
                 @if(session('status'))
                     <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm" role="alert">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-green-800">{{ session('status') }}</p>
-                            </div>
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <p class="ml-3 text-sm font-medium text-green-800">{{ session('status') }}</p>
                         </div>
                     </div>
                 @endif
@@ -65,101 +62,88 @@
 
                     <div>
                         <label for="phone" class="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                            <svg class="h-4 w-4 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
                             Nomor Telepon
                         </label>
                         <div class="relative">
                             <input id="phone" name="phone" type="text" required 
-                                   class="w-full px-4 py-3 pl-11 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-slate-400"
+                                   class="w-full px-4 py-3 pl-11 border rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
                                    value="{{ old('phone') }}"
                                    placeholder="081234567890"
                                    autocomplete="tel"
                                    autofocus>
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                                 </svg>
                             </div>
                         </div>
                     </div>
+
                     <div>
                         <label for="password" class="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                            <svg class="h-4 w-4 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
                             Password
                         </label>
                         <div class="relative">
                             <input id="password" name="password" type="password" required 
-                                   class="w-full px-4 py-3 pl-11 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-slate-400"
+                                   class="w-full px-4 py-3 pl-11 border rounded-xl shadow-sm focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
                                    placeholder="Masukkan password Anda"
                                    autocomplete="current-password">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </div>
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+                                        <path d="M6 10V8a6 6 0 1 1 12 0v2" />
+                                        <rect width="14" height="12" x="5" y="10" rx="2" />
+                                    </svg>
+                                </div>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
+                        <label class="flex items-center text-sm text-slate-600 font-medium">
                             <input id="remember" name="remember" type="checkbox" 
-                                   class="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-slate-300 rounded transition duration-150 ease-in-out"
+                                   class="h-4 w-4 text-cyan-600 border-slate-300 rounded"
                                    {{ old('remember') ? 'checked' : '' }}>
-                            <label for="remember" class="ml-2 block text-sm text-slate-600 font-medium">
-                                Ingat saya
-                            </label>
-                        </div>
+                            <span class="ml-2">Ingat saya</span>
+                        </label>
 
                         @if(Route::has('password.request'))
-                            <div class="text-sm">
-                                <a href="{{ route('password.request') }}" class="font-medium text-cyan-600 hover:text-cyan-500 transition-colors duration-200">
-                                    Lupa password?
-                                </a>
-                            </div>
+                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-cyan-600 hover:text-cyan-500">
+                                Lupa password?
+                            </a>
                         @endif
                     </div>
 
-                    <div class="pt-4">
-                        <button type="submit" class="group relative w-full flex justify-center items-center py-3.5 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                            <svg class="h-5 w-5 mr-2 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                            </svg>
-                            Masuk ke Akun
-                        </button>
-                    </div>
+                    <button type="submit"
+                        class="group w-full py-3.5 px-4 text-lg font-bold rounded-xl text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                        Masuk ke Akun
+                    </button>
                 </form>
 
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-slate-200"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-slate-500">Atau</span>
-                    </div>
+                <div class="relative my-6 flex items-center">
+                    <div class="w-full border-t border-slate-200"></div>
+                    <span class="px-2 bg-white text-slate-500 text-sm">Atau</span>
+                    <div class="w-full border-t border-slate-200"></div>
                 </div>
 
-                <div class="space-y-4 text-center">
-                    <div>
-                        <p class="text-sm text-slate-600">
-                            Belum memiliki akun?
-                            <a href="{{ route('member.register.store') }}" class="font-semibold text-cyan-600 hover:text-cyan-700 transition-colors duration-200 ml-1">
-                                Daftar member baru
-                            </a>
-                        </p>
-                    </div>
-                </div>
+                <p class="text-sm text-slate-600 text-center">
+                    Belum memiliki akun?
+                    <a href="{{ route('member.register.store') }}" class="font-semibold text-cyan-600 hover:text-cyan-700">
+                        Daftar member baru
+                    </a>
+                </p>
+                <p class="text-sm text-center mt-3 pt-10">
+                    <a href="{{ url('/') }}" class="font-semibold text-cyan-600 hover:text-cyan-700">
+                        Kembali ke Beranda
+                    </a>
+                </p>
             </div>
         </div>
 
-        <div class="text-center">
-            <p class="text-xs text-slate-500">
-                © {{ date('Y') }} Cikampek Swimming Club. All rights reserved.
-            </p>
-        </div>
+        <p class="text-xs text-slate-500 text-center">
+            © {{ date('Y') }} Cikampek Swimming Club. All rights reserved.
+        </p>
     </div>
 </div>
 
@@ -174,12 +158,9 @@
     50% { transform: translateX(20px) rotate(-180deg); }
 }
 
-.animate-float-slow {
-    animation: float-slow 15s ease-in-out infinite;
-}
-
-.animate-float-slower {
-    animation: float-slower 20s ease-in-out infinite;
-}
+.animate-float-slow { animation: float-slow 15s ease-in-out infinite; }
+.animate-float-slower { animation: float-slower 20s ease-in-out infinite; }
 </style>
-@endsection
+
+</body>
+</html>
