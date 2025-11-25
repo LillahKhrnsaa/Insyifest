@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Coaches\Tables;
 
+use App\Filament\Widgets\AttendanceTable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -19,10 +20,12 @@ use App\Models\Coach;
 use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Member;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ActionGroup;
+use Filament\Schemas\Components\Livewire;
 
 class CoachesTable
 {
@@ -30,122 +33,127 @@ class CoachesTable
     {
         return $table
             ->columns([
-                // 1. Foto Profil
-                ImageColumn::make('user.photo_path')
-                    ->label('Foto')
-                    ->circular()
-                    ->alignCenter()
-                    ->imageHeight(40)
-                    ->width(40)
-                    ->disk('public')
-                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'Coach')),
-
-                // 2. Nama Lengkap Coach
-                TextColumn::make('user.name')
-                    ->label('Nama Coach')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->color('primary')
-                    ->icon('heroicon-o-user-circle')
-                    ->tooltip(fn ($record) => $record->user?->name)
-                    ->wrap(),
-
-                // 3. Email
-                TextColumn::make('user.email')
-                    ->label('Email')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-envelope')
-                    ->iconColor('blue')
-                    ->copyable()
-                    ->copyMessage('Email disalin!')
-                    ->tooltip(fn ($record) => $record->user?->email)
-                    ->wrap(),
-
-                // 4. Nomor Telepon
-                TextColumn::make('user.phone')
-                    ->label('Nomor Telepon')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-phone')
-                    ->color('success')
-                    ->copyable()
-                    ->copyMessage('Nomor telepon disalin!')
-                    ->tooltip(fn ($record) => $record->user?->phone)
-                    ->wrap(),
-
-                // 5. Jenis Kelamin
-                TextColumn::make('user.gender')
-                    ->label('Gender')
-                    ->badge()
-                    ->alignCenter()
-                    ->sortable()
-                    ->color(fn (string $state): string => match ($state) {
-                        'MALE' => 'blue',
-                        'FEMALE' => 'pink',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'MALE' => 'Laki-laki',
-                        'FEMALE' => 'Perempuan',
-                        default => $state,
-                    }),
-
-                // 6. Tanggal Lahir
-                TextColumn::make('user.birth_date')
-                    ->label('Tgl. Lahir')
-                    ->date('d M Y')
-                    ->alignCenter()
-                    ->sortable(),
-
-                // 7. Bio Coach (snippet)
-                TextColumn::make('bio')
-                    ->label('Biografi')
-                    ->limit(50)
-                    ->tooltip(fn ($record) => $record->bio)
-                    ->wrap()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                // 8. Status Akun
-                ToggleColumn::make('user.active')
-                    ->label('Aktif')
-                    ->alignCenter()
-                    ->tooltip('Klik untuk aktif/nonaktif')
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->onIcon('heroicon-o-check-circle')
-                    ->offIcon('heroicon-o-x-circle')
-                    ->sortable()
-                    ->beforeStateUpdated(function ($record, $state) {
-                        // Update status di user
-                        $record->user->update(['active' => $state]);
-                    }),
-
-                // 9. Role (selalu Coach)
-                TextColumn::make('user.role')
-                    ->label('Role')
-                    ->badge()
-                    ->alignCenter()
-                    ->color('warning')
-                    ->default('coach')
-                    ->formatStateUsing(fn () => 'Coach'),
-
-                // 10. Dibuat
-                TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime('d M Y')
-                    ->alignCenter()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                // 11. Diupdate
-                TextColumn::make('updated_at')
-                    ->label('Diupdate')
-                    ->dateTime('d M Y')
-                    ->alignCenter()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Stack::make([
+                    ImageColumn::make('user.photo_path')
+                        ->label('Foto')
+                        ->circular()
+                        ->alignCenter()
+                        ->imageHeight(40)
+                        ->width(40)
+                        ->disk('public')
+                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'Coach')),
+    
+                    // 2. Nama Lengkap Coach
+                    TextColumn::make('user.name')
+                        ->label('Nama Coach')
+                        ->searchable()
+                        ->sortable()
+                        ->weight('bold')
+                        ->color('primary')
+                        ->icon('heroicon-o-user-circle')
+                        ->tooltip(fn ($record) => $record->user?->name)
+                        ->wrap(),
+    
+                    // 3. Email
+                    TextColumn::make('user.email')
+                        ->label('Email')
+                        ->searchable()
+                        ->sortable()
+                        ->icon('heroicon-o-envelope')
+                        ->iconColor('blue')
+                        ->copyable()
+                        ->copyMessage('Email disalin!')
+                        ->tooltip(fn ($record) => $record->user?->email)
+                        ->wrap(),
+    
+                    // 4. Nomor Telepon
+                    TextColumn::make('user.phone')
+                        ->label('Nomor Telepon')
+                        ->searchable()
+                        ->sortable()
+                        ->icon('heroicon-o-phone')
+                        ->color('success')
+                        ->copyable()
+                        ->copyMessage('Nomor telepon disalin!')
+                        ->tooltip(fn ($record) => $record->user?->phone)
+                        ->wrap(),
+    
+                    // 5. Jenis Kelamin
+                    TextColumn::make('user.gender')
+                        ->label('Gender')
+                        ->badge()
+                        ->alignCenter()
+                        ->sortable()
+                        ->color(fn (string $state): string => match ($state) {
+                            'MALE' => 'blue',
+                            'FEMALE' => 'pink',
+                            default => 'gray',
+                        })
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'MALE' => 'Laki-laki',
+                            'FEMALE' => 'Perempuan',
+                            default => $state,
+                        }),
+    
+                    // 6. Tanggal Lahir
+                    TextColumn::make('user.birth_date')
+                        ->label('Tgl. Lahir')
+                        ->date('d M Y')
+                        ->alignCenter()
+                        ->sortable(),
+    
+                    // 7. Bio Coach (snippet)
+                    TextColumn::make('bio')
+                        ->label('Biografi')
+                        ->limit(50)
+                        ->tooltip(fn ($record) => $record->bio)
+                        ->wrap()
+                        ->toggleable(isToggledHiddenByDefault: true),
+    
+                    // 8. Status Akun
+                    ToggleColumn::make('user.active')
+                        ->label('Aktif')
+                        ->alignCenter()
+                        ->tooltip('Klik untuk aktif/nonaktif')
+                        ->onColor('success')
+                        ->offColor('danger')
+                        ->onIcon('heroicon-o-check-circle')
+                        ->offIcon('heroicon-o-x-circle')
+                        ->sortable()
+                        ->beforeStateUpdated(function ($record, $state) {
+                            // Update status di user
+                            $record->user->update(['active' => $state]);
+                        }),
+    
+                    // 9. Role (selalu Coach)
+                    TextColumn::make('user.role')
+                        ->label('Role')
+                        ->badge()
+                        ->alignCenter()
+                        ->color('warning')
+                        ->default('coach')
+                        ->formatStateUsing(fn () => 'Coach'),
+    
+                    // 10. Dibuat
+                    TextColumn::make('created_at')
+                        ->label('Dibuat')
+                        ->dateTime('d M Y')
+                        ->alignCenter()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+    
+                    // 11. Diupdate
+                    TextColumn::make('updated_at')
+                        ->label('Diupdate')
+                        ->dateTime('d M Y')
+                        ->alignCenter()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+                ]),
+            ])
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
             ])
             ->filters([
                 // Filter berdasarkan status aktif
@@ -180,6 +188,34 @@ class CoachesTable
             ])
             ->recordActions([
                 ActionGroup::make([
+                    Action::make('lihat_kehadiran')
+                        ->label('lihat kehadiran')
+                        ->tooltip('Lihat Kehadiran Coach')
+                        ->icon('heroicon-o-calendar-days')
+                        ->color('info')
+                        ->modalHeading(fn ($record) => 'Kehadiran Coach: ' . $record->user->name)
+                        ->modalWidth('4xl')
+                        ->form(function ($record) {
+                            return [
+                                Section::make('Data Kehadiran')
+                                    ->schema([
+                                        Livewire::make(
+                                            AttendanceTable::class,
+                                            fn ($component) => [
+                                                'coachId' => $component->getRecord()->id,
+                                            ]
+                                        )
+                                        ->key('attendance-table-' . $record->id)
+                                        ->lazy()
+                                        ->dehydrated(false)
+                                        ->live(),
+                                    ])
+                                    ->columnSpanFull(),
+                            ];
+                        })
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Tutup'),
+
                     Action::make('viewMembers')
                         ->label('Lihat Member')
                         ->icon('heroicon-o-users')
