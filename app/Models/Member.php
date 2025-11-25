@@ -43,6 +43,11 @@ class Member extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function raports(): HasMany
+    {
+        // Satu Member/Coach memiliki banyak Raport
+        return $this->hasMany(Raport::class);
+    }
     /**
      * Get the training package associated with the member.
      */

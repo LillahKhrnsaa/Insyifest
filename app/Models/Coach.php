@@ -22,6 +22,12 @@ class Coach extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function raports(): HasMany
+    {
+        // Satu Member/Coach memiliki banyak Raport
+        return $this->hasMany(Raport::class);
+    }
+
     public function schedules(): BelongsToMany
     {
         return $this->trainingSchedules();
