@@ -320,10 +320,13 @@
                                                         {{ $member->status }}
                                                     </span>
                                                 </td>
+                                                {{-- Di bagian tabel member, ganti button raport --}}
                                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <a href="#" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-md text-white shell-blue hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-900/20 transform hover:-translate-y-0.5">
+                                                    <button 
+                                                        onclick="openRaportModal({{ $member->id }}, '{{ $member->user->name }}')" 
+                                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-md text-white shell-blue hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-900/20 transform hover:-translate-y-0.5">
                                                         <i data-feather="file-text" class="w-3 h-3 mr-1.5"></i> Raport
-                                                    </a>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @empty
@@ -651,8 +654,869 @@
             </div>
         </div>
     </div>
-    
 </div>
+{{-- Modal Raport --}}
+<div id="raportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-xl bg-white dark:bg-slate-800">
+        {{-- Header Modal --}}
+        <div class="flex justify-between items-center pb-4 mb-4 border-b dark:border-slate-700">
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Raport Member: <span id="memberName"></span>
+            </h3>
+            <button onclick="closeRaportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Content Modal --}}
+        <div class="space-y-6">
+            {{-- Filter Section --}}
+            <div class="bg-gradient-to-r from-blue-50 to-green-50 dark:from-slate-700 dark:to-slate-700 rounded-lg shadow p-4">
+                <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Filter Grafik</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Pilih gaya renang dan tahun untuk melihat grafik performa</p>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    {{-- Select Gaya --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gaya Renang & Jarak</label>
+                        <select id="gaya" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="gaya_bebas_50">Gaya Bebas 50m</option>
+                            <option value="gaya_bebas_100">Gaya Bebas 100m</option>
+                            <option value="gaya_bebas_200">Gaya Bebas 200m</option>
+                            <option value="gaya_bebas_400">Gaya Bebas 400m</option>
+                            <option value="gaya_bebas_800">Gaya Bebas 800m</option>
+                            <option value="gaya_bebas_1500">Gaya Bebas 1500m</option>
+                            <option value="gaya_dada_50">Gaya Dada 50m</option>
+                            <option value="gaya_dada_100">Gaya Dada 100m</option>
+                            <option value="gaya_dada_200">Gaya Dada 200m</option>
+                            <option value="gaya_punggung_50">Gaya Punggung 50m</option>
+                            <option value="gaya_punggung_100">Gaya Punggung 100m</option>
+                            <option value="gaya_punggung_200">Gaya Punggung 200m</option>
+                            <option value="gaya_kupu_50">Gaya Kupu 50m</option>
+                            <option value="gaya_kupu_100">Gaya Kupu 100m</option>
+                            <option value="gaya_kupu_200">Gaya Kupu 200m</option>
+                            <option value="gaya_ganti_200">Gaya Ganti 200m</option>
+                            <option value="gaya_ganti_400">Gaya Ganti 400m</option>
+                        </select>
+                    </div>
+
+                    {{-- Input Tahun --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tahun</label>
+                        <input type="number" id="year" value="{{ now()->year }}" 
+                               class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               min="2000" max="2099">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Loading State --}}
+            <div id="loadingState" class="hidden text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <p class="mt-3 text-gray-600 dark:text-gray-400">Memuat data...</p>
+            </div>
+
+            {{-- Detail Data (Placeholder) --}}
+            <div id="raport-info" class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Detail Data Raport Terpilih</p>
+                <div id="raport-detail" class="text-sm text-gray-600 dark:text-gray-400">
+                    <!-- Akan diisi via JS -->
+                </div>
+            </div>
+
+            {{-- Table Section dengan Action Buttons --}}
+            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-blue-50/50 dark:from-slate-800 dark:to-slate-800 flex justify-between items-center">
+                    <h4 class="font-semibold text-gray-900 dark:text-gray-100">Detail Data Raport</h4>
+                    
+                    {{-- Button Tambah Data --}}
+                    <button id="tambahDataBtn" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Tambah Data
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table id="raport-table" class="w-full">
+                        <thead class="bg-gray-50/80 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Bulan</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Waktu</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Volume</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Intensitas</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Peaking</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Coach</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
+                            <!-- Akan diisi via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Charts Section --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- Chart 1: Waktu Tempuh --}}
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-5 ring-1 ring-black/5 dark:ring-white/5">
+                    <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-4">Grafik Waktu Tempuh (Detik)</h4>
+                    <canvas id="chartValue" class="w-full" style="max-height: 300px;"></canvas>
+                </div>
+
+                {{-- Chart 2: Volume, Peaking, Intensity --}}
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-5 ring-1 ring-black/5 dark:ring-white/5">
+                    <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-4">Grafik Volume, Peaking, Intensity</h4>
+                    <canvas id="chartVolume" class="w-full" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer Modal --}}
+        <div class="mt-6 flex justify-end">
+            <button onclick="closeRaportModal()" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Form Create/Edit Raport --}}
+<div id="raportFormModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 overflow-y-auto h-full w-full z-[999]">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-2xl rounded-xl bg-white dark:bg-slate-800 z-[1000]">
+        <div class="flex justify-between items-center pb-3 mb-4 border-b dark:border-slate-700">
+            <h3 id="formModalTitle" class="text-xl font-bold text-gray-900 dark:text-gray-100">Tambah Data Raport</h3>
+            <button id="closeFormModalBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <form id="raportForm" class="space-y-4">
+            <input type="hidden" id="raport_id" name="raport_id">
+            <input type="hidden" id="form_member_id" name="member_id">
+            <input type="hidden" id="form_gaya" name="gaya">
+            <input type="hidden" id="form_year" name="year">
+
+            {{-- Bulan (hanya untuk Create) --}}
+            <div id="monthFieldWrapper">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bulan</label>
+                <select id="month" name="month" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2">
+                    <option value="">-- Pilih Bulan --</option>
+                </select>
+            </div>
+
+            {{-- Waktu (detik) --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Waktu (detik)</label>
+                <input type="number" id="value" name="value" step="0.01" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2" required>
+            </div>
+
+            {{-- Volume --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Volume (meter)</label>
+                <input type="number" id="volume" name="volume" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2" required>
+            </div>
+
+            {{-- Intensity --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Intensitas (%)</label>
+                <input type="number" id="intensity" name="intensity" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2" required>
+            </div>
+
+            {{-- Peaking --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Peaking</label>
+                <input type="number" id="peaking" name="peaking" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2" required>
+            </div>
+
+            {{-- Coach --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Coach</label>
+                <select id="coach_id" name="coach_id" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2" required>
+                    <option value="">-- Pilih Coach --</option>
+                </select>
+            </div>
+
+            {{-- Note --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan</label>
+                <textarea id="note" name="note" rows="3" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-2"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" id="cancelFormBtn" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Load Chart.js --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{{-- JavaScript untuk Modal & Chart --}}
+<script>
+    let currentMemberId = null;
+    let chartValue = null;
+    let chartVolume = null;
+    let isEditMode = false;
+    let coaches = []; // Cache coaches list
+
+    // ═══════════════════════════════════════════════════════════════
+    // INITIALIZATION - Event Listeners
+    // ═══════════════════════════════════════════════════════════════
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing Raport Modal System...');
+        
+        // Event Listeners untuk tombol
+        document.getElementById('tambahDataBtn').addEventListener('click', openCreateForm);
+        document.getElementById('closeFormModalBtn').addEventListener('click', closeFormModal);
+        document.getElementById('cancelFormBtn').addEventListener('click', closeFormModal);
+        
+        // Event delegation untuk edit dan delete buttons
+        document.addEventListener('click', function(e) {
+            // Edit Button
+            if (e.target.closest('.edit-btn')) {
+                const btn = e.target.closest('.edit-btn');
+                const id = btn.dataset.id;
+                const month = btn.dataset.month;
+                const value = btn.dataset.value;
+                const volume = btn.dataset.volume;
+                const intensity = btn.dataset.intensity;
+                const peaking = btn.dataset.peaking;
+                const coachId = btn.dataset.coach;
+                const note = decodeURIComponent(btn.dataset.note || '');
+                
+                console.log('Edit button clicked:', { id, month });
+                openEditForm(id, month, value, volume, intensity, peaking, coachId, note);
+            }
+            
+            // Delete Button
+            if (e.target.closest('.delete-btn')) {
+                const btn = e.target.closest('.delete-btn');
+                const id = btn.dataset.id;
+                const month = btn.dataset.month;
+                
+                console.log('Delete button clicked:', { id, month });
+                confirmDelete(id, month);
+            }
+        });
+
+        // Filter change events
+        document.getElementById('gaya').addEventListener('change', loadRaportData);
+        document.getElementById('year').addEventListener('input', loadRaportData);
+
+        // Close modal when click outside
+        document.getElementById('raportModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRaportModal();
+        });
+        
+        document.getElementById('raportFormModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFormModal();
+        });
+
+        // Form submit
+        document.getElementById('raportForm').addEventListener('submit', handleFormSubmit);
+        
+        console.log('Raport Modal System initialized successfully');
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // TABLE FUNCTIONS dengan Action Buttons
+    // ═══════════════════════════════════════════════════════════════
+    
+    function updateTable(raports) {
+        const tbody = document.querySelector('#raport-table tbody');
+        tbody.innerHTML = '';
+        
+        if (raports.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <div class="flex flex-col items-center justify-center opacity-60">
+                            <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-sm">Tidak ada data raport</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        raports.forEach(raport => {
+            const minutes = Math.floor(raport.value / 60);
+            const seconds = raport.value - (minutes * 60);
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${seconds.toFixed(2).padStart(5, '0')}`;
+            
+            const intensityBadge = raport.intensity >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                raport.intensity >= 60 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                                'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+            
+            const safeNote = encodeURIComponent(raport.note || '');
+            
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-blue-50/30 dark:hover:bg-slate-700/50 transition-colors';
+            row.innerHTML = `
+                <td class="px-6 py-3 text-sm">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        ${raport.month.charAt(0).toUpperCase() + raport.month.slice(1)}
+                    </span>
+                </td>
+                <td class="px-6 py-3 text-sm text-gray-900 dark:text-gray-100 font-mono">${formattedTime}</td>
+                <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">${raport.volume} m</td>
+                <td class="px-6 py-3 text-sm">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${intensityBadge}">
+                        ${raport.intensity}%
+                    </span>
+                </td>
+                <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">${raport.peaking}</td>
+                <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">${raport.coach?.user?.name || '-'}</td>
+                <td class="px-6 py-3 text-sm text-right">
+                    <button class="edit-btn inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 transition-colors" 
+                            data-id="${raport.id}" 
+                            data-month="${raport.month}" 
+                            data-value="${raport.value}" 
+                            data-volume="${raport.volume}" 
+                            data-intensity="${raport.intensity}" 
+                            data-peaking="${raport.peaking}" 
+                            data-coach="${raport.coach_id}" 
+                            data-note="${safeNote}"
+                            title="Edit data">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>
+                    <button class="delete-btn inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors" 
+                            data-id="${raport.id}" 
+                            data-month="${raport.month}"
+                            title="Hapus data">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    function updateCharts(valueData, volumeData) {
+        if (chartValue) chartValue.destroy();
+        if (chartVolume) chartVolume.destroy();
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#e5e7eb' : '#374151';
+        const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+        const ctx1 = document.getElementById('chartValue').getContext('2d');
+        chartValue = new Chart(ctx1, {
+            type: 'line',
+            data: valueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        reverse: true,
+                        title: { display: true, text: 'Waktu (detik)', color: textColor },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    x: {
+                        title: { display: true, text: 'Bulan', color: textColor },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    }
+                },
+                plugins: { legend: { labels: { color: textColor } } }
+            }
+        });
+
+        const ctx2 = document.getElementById('chartVolume').getContext('2d');
+        chartVolume = new Chart(ctx2, {
+            type: 'line',
+            data: volumeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        title: { display: true, text: 'Nilai', color: textColor },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    x: { 
+                        title: { display: true, text: 'Bulan', color: textColor },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    }
+                },
+                plugins: { legend: { labels: { color: textColor } } }
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FORM MODAL FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function openCreateForm() {
+        console.log('Opening create form');
+        
+        isEditMode = false;
+        document.getElementById('formModalTitle').textContent = 'Tambah Data Raport';
+        document.getElementById('raportForm').reset();
+        document.getElementById('raport_id').value = '';
+        
+        // Set hidden fields
+        document.getElementById('form_member_id').value = currentMemberId;
+        document.getElementById('form_gaya').value = document.getElementById('gaya').value;
+        document.getElementById('form_year').value = document.getElementById('year').value;
+        
+        // Show month field untuk create
+        document.getElementById('monthFieldWrapper').style.display = 'block';
+        
+        // Load available months
+        loadAvailableMonths();
+        
+        // Show modal
+        document.getElementById('raportFormModal').classList.remove('hidden');
+        console.log('Create form modal opened');
+    }
+
+    function openEditForm(id, month, value, volume, intensity, peaking, coachId, note) {
+        console.log('Opening edit form for ID:', id);
+        
+        isEditMode = true;
+        document.getElementById('formModalTitle').textContent = 'Edit Data Raport';
+        
+        // Set values
+        document.getElementById('raport_id').value = id;
+        document.getElementById('value').value = parseFloat(value).toFixed(2);
+        document.getElementById('volume').value = volume;
+        document.getElementById('intensity').value = intensity;
+        document.getElementById('peaking').value = peaking;
+        document.getElementById('coach_id').value = coachId;
+        document.getElementById('note').value = note;
+        
+        // Set hidden fields
+        document.getElementById('form_member_id').value = currentMemberId;
+        document.getElementById('form_gaya').value = document.getElementById('gaya').value;
+        document.getElementById('form_year').value = document.getElementById('year').value;
+        
+        // Hide month field untuk edit
+        document.getElementById('monthFieldWrapper').style.display = 'none';
+        
+        // Show modal
+        document.getElementById('raportFormModal').classList.remove('hidden');
+        console.log('Edit form modal opened');
+    }
+
+    function closeFormModal() {
+        console.log('Closing form modal');
+        document.getElementById('raportFormModal').classList.add('hidden');
+        document.getElementById('raportForm').reset();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FORM SUBMIT HANDLER
+    // ═══════════════════════════════════════════════════════════════
+    
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        console.log('Form submitted, edit mode:', isEditMode);
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+        
+        if (isEditMode) {
+            // UPDATE
+            const raportId = document.getElementById('raport_id').value;
+            console.log('Updating raport ID:', raportId);
+            
+            fetch(`/api/raport/update/${raportId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Raport berhasil diupdate!', 'success');
+                    closeFormModal();
+                    loadRaportData();
+                } else {
+                    showAlert(data.message || 'Gagal mengupdate raport', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Terjadi kesalahan saat mengupdate raport', 'error');
+            });
+            
+        } else {
+            // CREATE
+            console.log('Creating new raport');
+            
+            fetch('/api/raport/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Raport berhasil ditambahkan!', 'success');
+                    closeFormModal();
+                    loadRaportData();
+                } else {
+                    showAlert(data.message || 'Gagal menambahkan raport', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Terjadi kesalahan saat menambahkan raport', 'error');
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function loadCoachesList() {
+        fetch('/api/raport/coaches')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    coaches = data.coaches;
+                    const select = document.getElementById('coach_id');
+                    select.innerHTML = '<option value="">-- Pilih Coach --</option>';
+                    
+                    coaches.forEach(coach => {
+                        select.innerHTML += `<option value="${coach.id}">${coach.name}</option>`;
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading coaches:', error));
+    }
+
+    function loadAvailableMonths() {
+        const gaya = document.getElementById('gaya').value;
+        const year = document.getElementById('year').value;
+        
+        fetch(`/api/raport/available-months?member_id=${currentMemberId}&gaya=${gaya}&year=${year}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = document.getElementById('month');
+                    select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+                    
+                    Object.entries(data.months).forEach(([key, value]) => {
+                        select.innerHTML += `<option value="${key}">${value}</option>`;
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading months:', error));
+    }
+
+    function confirmDelete(id, month) {
+        if (confirm(`Apakah Anda yakin ingin menghapus data raport bulan ${month}?`)) {
+            deleteRaport(id);
+        }
+    }
+
+    function deleteRaport(id) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+        
+        fetch(`/api/raport/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Raport berhasil dihapus!', 'success');
+                loadRaportData();
+            } else {
+                showAlert(data.message || 'Gagal menghapus raport', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Terjadi kesalahan saat menghapus raport', 'error');
+        });
+    }
+
+    function showAlert(message, type = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-[70] ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        alertDiv.textContent = message;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODAL MANAGEMENT FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    let modalStack = []; // Untuk melacak modal yang terbuka
+
+    function openRaportModal(memberId, memberName) {
+        console.log('Opening raport modal for:', memberId, memberName);
+        
+        currentMemberId = memberId;
+        document.getElementById('memberName').textContent = memberName;
+        document.getElementById('raportModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Tambah ke stack
+        modalStack.push('raportModal');
+        
+        // Load coaches list
+        loadCoachesList();
+        
+        // Load data pertama kali
+        loadRaportData();
+    }
+
+    function openCreateForm() {
+        console.log('Opening create form');
+        
+        isEditMode = false;
+        document.getElementById('formModalTitle').textContent = 'Tambah Data Raport';
+        document.getElementById('raportForm').reset();
+        document.getElementById('raport_id').value = '';
+        
+        // Set hidden fields
+        document.getElementById('form_member_id').value = currentMemberId;
+        document.getElementById('form_gaya').value = document.getElementById('gaya').value;
+        document.getElementById('form_year').value = document.getElementById('year').value;
+        
+        // Show month field untuk create
+        document.getElementById('monthFieldWrapper').style.display = 'block';
+        
+        // Load available months
+        loadAvailableMonths();
+        
+        // Show modal form dengan z-index tinggi
+        document.getElementById('raportFormModal').classList.remove('hidden');
+        
+        // Tambah ke stack
+        modalStack.push('raportFormModal');
+        
+        console.log('Create form modal opened');
+    }
+
+    function openEditForm(id, month, value, volume, intensity, peaking, coachId, note) {
+        console.log('Opening edit form for ID:', id);
+        
+        isEditMode = true;
+        document.getElementById('formModalTitle').textContent = 'Edit Data Raport';
+        
+        // Set values
+        document.getElementById('raport_id').value = id;
+        document.getElementById('value').value = parseFloat(value).toFixed(2);
+        document.getElementById('volume').value = volume;
+        document.getElementById('intensity').value = intensity;
+        document.getElementById('peaking').value = peaking;
+        document.getElementById('coach_id').value = coachId;
+        document.getElementById('note').value = note;
+        
+        // Set hidden fields
+        document.getElementById('form_member_id').value = currentMemberId;
+        document.getElementById('form_gaya').value = document.getElementById('gaya').value;
+        document.getElementById('form_year').value = document.getElementById('year').value;
+        
+        // Hide month field untuk edit
+        document.getElementById('monthFieldWrapper').style.display = 'none';
+        
+        // Show modal form
+        document.getElementById('raportFormModal').classList.remove('hidden');
+        
+        // Tambah ke stack
+        modalStack.push('raportFormModal');
+        
+        console.log('Edit form modal opened');
+    }
+
+    function closeFormModal() {
+        console.log('Closing form modal');
+        document.getElementById('raportFormModal').classList.add('hidden');
+        document.getElementById('raportForm').reset();
+        
+        // Hapus dari stack
+        modalStack = modalStack.filter(modal => modal !== 'raportFormModal');
+    }
+
+    function closeRaportModal() {
+        console.log('Closing raport modal');
+        
+        document.getElementById('raportModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        
+        // Juga tutup form modal jika terbuka
+        if (modalStack.includes('raportFormModal')) {
+            closeFormModal();
+        }
+        
+        // Reset stack
+        modalStack = [];
+        
+        if (chartValue) {
+            chartValue.destroy();
+            chartValue = null;
+        }
+        if (chartVolume) {
+            chartVolume.destroy();
+            chartVolume = null;
+        }
+    }
+
+    // Event listener untuk klik outside modal form
+    document.getElementById('raportFormModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeFormModal();
+        }
+    });
+
+    // Event listener untuk klik outside modal raport
+    document.getElementById('raportModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeRaportModal();
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODAL RAPORT FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function openRaportModal(memberId, memberName) {
+        console.log('Opening raport modal for:', memberId, memberName);
+        
+        currentMemberId = memberId;
+        document.getElementById('memberName').textContent = memberName;
+        document.getElementById('raportModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Load coaches list
+        loadCoachesList();
+        
+        // Load data pertama kali
+        loadRaportData();
+    }
+
+    function closeRaportModal() {
+        console.log('Closing raport modal');
+        
+        document.getElementById('raportModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        
+        if (chartValue) {
+            chartValue.destroy();
+            chartValue = null;
+        }
+        if (chartVolume) {
+            chartVolume.destroy();
+            chartVolume = null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // LOAD DATA FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function loadRaportData() {
+        const gaya = document.getElementById('gaya').value;
+        const year = document.getElementById('year').value;
+        
+        console.log('Loading raport data:', { currentMemberId, gaya, year });
+        
+        document.getElementById('loadingState').classList.remove('hidden');
+
+        fetch(`/api/raport/chart-data?member_id=${currentMemberId}&gaya=${gaya}&year=${year}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingState').classList.add('hidden');
+                
+                if (data.success) {
+                    console.log('Data loaded successfully:', data.raports.length, 'records');
+                    updateDetailInfo(data.raports);
+                    updateTable(data.raports);
+                    updateCharts(data.chartValue, data.chartVolume);
+                } else {
+                    console.error('Failed to load data:', data.message);
+                    showAlert('Gagal memuat data: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading raport data:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                showAlert('Gagal memuat data raport', 'error');
+            });
+    }
+
+    function updateDetailInfo(raports) {
+        const detailDiv = document.getElementById('raport-detail');
+        
+        if (raports.length === 0) {
+            detailDiv.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Tidak ada data raport untuk gaya dan tahun yang dipilih.</p>';
+            return;
+        }
+
+        let html = `<p class="text-sm font-semibold mb-3 text-gray-900 dark:text-gray-100">Total Data: ${raports.length} bulan</p>`;
+        html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-3">';
+        
+        raports.forEach(raport => {
+            const minutes = Math.floor(raport.value / 60);
+            const seconds = raport.value - (minutes * 60);
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${seconds.toFixed(2).padStart(5, '0')}`;
+            
+            html += `
+                <div class="border border-gray-200 dark:border-slate-600 rounded-lg p-3 bg-white dark:bg-slate-800">
+                    <p class="font-bold text-blue-600 dark:text-blue-400 mb-1">${raport.month.charAt(0).toUpperCase() + raport.month.slice(1)}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">⏱️ ${formattedTime}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">📊 ${raport.volume || '-'}m</p>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        detailDiv.innerHTML = html;
+    }
+
+</script>
 
 </body>
 </html>
