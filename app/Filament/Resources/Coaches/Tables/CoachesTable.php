@@ -26,6 +26,7 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ActionGroup;
 use Filament\Schemas\Components\Livewire;
+use Filament\Tables\Columns\Layout\Split;
 
 class CoachesTable
 {
@@ -33,127 +34,112 @@ class CoachesTable
     {
         return $table
             ->columns([
-                Stack::make([
-                    ImageColumn::make('user.photo_path')
-                        ->label('Foto')
-                        ->circular()
-                        ->alignCenter()
-                        ->imageHeight(40)
-                        ->width(40)
+                Split::make([
+                    ImageColumn::make('user.photo_path')->label('Foto')
+                        ->size(120)
                         ->disk('public')
-                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'Coach')),
-    
-                    // 2. Nama Lengkap Coach
-                    TextColumn::make('user.name')
-                        ->label('Nama Coach')
-                        ->searchable()
-                        ->sortable()
-                        ->weight('bold')
-                        ->color('primary')
-                        ->icon('heroicon-o-user-circle')
-                        ->tooltip(fn ($record) => $record->user?->name)
-                        ->wrap(),
-    
-                    // 3. Email
-                    TextColumn::make('user.email')
-                        ->label('Email')
-                        ->searchable()
-                        ->sortable()
-                        ->icon('heroicon-o-envelope')
-                        ->iconColor('blue')
-                        ->copyable()
-                        ->copyMessage('Email disalin!')
-                        ->tooltip(fn ($record) => $record->user?->email)
-                        ->wrap(),
-    
-                    // 4. Nomor Telepon
-                    TextColumn::make('user.phone')
-                        ->label('Nomor Telepon')
-                        ->searchable()
-                        ->sortable()
-                        ->icon('heroicon-o-phone')
-                        ->color('success')
-                        ->copyable()
-                        ->copyMessage('Nomor telepon disalin!')
-                        ->tooltip(fn ($record) => $record->user?->phone)
-                        ->wrap(),
-    
-                    // 5. Jenis Kelamin
-                    TextColumn::make('user.gender')
-                        ->label('Gender')
-                        ->badge()
-                        ->alignCenter()
-                        ->sortable()
-                        ->color(fn (string $state): string => match ($state) {
-                            'MALE' => 'blue',
-                            'FEMALE' => 'pink',
-                            default => 'gray',
-                        })
-                        ->formatStateUsing(fn (string $state): string => match ($state) {
-                            'MALE' => 'Laki-laki',
-                            'FEMALE' => 'Perempuan',
-                            default => $state,
-                        }),
-    
-                    // 6. Tanggal Lahir
-                    TextColumn::make('user.birth_date')
-                        ->label('Tgl. Lahir')
-                        ->date('d M Y')
-                        ->alignCenter()
-                        ->sortable(),
-    
-                    // 7. Bio Coach (snippet)
-                    TextColumn::make('bio')
-                        ->label('Biografi')
-                        ->limit(50)
-                        ->tooltip(fn ($record) => $record->bio)
-                        ->wrap()
-                        ->toggleable(isToggledHiddenByDefault: true),
-    
-                    // 8. Status Akun
-                    ToggleColumn::make('user.active')
-                        ->label('Aktif')
-                        ->alignCenter()
-                        ->tooltip('Klik untuk aktif/nonaktif')
-                        ->onColor('success')
-                        ->offColor('danger')
-                        ->onIcon('heroicon-o-check-circle')
-                        ->offIcon('heroicon-o-x-circle')
-                        ->sortable()
-                        ->beforeStateUpdated(function ($record, $state) {
-                            // Update status di user
-                            $record->user->update(['active' => $state]);
-                        }),
-    
-                    // 9. Role (selalu Coach)
-                    TextColumn::make('user.role')
-                        ->label('Role')
-                        ->badge()
-                        ->alignCenter()
-                        ->color('warning')
-                        ->default('coach')
-                        ->formatStateUsing(fn () => 'Coach'),
-    
-                    // 10. Dibuat
-                    TextColumn::make('created_at')
-                        ->label('Dibuat')
-                        ->dateTime('d M Y')
-                        ->alignCenter()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-    
-                    // 11. Diupdate
-                    TextColumn::make('updated_at')
-                        ->label('Diupdate')
-                        ->dateTime('d M Y')
-                        ->alignCenter()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                ]),
+                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'M'))
+                        ->extraAttributes([
+                            'style' => 'height: 100%; object-fit: cover; border-radius: 4px;'
+                        ])
+                        ->grow(false),
+
+                    Stack::make([
+                        // 2. Nama Lengkap Coach
+                        TextColumn::make('user.name')
+                            ->label('Nama Coach')
+                            ->searchable()
+                            ->sortable()
+                            ->weight('bold')
+                            ->color('primary')
+                            ->icon('heroicon-o-user-circle')
+                            ->tooltip(fn ($record) => $record->user?->name)
+                        ,
+
+                        TextColumn::make('user.role')
+                            ->label('Role')
+                            ->badge()
+                            ->color('warning')
+                            ->default('coach')
+                            ->formatStateUsing(fn () => 'Coach'),
+        
+                        // 3. Email
+                        TextColumn::make('user.email')
+                            ->label('Email')
+                            ->searchable()
+                            ->sortable()
+                            ->icon('heroicon-o-envelope')
+                            ->iconColor('blue')
+                            ->copyable()
+                            ->copyMessage('Email disalin!')
+                            ->tooltip(fn ($record) => $record->user?->email)
+                        ,
+        
+                        // 4. Nomor Telepon
+                        TextColumn::make('user.phone')
+                            ->label('Nomor Telepon')
+                            ->searchable()
+                            ->sortable()
+                            ->icon('heroicon-o-phone')
+                            ->color('success')
+                            ->copyable()
+                            ->copyMessage('Nomor telepon disalin!')
+                            ->tooltip(fn ($record) => $record->user?->phone)
+                        ,
+                        Split::make([
+                            // 5. Jenis Kelamin
+                            TextColumn::make('user.gender')
+                                ->label('Gender')
+                                ->badge()
+                                ->sortable()
+                                ->color(fn (string $state): string => match ($state) {
+                                    'MALE' => 'blue',
+                                    'FEMALE' => 'pink',
+                                    default => 'gray',
+                                })
+                                ->formatStateUsing(fn (string $state): string => match ($state) {
+                                    'MALE' => 'Laki-laki',
+                                    'FEMALE' => 'Perempuan',
+                                    default => $state,
+                                }),
+
+                                // 6. Tanggal Lahir
+                                TextColumn::make('user.birth_date')
+                                    ->label('Tgl. Lahir')
+                                    ->date('d M Y')
+                                    ->sortable()
+                                    ->hidden(),
+                        ]),
+        
+                        // 7. Bio Coach (snippet)
+                        TextColumn::make('bio')
+                            ->label('Biografi')
+                            ->limit(50)
+                            ->tooltip(fn ($record) => $record->bio)
+                            ->toggleable(isToggledHiddenByDefault: true),
+        
+        
+                        // 10. Dibuat
+                        TextColumn::make('created_at')
+                            ->label('Dibuat')
+                            ->dateTime('d M Y')
+                            ->sortable()
+                            ->hidden()
+                            ->toggleable(isToggledHiddenByDefault: true),
+        
+                        // 11. Diupdate
+                        TextColumn::make('updated_at')
+                            ->label('Diupdate')
+                            ->dateTime('d M Y')
+                            ->sortable()
+                            ->hidden()
+                            ->toggleable(isToggledHiddenByDefault: true),
+                    ]),
+                ])
             ])
             ->contentGrid([
                 'md' => 2,
-                'xl' => 3,
+                'xl' => 2,
             ])
             ->filters([
                 // Filter berdasarkan status aktif
@@ -187,9 +173,9 @@ class CoachesTable
                     }),
             ])
             ->recordActions([
-                ActionGroup::make([
                     Action::make('lihat_kehadiran')
-                        ->label('lihat kehadiran')
+                        ->label('')
+                        ->button()
                         ->tooltip('Lihat Kehadiran Coach')
                         ->icon('heroicon-o-calendar-days')
                         ->color('info')
@@ -217,7 +203,8 @@ class CoachesTable
                         ->modalCancelActionLabel('Tutup'),
 
                     Action::make('viewMembers')
-                        ->label('Lihat Member')
+                        ->label('')
+                        ->button()
                         ->icon('heroicon-o-users')
                         ->color('info')
                         ->modalHeading(fn ($record) => 'Member yang Di-assign')
@@ -269,7 +256,8 @@ class CoachesTable
                         ->slideOver()
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
                     Action::make('assignMember')
-                        ->label('Atur Member')
+                        ->label('')
+                        ->button()
                         ->icon('heroicon-o-users')
                         ->form([
                             Select::make('members')
@@ -301,17 +289,13 @@ class CoachesTable
                         })
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
                     ViewAction::make()
-                        ->label('Lihat')
+                        ->label('')
+                        ->button()
                         ->tooltip('Lihat detail')
-                        ->icon('heroicon-o-eye')
-                        ->color('gray')
-                        ->size('sm')
-                        ->extraAttributes([
-                            'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2'
-                        ]),
-    
+                        ->icon('heroicon-o-eye'),
                     EditAction::make()
-                        ->label('Edit')
+                        ->label('')
+                        ->button()
                         ->tooltip('Edit coach')
                         ->icon('heroicon-o-pencil-square')
                         ->color('primary')
@@ -321,7 +305,8 @@ class CoachesTable
                         ]),
     
                     DeleteAction::make()
-                        ->label('Delete')
+                        ->label('')
+                        ->button()
                         ->tooltip('Hapus coach')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
@@ -340,7 +325,8 @@ class CoachesTable
                         }),
     
                     Action::make('assignSchedule')
-                        ->label('Atur Jadwal')
+                        ->label('')
+                        ->button()
                         ->icon('heroicon-o-calendar-days')
                         ->form([
                             Select::make('schedules')
@@ -373,10 +359,6 @@ class CoachesTable
                         })
                         // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
-                ])
-                    ->icon('heroicon-o-bars-4') // ini ikon burger menu (⋮)
-                    ->label('')
-                    ->button(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
