@@ -51,6 +51,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/attendance/store', [AttendanceController::class, 'store'])
          ->name('attendance.store');
     
+    Route::get('/api/raport/chart-data', [CoachDashboardController::class, 'getChartData'])
+        ->name('api.raport.chart');
+
+    Route::post('/api/raport/create', [CoachDashboardController::class, 'createRaport'])
+        ->name('api.raport.create');
+
+    // Update Raport
+    Route::put('/api/raport/update/{id}', [CoachDashboardController::class, 'updateRaport'])
+        ->name('api.raport.update');
+
+    // Delete Raport
+    Route::delete('/api/raport/delete/{id}', [CoachDashboardController::class, 'deleteRaport'])
+        ->name('api.raport.delete');
+
+    // Get Available Months
+    Route::get('/api/raport/available-months', [CoachDashboardController::class, 'getAvailableMonths'])
+        ->name('api.raport.months');
+
+    // Get Coaches List
+    Route::get('/api/raport/coaches', [CoachDashboardController::class, 'getCoachesList'])
+        ->name('api.raport.coaches');
+    
     // Rute Dashboard Member (sesuai rencana)
     Route::get('/member/dashboard', function() {
         // Nanti kamu bisa ganti ini ke controller-mu
