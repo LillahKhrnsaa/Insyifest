@@ -10,10 +10,10 @@ class ViewMember extends ViewRecord
 {
     protected static string $resource = MemberResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            EditAction::make(),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         //
+    //     ];
+    // }
 }
