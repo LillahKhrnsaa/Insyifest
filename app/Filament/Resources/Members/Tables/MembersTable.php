@@ -21,6 +21,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -35,42 +36,45 @@ class MembersTable
     {
         return $table
             ->columns([
-                Stack::make([
-
-                    // 1. Foto Profil
+                Split::make([
                     ImageColumn::make('user.photo_path')->label('Foto')
-                        ->circular()->imageHeight(40)->disk('public')
-                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'M')),
-    
-                    // 2. Nama, Email, & Telepon
-                    TextColumn::make('user.name')->label('Nama Member')
-                        ->searchable()->sortable()->weight('bold')->color('primary')
-                        ->description(fn ($record) => $record->user->email) // Tampilkan email di bawah nama
-                        ->tooltip(fn ($record) => "Telepon: " . ($record->user->phone ?? '-')),
-    
-                    // 3. Paket Latihan
-                    TextColumn::make('trainingPackage.name')->label('Paket Latihan')
-                        ->badge()->color('success')->default('Belum ada paket')->searchable(),
-    
-                    // 4. Status Akun (User Active/Inactive) - Toggle Interaktif
-                    ToggleColumn::make('user.active')->label('Akun Aktif')
-                        ->tooltip('Klik untuk mengaktifkan/menonaktifkan akun user')
-                        ->onColor('success')->offColor('danger'),
-    
-                    // 5. Status Keanggotaan (Member AKTIF/TIDAK_AKTIF) - Select Interaktif
-                    SelectColumn::make('status')->label('Status Member')
-                        ->options(['AKTIF' => 'Aktif', 'TIDAK_AKTIF' => 'Tidak Aktif'])
-                        ->sortable(),
-                    
-                    // 6. Dibuat Pada (Toggleable)
-                    TextColumn::make('created_at')->label('Dibuat Pada')
-                        ->dateTime('d M Y')->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                ]), 
+                        ->size(120)
+                        ->disk('public')
+                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'M'))
+                        ->extraAttributes([
+                            'style' => 'height: 100%; object-fit: cover; border-radius: 4px;'
+                        ])
+                        ->grow(false),
+
+                        Stack::make([
+            
+                            // 2. Nama, Email, & Telepon
+                            TextColumn::make('user.name')->label('Nama Member')
+                                ->searchable()->sortable()->weight('bold')->color('primary')
+                                ->description(fn ($record) => $record->user->email)
+                                ->tooltip(fn ($record) => "Telepon: " . ($record->user->phone ?? '-')),
+                                
+                            TextColumn::make('user.birth_date')
+                                ->label('Tgl. Lahir')
+                                ->date('d M Y')
+                                ->sortable(),
+
+                            TextColumn::make('trainingPackage.name')->label('Paket Latihan')
+                                ->badge()->color('success')->default('Belum ada paket')->searchable(),
+                            
+                            ToggleColumn::make('is_active_toggle')->label('Status Aktif')
+                                ->sortable(),
+                                
+                            // 6. Dibuat Pada (Toggleable)
+                            TextColumn::make('created_at')->label('Dibuat Pada')
+                                ->dateTime('d M Y')->sortable()->hidden()
+                                ->toggleable(isToggledHiddenByDefault: true),
+                        ]),
+                ]),
             ])
             ->contentGrid([
                 'md' => 2,
-                'xl' => 3,
+                'xl' => 2,
             ])
             ->filters([
                 // Filter berdasarkan status keanggotaan
@@ -136,7 +140,7 @@ class MembersTable
                                             ->default('gaya_bebas_50')
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated($refreshHandler), // Panggil handler
+                                            ->afterStateUpdated($refreshHandler),
 
                                         TextInput::make('year')
                                             ->label('Tahun')
@@ -146,7 +150,7 @@ class MembersTable
                                             ->maxLength(4)
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated($refreshHandler), // Panggil handler
+                                            ->afterStateUpdated($refreshHandler),
                                     ]),
                                 ])->columnSpanFull(),
                             
@@ -192,52 +196,41 @@ class MembersTable
                                 })
                                 ->columnSpanFull(),
 
-                            Section::make('Detail Data Raport Terpilih')
-                                ->schema([
-                                    Livewire::make(\App\Filament\Widgets\RaportTable::class, fn (SchemaComponent $component, Get $get) => [
-                                        'memberId' => $component->getRecord()?->id ?? 0,
-                                        'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
-                                        'year'     => $get('year') ?? now()->year,
-                                    ])
-                                    ->key(fn($r, $get) => 'table-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                    ->lazy()
-                                    ->dehydrated(false)
-                                    ->live()
-                                ]),
+                                Livewire::make(\App\Filament\Widgets\RaportTable::class, fn (SchemaComponent $component, Get $get) => [
+                                    'memberId' => $component->getRecord()?->id ?? 0,
+                                    'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
+                                    'year'     => $get('year') ?? now()->year,
+                                ])
+                                ->key(fn($r, $get) => 'table-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
                                 
                             // 3. WIDGET CHARTS (Grid 2 Kolom)
                             Grid::make(2)->schema([
-                                
-                                // CHART 1: Waktu Tempuh
-                                Section::make('Grafik Waktu Tempuh (Detik)')
-                                    ->schema([
-                                        Livewire::make(\App\Filament\Widgets\RaportChart::class, fn (SchemaComponent $component, Get $get) => [
-                                            // ambil record dari schema/component context (record modal/action)
-                                            'memberId' => $component->getRecord()?->id ?? 0,
-                                            'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
-                                            'year'     => $get('year') ?? now()->year,
-                                        ])
-                                        ->key(fn($r, $get) => 'chart-value-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                        ->lazy()
-                                        ->dehydrated(false)
-                                        ->live()
 
-                                    ]),
+                                Livewire::make(\App\Filament\Widgets\RaportChart::class, fn (SchemaComponent $component, Get $get) => [
+                                    // ambil record dari schema/component context (record modal/action)
+                                    'memberId' => $component->getRecord()?->id ?? 0,
+                                    'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
+                                    'year'     => $get('year') ?? now()->year,
+                                ])
+                                ->key(fn($r, $get) => 'chart-value-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
 
-                                Section::make('Grafik Volume, Peaking, Intensity')
-                                ->schema([
-                                    Livewire::make(\App\Filament\Widgets\RaportVolumeChart::class, 
-                                        fn($component, $get) => [
-                                            'memberId' => $component->getRecord()?->id ?? 0,
-                                            'gaya' => $get('gaya'),
-                                            'year' => $get('year'),
-                                        ]
-                                    )
-                                    ->key(fn($r, $get) => 'chart-volume-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                    ->lazy()
-                                    ->dehydrated(false)
-                                    ->live()
-                                ]),
+                                Livewire::make(\App\Filament\Widgets\RaportVolumeChart::class, 
+                                    fn($component, $get) => [
+                                        'memberId' => $component->getRecord()?->id ?? 0,
+                                        'gaya' => $get('gaya'),
+                                        'year' => $get('year'),
+                                    ]
+                                )
+                                ->key(fn($r, $get) => 'chart-volume-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
                                     
                             ])->columnSpanFull(), 
 
@@ -259,9 +252,8 @@ class MembersTable
                     ->modalDescription('Yakin ingin menghapus member ini? Data user terkait juga akan terhapus!')
                     ->modalSubmitActionLabel('Ya, Hapus')
                     // HOOK PENTING: Hapus user terkait sebelum menghapus member
-                    ->before(fn ($record) => $record->user?->delete()), 
+                    ->before(fn ($record) => $record->user?->delete()),
             ])
-            // ✅ SINTAKS BENAR: Menggunakan ->bulkActions()
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->label('Hapus Pilihan')
