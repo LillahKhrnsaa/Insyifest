@@ -14,8 +14,9 @@ class MemberInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema
+        ->columns(1)
             ->schema([
-                Grid::make(3)->schema([
+                Grid::make(2)->schema([
                     // --- GRUP KIRI: PROFIL UTAMA ---
                     Section::make('Informasi Profil Member')
                         ->schema([
@@ -31,7 +32,7 @@ class MemberInfolist
                                     'FEMALE' => 'Perempuan',
                                     default => 'Tidak Diketahui',
                                 }),
-                        ])->columns(2)->columnSpan(2),
+                        ])->columnSpanFull()->columns(2),
 
                     // --- GRUP KANAN: STATUS & PAKET ---
                     Section::make('Status Keanggotaan')
@@ -49,7 +50,7 @@ class MemberInfolist
 
                             TextEntry::make('start_date')->label('Terdaftar Sejak')->date('d F Y'),
                             TextEntry::make('end_date')->label('Berakhir Pada')->date('d F Y')->default('-'),
-                        ])->columnSpan(1),
+                        ])->columnSpanFull()->columns(2),
 
                     // --- BAGIAN BAWAH: RIWAYAT SISTEM ---
                     Section::make('Riwayat Sistem')
