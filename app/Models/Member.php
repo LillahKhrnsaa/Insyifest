@@ -94,13 +94,20 @@ class Member extends Model
                     ->withTimestamps();
     }
 
-    /**
-     * Riwayat absensi dimana member ini hadir.
-     * (via tabel 'attendance_members')
-     */
     public function attendances(): BelongsToMany
     {
         return $this->belongsToMany(Attendance::class, 'attendance_members')->withTimestamps();
     }
 
+    protected function isActiveToggle(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) => $attributes['status'] === 'AKTIF',
+        )->shouldCache();
+    }
+    
+    protected function setIsActiveToggleAttribute(bool $value): void
+    {
+        $this->attributes['status'] = $value ? 'AKTIF' : 'TIDAK_AKTIF';
+    }
 }
