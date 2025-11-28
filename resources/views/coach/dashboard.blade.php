@@ -60,7 +60,7 @@
 
     {{-- Header: Ditambah border-t-4 warna merah (Khas Persija/Shell) --}}
     <header class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 {{-- Logo dan Brand --}}
                 <div class="flex items-center">
@@ -151,7 +151,7 @@
 
     {{-- Konten Utama Dashboard --}}
     <main class="py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Notifikasi --}}
             @if (session('success'))
@@ -657,7 +657,7 @@
 </div>
 {{-- Modal Raport --}}
 <div id="raportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-xl bg-white dark:bg-slate-800">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-full shadow-lg rounded-xl bg-white dark:bg-slate-800">
         {{-- Header Modal --}}
         <div class="flex justify-between items-center pb-4 mb-4 border-b dark:border-slate-700">
             <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -860,9 +860,6 @@
         </form>
     </div>
 </div>
-
-{{-- Load Chart.js --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {{-- JavaScript untuk Modal & Chart --}}
 <script>
