@@ -22,11 +22,13 @@ class MemberForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+        ->columns(1)
             ->schema([
                 Section::make('Informasi Akun Pengguna')
                     ->description('Detail login dan akses untuk member.')
                     ->icon('heroicon-o-user-circle')
                     ->schema([
+                        Grid::make(2)->schema([
                         // ✅ PERUBAHAN DI SINI: Logika 'afterStateUpdated' disederhanakan
                         TextInput::make('name')->label('Nama Lengkap')->required()->maxLength(255)
                             ->live(onBlur: true)
@@ -35,7 +37,7 @@ class MemberForm
                                     $baseEmail = Str::lower(str_replace(' ', '.', $state));
                                     $set('email', $baseEmail . '@cikampekswimmingclub.com');
                                 }
-                            })->columnSpanFull(),
+                            }),
 
                         // ✅ PERUBAHAN DI SINI: Tambahkan 'readonly' agar konsisten dengan Coach
                         TextInput::make('email')
@@ -43,13 +45,10 @@ class MemberForm
                             ->email()->required()->prefixIcon('heroicon-o-envelope')
                             ->readonly() // Buat field ini tidak bisa diubah manual
                             ->helperText('Email akan terisi otomatis berdasarkan nama.')
-                            ->columnSpanFull()
                             ->placeholder('contoh@cikampekswimmingclub.gmail.com')
-                            ->extraAttributes(['class' => 'focus:border-primary-500'])
-                            ->columnSpanFull(),
+                            ->extraAttributes(['class' => 'focus:border-primary-500']),
                         
                         // ... sisa field di section ini sama ...
-                        Grid::make(2)->schema([
                             TextInput::make('password')->label('Password')
                                 ->password()
                                 ->required(fn (string $operation): bool => $operation === 'create')
@@ -59,13 +58,13 @@ class MemberForm
                                 ->password()
                                 ->required(fn (string $operation): bool => $operation === 'create')
                                 ->dehydrated(false),
+                            FileUpload::make('photo_path')->label('Foto Profil')
+                                ->image()->avatar()->disk('public')->directory('member-photos')
+                                ->imageEditor(),
+                            Hidden::make('role')->default('member'),
+                            Toggle::make('active')->label('Akun Aktif')->required()->default(true),
                         ]),
-                        FileUpload::make('photo_path')->label('Foto Profil')
-                            ->image()->avatar()->disk('public')->directory('member-photos')
-                            ->imageEditor()->columnSpanFull(),
-                        Toggle::make('active')->label('Akun Aktif')->required()->default(true),
-                        Hidden::make('role')->default('member'),
-                    ])->collapsible()->columns(2),
+                    ])->collapsible()->columns(1),
 
                 // ... Sisa Section lainnya tidak ada perubahan ...
                 Section::make('Informasi Pribadi')
@@ -78,7 +77,7 @@ class MemberForm
                             ->native(false)->prefixIcon('heroicon-o-user'),
                         DatePicker::make('birth_date')->label('Tanggal Lahir')
                             ->maxDate(now())->native(false)->prefixIcon('heroicon-o-cake'),
-                    ])->collapsible()->columns(3),
+                    ])->collapsible()->columns(2),
 
                 Section::make('Informasi Keanggotaan')
                     ->description('Detail spesifik terkait status keanggotaan.')
