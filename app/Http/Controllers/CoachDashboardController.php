@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\Coach;
 use App\Models\Member;
 use App\Models\Attendance;
+use App\Models\Raport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class CoachDashboardController extends Controller
 {
@@ -65,5 +68,328 @@ class CoachDashboardController extends Controller
             'allOtherMembers',      // Data BARU (terfilter) untuk modal checklist 2
             'attendances'
         ));
+    }
+
+    public function getChartData(Request $request)
+    {
+        try {
+            // Validasi input
+            $request->validate([
+                'member_id' => 'required|integer|exists:members,id',
+                'gaya' => 'required|string',
+                'year' => 'required|integer|min:2000|max:2099',
+            ]);
+
+            $memberId = $request->input('member_id');
+            $gaya = $request->input('gaya');
+            $year = $request->input('year');
+
+            // Opsional: Cek apakah coach berhak akses member ini
+            $user = Auth::user();
+            $coach = Coach::where('user_id', $user->id)->first();
+            
+            if (!$coach) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Coach tidak ditemukan'
+                ], 404);
+            }
+
+            // ✅ FIX: Tambahkan prefix tabel untuk menghindari ambiguous column
+            $member = $coach->members()
+                ->where('members.id', $memberId) // ← TAMBAHKAN 'members.' prefix
+                ->first();
+            
+            if (!$member) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke member ini'
+                ], 403);
+            }
+
+            // Query raport dengan ordering bulan
+            $raports = Raport::where('member_id', $memberId)
+                ->where('gaya', $gaya)
+                ->where('year', $year)
+                ->whereNotNull('value')
+                ->where('value', '>', 0)
+                ->orderByRaw("CASE month 
+                    WHEN 'januari' THEN 1 
+                    WHEN 'februari' THEN 2 
+                    WHEN 'maret' THEN 3 
+                    WHEN 'april' THEN 4 
+                    WHEN 'mei' THEN 5 
+                    WHEN 'juni' THEN 6 
+                    WHEN 'juli' THEN 7 
+                    WHEN 'agustus' THEN 8 
+                    WHEN 'september' THEN 9 
+                    WHEN 'oktober' THEN 10 
+                    WHEN 'november' THEN 11 
+                    WHEN 'desember' THEN 12 
+                    ELSE 13 END")
+                ->with(['coach.user'])
+                ->get();
+
+            // Format data untuk response
+            $labels = $raports->pluck('month')->map(fn($m) => ucfirst($m))->toArray();
+            
+            return response()->json([
+                'success' => true,
+                'raports' => $raports,
+                
+                // Data untuk Chart 1 (Waktu Tempuh)
+                'chartValue' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => 'Waktu (detik)',
+                            'data' => $raports->pluck('value')->map(fn($v) => (float) $v)->toArray(),
+                            'borderColor' => 'rgb(59, 130, 246)',
+                            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                            'tension' => 0.4,
+                        ]
+                    ]
+                ],
+                
+                // Data untuk Chart 2 (Volume, Peaking, Intensity)
+                'chartVolume' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => 'Volume (meter)',
+                            'data' => $raports->pluck('volume')->map(fn($v) => (float) $v)->toArray(),
+                            'borderColor' => 'rgb(34, 197, 94)',
+                            'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
+                            'tension' => 0.4,
+                        ],
+                        [
+                            'label' => 'Peaking (%)',
+                            'data' => $raports->pluck('peaking')->map(fn($v) => (float) $v)->toArray(),
+                            'borderColor' => 'rgb(236, 72, 153)',
+                            'backgroundColor' => 'rgba(236, 72, 153, 0.2)',
+                            'tension' => 0.4,
+                        ],
+                        [
+                            'label' => 'Intensity (%)',
+                            'data' => $raports->pluck('intensity')->map(fn($v) => (float) $v)->toArray(),
+                            'borderColor' => 'rgb(234, 179, 8)',
+                            'backgroundColor' => 'rgba(234, 179, 8, 0.2)',
+                            'tension' => 0.4,
+                        ],
+                    ]
+                ],
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Log error untuk debugging
+            Log::error('Raport Chart Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * CREATE Raport
+     * ═══════════════════════════════════════════════════════════════
+     */
+    public function createRaport(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'member_id' => 'required|integer|exists:members,id',
+                'gaya' => 'required|string',
+                'year' => 'required|integer',
+                'month' => 'required|string',
+                'value' => 'required|numeric',
+                'volume' => 'required|numeric',
+                'intensity' => 'required|numeric',
+                'peaking' => 'required|numeric',
+                'coach_id' => 'required|integer|exists:coaches,id',
+                'note' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Cek duplikasi
+            $exists = Raport::where('member_id', $request->member_id)
+                ->where('gaya', $request->gaya)
+                ->where('year', $request->year)
+                ->where('month', $request->month)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data raport untuk bulan ini sudah ada!'
+                ], 422);
+            }
+
+            $raport = Raport::create($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Raport berhasil ditambahkan',
+                'data' => $raport
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan raport: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * UPDATE Raport
+     * ═══════════════════════════════════════════════════════════════
+     */
+    public function updateRaport(Request $request, $id)
+    {
+        try {
+            $raport = Raport::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'value' => 'required|numeric',
+                'volume' => 'required|numeric',
+                'intensity' => 'required|numeric',
+                'peaking' => 'required|numeric',
+                'coach_id' => 'required|integer|exists:coaches,id',
+                'note' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Lock field penting (tidak bisa diubah)
+            $raport->update([
+                'value' => $request->value,
+                'volume' => $request->volume,
+                'intensity' => $request->intensity,
+                'peaking' => $request->peaking,
+                'coach_id' => $request->coach_id,
+                'note' => $request->note,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Raport berhasil diupdate',
+                'data' => $raport
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate raport: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * DELETE Raport
+     * ═══════════════════════════════════════════════════════════════
+     */
+    public function deleteRaport($id)
+    {
+        try {
+            $raport = Raport::findOrFail($id);
+            $raport->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Raport berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus raport: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * GET Available Months (untuk dropdown Create)
+     * ═══════════════════════════════════════════════════════════════
+     */
+    public function getAvailableMonths(Request $request)
+    {
+        $memberId = $request->input('member_id');
+        $gaya = $request->input('gaya');
+        $year = $request->input('year');
+
+        $allMonths = [
+            'januari' => 'Januari',
+            'februari' => 'Februari',
+            'maret' => 'Maret',
+            'april' => 'April',
+            'mei' => 'Mei',
+            'juni' => 'Juni',
+            'juli' => 'Juli',
+            'agustus' => 'Agustus',
+            'september' => 'September',
+            'oktober' => 'Oktober',
+            'november' => 'November',
+            'desember' => 'Desember'
+        ];
+
+        $usedMonths = Raport::where('member_id', $memberId)
+            ->where('gaya', $gaya)
+            ->where('year', $year)
+            ->pluck('month')
+            ->toArray();
+
+        $availableMonths = array_diff_key($allMonths, array_flip($usedMonths));
+
+        return response()->json([
+            'success' => true,
+            'months' => $availableMonths
+        ]);
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * GET Coaches List (untuk dropdown)
+     * ═══════════════════════════════════════════════════════════════
+     */
+    public function getCoachesList()
+    {
+        $coaches = Coach::with('user')->get()->map(function ($coach) {
+            return [
+                'id' => $coach->id,
+                'name' => $coach->user->name ?? "Coach #{$coach->id}"
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'coaches' => $coaches
+        ]);
     }
 }
