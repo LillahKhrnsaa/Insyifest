@@ -3,6 +3,7 @@ import Swiper from 'swiper';
 import 'swiper/css';
 import 'swiper/css/autoplay';
 import { Autoplay } from 'swiper/modules';
+import Chart from 'chart.js/auto';
 
 import Alpine from 'alpinejs';
 import feather from 'feather-icons';
@@ -59,6 +60,8 @@ Alpine.data('coachDashboard', (hasErrors, oldScheduleId, oldPlace) => ({
 
 window.Alpine = Alpine;
 Alpine.start();
+
+window.Chart = Chart;
 
 document.addEventListener('DOMContentLoaded', function() {
     feather.replace();
