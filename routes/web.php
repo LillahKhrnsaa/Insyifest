@@ -7,11 +7,8 @@ use App\Http\Controllers\FormEksternalController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\CoachDashboardController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\MemberDashboardController; // TAMBAHKAN INI
 
-
-// Route::get('/', function () {
-//     return view('welcome');
-// });
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -19,19 +16,17 @@ Route::get('/form/{slug}', [FormEksternalController::class, 'show'])->name('form
 Route::post('/form/{slug}', [FormEksternalController::class, 'submit'])->name('form.submit');
 
 // Rute untuk menampilkan form registrasi member
-// Rute GET untuk MENAMPILKAN form, diberi nama 'create'
 Route::get('/register/member', [MemberRegistrationController::class, 'create'])
     ->middleware('guest')
-    ->name('member.register.create'); // <--- NAMA DIUBAH
+    ->name('member.register.create');
 
-// Rute POST untuk MENYIMPAN data, diberi nama 'store'
 Route::post('/register/member', [MemberRegistrationController::class, 'store'])
     ->middleware('guest')
-    ->name('member.register.store'); // <--- NAMA DITAMBAHKAN
+    ->name('member.register.store');
 
 // Route untuk menampilkan halaman login (GET request)
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])
-    ->name('login'); // <--- ini penting!
+    ->name('login');
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -41,49 +36,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Rute fallback default (jika ada user login tanpa role)
     Route::get('/dashboard', function () {
-        return view('dashboard'); // <-- Pastikan view 'dashboard.blade.php' ada
+        return view('dashboard');
     })->name('dashboard');
 
-    // Rute Dashboard Coach (INI YANG KITA AKTIFKAN)
+    // Rute Dashboard Coach
     Route::get('/coach/dashboard', [CoachDashboardController::class, 'index'])
         ->name('coach.dashboard');
 
     Route::post('/attendance/store', [AttendanceController::class, 'store'])
          ->name('attendance.store');
     
+    // Coach Raport API Routes
     Route::get('/api/raport/chart-data', [CoachDashboardController::class, 'getChartData'])
         ->name('api.raport.chart');
 
     Route::post('/api/raport/create', [CoachDashboardController::class, 'createRaport'])
         ->name('api.raport.create');
 
-    // Update Raport
     Route::put('/api/raport/update/{id}', [CoachDashboardController::class, 'updateRaport'])
         ->name('api.raport.update');
 
-    // Delete Raport
     Route::delete('/api/raport/delete/{id}', [CoachDashboardController::class, 'deleteRaport'])
         ->name('api.raport.delete');
 
-    // Get Available Months
     Route::get('/api/raport/available-months', [CoachDashboardController::class, 'getAvailableMonths'])
         ->name('api.raport.months');
 
-    // Get Coaches List
     Route::get('/api/raport/coaches', [CoachDashboardController::class, 'getCoachesList'])
         ->name('api.raport.coaches');
     
-    // Rute Dashboard Member (sesuai rencana)
-    Route::get('/member/dashboard', function() {
-        // Nanti kamu bisa ganti ini ke controller-mu
-        return view('member.dashboard'); // <-- Buat file 'resources/views/member/dashboard.blade.php'
-    })->name('member.dashboard');
+    // ═══════════════════════════════════════════════════════════════
+    // MEMBER DASHBOARD ROUTES - TAMBAHKAN INI
+    // ═══════════════════════════════════════════════════════════════
     
-    // Rute untuk profile, dll. bisa ditambahkan di sini
-    // Contoh: Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-});
+    // Rute Dashboard Member dengan Controller
+    Route::get('/member/dashboard', [MemberDashboardController::class, 'index'])
+        ->name('member.dashboard');
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/coach-dashboard', [CoachDashboardController::class, 'index'])
-//         ->name('coach.dashboard');
-// });
+    // Member Performance API Routes
+    Route::get('/member/performance-data', [MemberDashboardController::class, 'getPerformanceData'])
+        ->name('member.performance.data');
+
+    Route::get('/member/attendance-history', [MemberDashboardController::class, 'getAttendanceHistory'])
+        ->name('member.attendance.history');
+});
