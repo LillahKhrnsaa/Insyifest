@@ -58,18 +58,18 @@ class SalariesTable
                     ->icon('heroicon-o-academic-cap'),
 
                 // 💰 Total Gaji
-                TextColumn::make('total_amount')
-                    ->label('Total Gaji')
-                    ->money('IDR')
-                    ->sortable()
-                    ->weight('bold')
-                    ->color('success')
-                    ->icon('heroicon-o-banknotes')
-                    ->summarize([
-                        \Filament\Tables\Columns\Summarizers\Sum::make()
-                            ->money('IDR')
-                            ->label('Total Keseluruhan'),
-                    ]),
+                // TextColumn::make('total_amount')
+                //     ->label('Total Gaji')
+                //     ->money('IDR')
+                //     ->sortable()
+                //     ->weight('bold')
+                //     ->color('success')
+                //     ->icon('heroicon-o-banknotes')
+                //     ->summarize([
+                //         \Filament\Tables\Columns\Summarizers\Sum::make()
+                //             ->money('IDR')
+                //             ->label('Total Keseluruhan'),
+                //     ]),
 
                 // 📋 Status
                 TextColumn::make('status')
