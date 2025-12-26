@@ -1,770 +1,779 @@
 <!DOCTYPE html>
-<html lang="id" class="">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50 scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Dashboard - Cikampek Swimming Club</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Member Dashboard - Cikampek Swimming Club</title>
     
-    <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-    </script>
-    
+    {{-- Vite Assets --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    {{-- Font Nunito --}}
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=nunito:400,500,600,700,800,900&display=swap" rel="stylesheet">
+    
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-        }
+        /* Custom Styles - Sama persis dengan Coach Dashboard */
+        body { font-family: 'Nunito', sans-serif; }
         [x-cloak] { display: none !important; }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-        
-        .dark .custom-scrollbar::-webkit-scrollbar-track { background: #374151; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        
-        .shell-blue { background-color: #0051ff; }
-        
-        /* Loading spinner */
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { 
+            background: #cbd5e1; 
+            border-radius: 3px; 
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        ::-webkit-scrollbar-thumb:hover { background: #0891b2; }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Card Hover Effects */
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(8, 145, 178, 0.15);
+        }
+        
+        /* Gradient Border */
+        .gradient-border {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+        }
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px; right: -1px; bottom: -1px;
+            background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+            border-radius: 17px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .gradient-border:hover::before { opacity: 1; }
+        
+        /* Table Styles */
+        .table-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+        .table-row:hover { background-color: #f8fafc; }
+        
+        /* Status Badge */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-badge::before {
+            content: '';
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-active { background-color: #f0fdf4; color: #16a34a; }
+        .status-active::before { background-color: #16a34a; }
+        .status-inactive { background-color: #f1f5f9; color: #64748b; }
+        .status-inactive::before { background-color: #64748b; }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+            color: white;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(8, 145, 178, 0.3);
+        }
+        
+        /* Input Styles */
+        .input-field {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #0891b2;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        }
+
+        .sidebar-card {
+            height: fit-content;
+            position: sticky;
+            top: 6rem;
         }
     </style>
 </head>
-<body class="bg-blue-100 dark:bg-slate-900 text-blue-800 dark:text-gray-200 antialiased selection:bg-blue-500 selection:text-white">
+<body class="h-full text-slate-700 antialiased">
 
 @if(!isset($member))
-    {{-- Tampilkan error page jika tidak ada data member --}}
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-xl shadow-md p-8 text-center">
-            <div class="w-20 h-20 mx-auto mb-4 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                <i data-feather="alert-triangle" class="text-red-600 dark:text-red-400 w-10 h-10"></i>
+    {{-- Error State --}}
+    <div class="min-h-screen flex items-center justify-center bg-slate-50">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
+            <div class="w-20 h-20 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+                <i data-feather="alert-triangle" class="text-red-500 w-10 h-10"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Data Member Tidak Ditemukan</h2>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">
-                Akun Anda tidak memiliki data member. Silakan hubungi administrator untuk mengaktifkan akun member Anda.
-            </p>
-            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i>
-                Kembali ke Dashboard
-            </a>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Data Tidak Ditemukan</h2>
+            <p class="text-slate-500 mb-6">Akun Anda belum terhubung dengan data member. Hubungi admin.</p>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn-primary w-full flex justify-center items-center gap-2">
+                    <i data-feather="log-out" class="w-4 h-4"></i> Keluar
+                </button>
+            </form>
         </div>
     </div>
 @else
-<div x-data="memberDashboard()" x-init="init()">
-    {{-- Header --}}
-    <header class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-40">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                {{-- Logo dan Brand --}}
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <div class="h-10 w-10 ml-1 flex items-center justify-center transition-transform hover:scale-110 duration-300">
-                            <a href="{{ route('landing') }}" class="flex-shrink-0">
-                                <img src="{{ asset('images/logocsc.png') }}" alt="Logo Cikampek Swimming Club" class="h-12 w-auto drop-shadow-sm">
-                            </a>
-                        </div>
-                        
-                        <span class="hidden sm:inline-block ml-5 text-xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100">
-                            <span class="text-blue-700 dark:text-blue-400">Cikampek Swimming Club</span>
-                        </span>
-                    </div>
-                </div>
 
-                {{-- User Menu & Theme Switcher --}}
-                <div class="flex items-center">
-                    {{-- Theme Switcher --}}
-                    <div class="flex items-center p-1 bg-gray-100 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600">
-                        <button @click="theme = 'light'" 
-                                :class="theme === 'light' ? 'bg-white dark:bg-slate-500 shadow-sm text-yellow-500' : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'" 
-                                class="p-1.5 rounded-md focus:outline-none transition-all duration-200">
-                            <i data-feather="sun" class="w-4 h-4"></i>
-                        </button>
-                        <button @click="theme = 'system'" 
-                                :class="theme === 'system' ? 'bg-white dark:bg-slate-500 shadow-sm text-blue-600' : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'" 
-                                class="ml-1 p-1.5 rounded-md focus:outline-none transition-all duration-200">
-                            <i data-feather="monitor" class="w-4 h-4"></i>
-                        </button>
-                        <button @click="theme = 'dark'" 
-                                :class="theme === 'dark' ? 'bg-white dark:bg-slate-500 shadow-sm text-red-400' : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'" 
-                                class="ml-1 p-1.5 rounded-md focus:outline-none transition-all duration-200">
-                            <i data-feather="moon" class="w-4 h-4"></i>
-                        </button>
+    {{-- Wrapper Utama --}}
+    <div x-data="{ 
+            showRaportModal: false,
+            toggleRaportModal() {
+                this.showRaportModal = !this.showRaportModal;
+                if(this.showRaportModal) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'auto';
+                }
+            }
+         }"
+         class="min-h-screen"
+    >
+        {{-- Navbar --}}
+        <nav class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
+            <div class="w-full px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    {{-- Logo --}}
+                    <div class="flex items-center gap-3">
+                        <img src="{{ asset('images/logocsc.png') }}" alt="CSC Logo" class="h-10 w-auto">
+                        <div class="hidden md:block">
+                            <h1 class="text-lg font-bold text-slate-800 leading-tight">Cikampek Swimming Club</h1>
+                            <p class="text-xs text-slate-500">Member Dashboard</p>
+                        </div>
                     </div>
-                    
-                    @auth
-                        <div class="p-2 flex items-center space-x-4">
+
+                    {{-- User Menu --}}
+                    <div class="flex items-center gap-4">
+                        @auth
+                        <div class="flex items-center gap-3">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-sm font-bold text-slate-800">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-cyan-600 font-medium">Member</p>
+                            </div>
+                            
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-slate-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 focus:outline-none transition-colors shadow-sm">
-                                    <i data-feather="log-out" class="w-4 h-4 mr-0 sm:mr-1"></i>
-                                    <span class="hidden sm:inline">Logout</span>
+                                <button type="submit" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors flex items-center gap-2">
+                                    <i data-feather="log-out" class="w-4 h-4"></i>
+                                    <span class="hidden sm:inline">Keluar</span>
                                 </button>
                             </form>
                         </div>
-                    @endauth
+                        @endauth
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </nav>
 
-    {{-- Main Content --}}
-    <main class="py-8">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-
-            {{-- Notifikasi --}}
-            @if (session('success'))
-                <div class="mb-6 rounded-lg bg-gradient-to-r from-green-50 to-white dark:from-green-900/40 dark:to-slate-800 p-4 flex items-start border-l-4 border-green-500 shadow-sm">
-                    <div class="bg-green-100 dark:bg-green-800 p-1 rounded-full mr-3">
-                         <i data-feather="check-circle" class="text-green-600 dark:text-green-300 w-5 h-5"></i>
-                    </div>
-                    <p class="text-sm font-medium text-green-800 dark:text-green-200 self-center">{{ session('success') }}</p>
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="mb-6 rounded-lg bg-gradient-to-r from-red-50 to-white dark:from-red-900/40 dark:to-slate-800 p-4 flex items-start border-l-4 border-red-500 shadow-sm">
-                    <div class="bg-red-100 dark:bg-red-800 p-1 rounded-full mr-3">
-                        <i data-feather="alert-circle" class="text-red-600 dark:text-red-300 w-5 h-5"></i>
-                    </div>
-                    <p class="text-sm font-medium text-red-800 dark:text-red-200 self-center">{{ session('error') }}</p>
-                </div>
-            @endif
-
-            <div class="space-y-8">
-
-                {{-- Profil Member --}}
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-l-4 border-blue-600 dark:border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-                    <div class="p-6 bg-gradient-to-br from-white via-white to-blue-50 dark:from-slate-800 dark:to-slate-800/50">
-                        <div class="flex flex-col md:flex-row gap-6 items-start">
-                            <div class="flex-shrink-0 group flex justify-center md:justify-start w-full md:w-auto">
-                                @if ($member->user->photo_url)
-                                    <img 
-                                        src="{{ $member->user->photo_url }}" 
-                                        class="w-28 h-28 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg mx-auto">
-                                @else
-                                    <div class="w-28 h-28 rounded-full flex items-center justify-center
-                                                bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 border-4 border-white dark:border-slate-700 shadow-lg">
-                                        <i data-feather="user" class="w-12 h-12 text-gray-400 dark:text-gray-300"></i>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div class="flex-1 w-full">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                                            {{ $member->user->name }}
-                                        </h2>
-                                        <div class="flex items-center mt-1 text-blue-600 dark:text-blue-400 font-medium">
-                                            <i data-feather="mail" class="w-4 h-4 mr-2"></i>
-                                            <p class="text-sm">{{ $member->user->email }}</p>
+        {{-- Main Content --}}
+        <main class="py-6">
+            <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-full">
+                
+                {{-- Header Section --}}
+                <div class="mb-8 fade-in">
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between">
+                            <div class="flex items-center gap-6">
+                                {{-- Foto Profil Member --}}
+                                <div class="hidden md:block w-20 h-20 rounded-full bg-white p-1 shadow-md">
+                                    @if ($member->user->photo_url)
+                                        <img src="{{ $member->user->photo_url }}" class="w-full h-full rounded-full object-cover">
+                                    @else
+                                        <div class="w-full h-full rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                            <i data-feather="user" class="w-8 h-8"></i>
                                         </div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-1">
+                                        Halo, {{ explode(' ', Auth::user()->name)[0] }}
+                                    </h1>
+                                    <div class="flex items-center gap-3 text-slate-600 text-sm">
+                                        <span class="flex items-center gap-1">
+                                            <i data-feather="mail" class="w-3 h-3"></i> {{ $member->user->email }}
+                                        </span>
+                                        <span class="w-1 h-1 bg-slate-400 rounded-full"></span>
+                                        <span class="status-badge {{ $member->status == 'AKTIF' ? 'status-active' : 'status-inactive' }}">
+                                            {{ $member->status }}
+                                        </span>
                                     </div>
-                                    <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
-                                        {{ $member->status == 'AKTIF' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                        {{ $member->status }}
-                                    </span>
                                 </div>
-                                
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-                                    @php
-                                        $stats = [
-                                            ['label' => 'Total Kehadiran', 'value' => $totalAttendances, 'color' => 'blue', 'icon' => 'calendar'],
-                                            ['label' => 'Total Raport', 'value' => $totalRaports, 'color' => 'green', 'icon' => 'file-text'],
-                                            ['label' => 'Coach', 'value' => $totalCoaches, 'color' => 'yellow', 'icon' => 'users'],
-                                            ['label' => 'Paket Latihan', 'value' => $member->trainingPackage->name ?? 'Tidak ada', 'color' => 'red', 'icon' => 'package'],
-                                        ];
-                                        
-                                        $colorClasses = [
-                                            'blue'   => 'bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:border-blue-700/30 hover:bg-blue-100 transition-colors',
-                                            'green'  => 'bg-green-50 text-green-800 border border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-700/30 hover:bg-green-100 transition-colors',
-                                            'yellow' => 'bg-yellow-50 text-yellow-800 border border-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-100 dark:border-yellow-700/30 hover:bg-yellow-100 transition-colors',
-                                            'red' => 'bg-red-50 text-red-800 border border-red-100 dark:bg-red-900/20 dark:text-red-100 dark:border-red-700/30 hover:bg-red-100 transition-colors',
-                                        ];
-                                        
-                                        $iconBg = [
-                                            'blue'   => 'bg-blue-500 text-white shadow-blue-500/30',
-                                            'green'  => 'bg-green-500 text-white shadow-green-500/30',
-                                            'yellow' => 'bg-yellow-400 text-white shadow-yellow-400/30',
-                                            'red' => 'bg-red-500 text-white shadow-red-500/30',
-                                        ];
-                                    @endphp
-                                    @foreach ($stats as $s)
-                                        <div class="rounded-xl p-4 flex items-center shadow-sm {{ $colorClasses[$s['color']] ?? 'bg-gray-100' }}">
-                                            <div class="flex-shrink-0 p-3 rounded-lg shadow-lg {{ $iconBg[$s['color']] }} mr-4">
-                                                <i data-feather="{{ $s['icon'] }}" class="w-5 h-5"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs font-bold uppercase tracking-wider opacity-70">{{ $s['label'] }}</p>
-                                                <p class="text-lg font-black mt-0.5">{{ $s['value'] }}</p>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 text-right">
+                                <p class="text-sm text-slate-500">Paket Latihan</p>
+                                <p class="text-lg font-bold text-cyan-600">{{ $member->trainingPackage->name ?? 'Tidak ada' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Dua Kolom: Coach & Jadwal --}}
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    {{-- Coach Terkait --}}
-                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-t-4 border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
-                        <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-green-50/50 dark:from-slate-800 dark:to-slate-800">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                                        <i data-feather="users" class="text-blue-600 dark:text-blue-400 w-5 h-5"></i>
-                                    </div>
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                        Coach Saya
-                                    </h3>
+                {{-- Alerts --}}
+                @if (session('success') || session('error'))
+                    <div class="mb-8 fade-in" x-data="{ show: true }" x-show="show" x-transition>
+                        @if (session('success'))
+                            <div class="rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 p-4 flex items-start gap-3">
+                                <div class="bg-cyan-100 p-2 rounded-full text-cyan-600">
+                                    <i data-feather="check-circle" class="w-5 h-5"></i>
                                 </div>
-                                <span class="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs font-bold px-3 py-1 rounded-full">
-                                    {{ $assignedCoaches->count() }}
-                                </span>
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-bold text-slate-800">Berhasil</h3>
+                                    <p class="text-sm text-slate-600 mt-0.5">{{ session('success') }}</p>
+                                </div>
+                                <button @click="show = false" class="text-slate-400 hover:text-slate-600">
+                                    <i data-feather="x" class="w-4 h-4"></i>
+                                </button>
                             </div>
-                        </div>
-                        <div class="overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50/80 dark:bg-slate-700/50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Coach</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bio</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                                        @forelse($assignedCoaches as $coach)
-                                            <tr class="hover:bg-green-50/30 dark:hover:bg-slate-700/50 transition-colors">
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="flex items-center">
-                                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center shadow-sm border border-white dark:border-slate-600">
-                                                            @if ($coach->user->photo_url)
-                                                                <img class="h-10 w-10 rounded-full object-cover" src="{{ $coach->user->photo_url }}" alt="">
-                                                            @else
-                                                                <i data-feather="user" class="text-gray-400 dark:text-gray-300 w-5 h-5"></i>
-                                                            @endif
-                                                        </div>
-                                                        <div class="ml-4">
-                                                            <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $coach->user->name }}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $coach->user->email }}
-                                                </td>
-                                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ Str::limit($coach->bio ?? 'Tidak ada bio', 50) }}
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                                    <div class="flex flex-col items-center justify-center opacity-60">
-                                                        <i data-feather="users" class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3"></i>
-                                                        <p class="text-sm">Belum ada coach yang ditugaskan</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        @endif
                     </div>
+                @endif
 
-                    {{-- Jadwal Latihan --}}
-                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-t-4 border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
-                        <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-yellow-50/50 dark:from-slate-800 dark:to-slate-800">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                                        <i data-feather="calendar" class="text-blue-600 dark:text-blue-400 w-5 h-5"></i>
-                                    </div>
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                        Jadwal Latihan
-                                    </h3>
-                                </div>
-                                <span class="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs font-bold px-3 py-1 rounded-full">
-                                    {{ $trainingSchedules->count() }}
-                                </span>
+                {{-- Quick Stats --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-in" style="animation-delay: 0.1s;">
+                    {{-- Total Kehadiran --}}
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 mb-1">Total Kehadiran</p>
+                                <h3 class="text-2xl font-bold text-slate-800">{{ $totalAttendances ?? 0 }}</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center">
+                                <i data-feather="calendar" class="w-6 h-6 text-cyan-600"></i>
                             </div>
                         </div>
-                        <div class="overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50/80 dark:bg-slate-700/50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hari</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Waktu</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lokasi</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Coach</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                                        @forelse($trainingSchedules as $schedule)
-                                            <tr class="hover:bg-yellow-50/30 dark:hover:bg-slate-700/50 transition-colors">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800 dark:text-gray-100">
-                                                    <span class="inline-block bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300 text-xs uppercase tracking-wide">
-                                                        {{ ucfirst(strtolower($schedule->day)) }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 font-medium">
-                                                    {{ $schedule->time ? \Carbon\Carbon::parse($schedule->time)->format('H:i') : '-' }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                                    <div class="flex items-center">
-                                                        <i data-feather="map-pin" class="w-3 h-3 mr-1 text-gray-400"></i>
-                                                        {{ $schedule->place ?? '-' }}
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                                    @forelse($schedule->coaches as $coach)
-                                                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
-                                                            {{ $coach->user->name }}
-                                                        </span>
-                                                    @empty
-                                                        <span class="text-gray-400">-</span>
-                                                    @endforelse
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                                    <div class="flex flex-col items-center justify-center opacity-60">
-                                                        <i data-feather="calendar" class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3"></i>
-                                                        <p class="text-sm">Belum ada jadwal latihan.</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Dua Kolom: Riwayat Absensi & Raport --}}
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    {{-- Riwayat Absensi --}}
-                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-t-4 border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
-                        <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-blue-50/50 dark:from-slate-800 dark:to-slate-800">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                                        <i data-feather="clipboard" class="text-blue-600 dark:text-blue-400 w-5 h-5"></i>
-                                    </div>
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                        Riwayat Kehadiran
-                                    </h3>
-                                </div>
-                                <span class="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs font-bold px-3 py-1 rounded-full">
-                                    {{ $attendances->count() }} Sesi
-                                </span>
-                            </div>
-                        </div>
-                        <div class="overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50/80 dark:bg-slate-700/50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hari</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lokasi</th>
-                                            <th scope="col" class="px-6py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Coach</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                                        @forelse($attendances as $attendance)
-                                            <tr class="hover:bg-blue-50/30 dark:hover:bg-slate-700/50 transition-colors">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800 dark:text-gray-100">
-                                                    {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('DD MMM YYYY') }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    <span class="font-medium text-gray-900 dark:text-gray-200">
-                                                        {{ $attendance->schedule ? ucfirst(strtolower($attendance->schedule->day)) : 'N/A' }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $attendance->place ?? '-' }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $attendance->coach->user->name ?? '-' }}
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                                    <div class="flex flex-col items-center justify-center opacity-60">
-                                                        <i data-feather="clipboard" class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3"></i>
-                                                        <p class="text-sm">Belum ada riwayat kehadiran.</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-xs text-slate-500">Sesi latihan diikuti</p>
                         </div>
                     </div>
 
                     {{-- Data Raport --}}
-                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-t-4 border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
-                        <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-green-50/50 dark:from-slate-800 dark:to-slate-800">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                                        <i data-feather="bar-chart-2" class="text-blue-600 dark:text-blue-400 w-5 h-5"></i>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 mb-1">Data Raport</p>
+                                <h3 class="text-2xl font-bold text-slate-800">{{ $totalRaports ?? 0 }}</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                <i data-feather="file-text" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-xs text-slate-500">Catatan performa</p>
+                        </div>
+                    </div>
+
+                    {{-- Coach --}}
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 mb-1">Coach</p>
+                                <h3 class="text-2xl font-bold text-slate-800">{{ $assignedCoaches->count() }}</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <i data-feather="users" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-xs text-slate-500">Pelatih aktif</p>
+                        </div>
+                    </div>
+
+                    {{-- Jadwal Minggu Ini --}}
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 mb-1">Jadwal</p>
+                                <h3 class="text-2xl font-bold text-slate-800">{{ $trainingSchedules->count() }}</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+                                <i data-feather="clock" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-xs text-slate-500">Sesi minggu ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Main Grid Layout --}}
+                <div class="mb-8 fade-in" style="animation-delay: 0.2s;">
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                        
+                        <div class="space-y-6">
+                            
+                            {{-- Grafik Performa --}}
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover p-4">
+                                <div class="px-4 py-2 border-b border-slate-100 bg-slate-50 flex justify-between items-center flex-wrap gap-2">
+                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-feather="trending-up" class="w-5 h-5 text-red-500"></i>
+                                        Grafik Performa
+                                    </h3>
+                                    <div class="flex gap-2">
+                                        <select id="performanceGaya" class="input-field text-xs py-1 px-2">
+                                            <option value="gaya_bebas_50">Bebas 50m</option>
+                                            <option value="gaya_bebas_100">Bebas 100m</option>
+                                            <option value="gaya_dada_50">Dada 50m</option>
+                                            <option value="gaya_dada_100">Dada 100m</option>
+                                        </select>
+                                        <input type="number" id="performanceYear" value="{{ now()->year }}" class="input-field text-xs py-1 px-2 w-20">
                                     </div>
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                        Data Raport Terbaru
+                                </div>
+                                <div class="p-5">
+                                    <div id="chartLoading" class="text-center py-10 hidden">
+                                        <p class="text-slate-400 text-sm">Memuat data...</p>
+                                    </div>
+                                    <div id="chartContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {{-- PERBAIKAN LOOP: Wrapper dengan tinggi tetap (h-64) dan relative --}}
+                                        <div class="relative w-full h-64">
+                                            <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Waktu (Detik)</h4>
+                                            <canvas id="performanceChartValue"></canvas>
+                                        </div>
+                                        <div class="relative w-full h-64">
+                                            <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Volume & Intensitas</h4>
+                                            <canvas id="performanceChartVolume"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- jadwal dan history --}}
+                        <div class="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            {{-- Card Jadwal --}}
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
+                                <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-feather="calendar" class="w-5 h-5 text-purple-600"></i>
+                                        Jadwal Latihan
                                     </h3>
                                 </div>
-                                <button onclick="openRaportModal()" 
-                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-md text-white shell-blue hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-900/20 transform hover:-translate-y-0.5">
-                                    <i data-feather="eye" class="w-3 h-3 mr-1.5"></i> Lihat Semua
+                                <div class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+                                    @forelse($trainingSchedules as $schedule)
+                                        <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <h4 class="font-bold text-slate-800">{{ ucfirst($schedule->day) }}</h4>
+                                                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                                                    {{ $schedule->time ? \Carbon\Carbon::parse($schedule->time)->format('H:i') : '-' }}
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-slate-500 flex items-center gap-1 mb-2">
+                                                <i data-feather="map-pin" class="w-3 h-3"></i> {{ $schedule->place ?? 'Kolam Utama' }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($schedule->coaches as $coach)
+                                                    <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100">
+                                                        {{ $coach->user->name }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="px-5 py-8 text-center text-slate-400">
+                                            <p>Tidak ada jadwal</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            {{-- Riwayat Kehadiran --}}
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
+                                <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-feather="clock" class="w-5 h-5 text-blue-600"></i>
+                                        Riwayat Kehadiran
+                                    </h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full min-w-[600px]">
+                                        <thead class="table-header text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
+                                            <tr>
+                                                <th class="px-5 py-3">Tanggal</th>
+                                                <th class="px-5 py-3">Hari</th>
+                                                <th class="px-5 py-3">Lokasi</th>
+                                                <th class="px-5 py-3">Coach</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            @forelse($attendances->take(5) as $attendance)
+                                                <tr class="table-row hover:bg-slate-50 transition-colors">
+                                                    <td class="px-5 py-4 font-bold text-slate-800">
+                                                        {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM Y') }}
+                                                    </td>
+                                                    <td class="px-5 py-4 text-slate-600">
+                                                        {{ $attendance->schedule ? ucfirst($attendance->schedule->day) : '-' }}
+                                                    </td>
+                                                    <td class="px-5 py-4 text-slate-600 flex items-center gap-1">
+                                                        <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
+                                                        {{ $attendance->place ?? '-' }}
+                                                    </td>
+                                                    <td class="px-5 py-4 text-slate-600">
+                                                        {{ $attendance->coach->user->name ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="px-5 py-8 text-center text-slate-400">
+                                                        <p>Belum ada data kehadiran</p>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {{-- coach dan raport --}}
+                        <div class="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Card Coach --}}
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
+                                <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-feather="users" class="w-5 h-5 text-green-600"></i>
+                                        Coach Saya
+                                    </h3>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    @forelse($assignedCoaches as $coach)
+                                        <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                                            <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                @if ($coach->user->photo_url)
+                                                    <img src="{{ $coach->user->photo_url }}" class="w-full h-full object-cover">
+                                                @else
+                                                    <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                                        <i data-feather="user" class="w-5 h-5"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="overflow-hidden">
+                                                <h4 class="font-bold text-slate-800 text-sm truncate">{{ $coach->user->name }}</h4>
+                                                <p class="text-xs text-slate-500 truncate">{{ $coach->user->email }}</p>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="text-center text-slate-400 text-sm py-2">Belum ada coach assigned.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            {{-- Tombol Lihat Semua Raport --}}
+                            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 p-5 text-center">
+                                <h4 class="text-sm font-bold text-blue-800 mb-2">Lihat Semua Raport</h4>
+                                <p class="text-xs text-blue-600 mb-4">Cek detail perkembangan latihanmu</p>
+                                <button @click="toggleRaportModal()" class="w-full btn-primary text-sm flex justify-center items-center gap-2">
+                                    <i data-feather="file-text" class="w-4 h-4"></i> Buka Raport
                                 </button>
                             </div>
                         </div>
-                        <div class="overflow-hidden">
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        {{-- Modal Raport Member --}}
+        <div x-show="showRaportModal" x-cloak class="relative z-50">
+            <div x-show="showRaportModal" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+            
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4">
+                    
+                    {{-- PERUBAHAN DISINI: max-w-5xl diganti menjadi max-w-4xl agar lebih ramping --}}
+                    <div x-show="showRaportModal" 
+                         @click.away="toggleRaportModal()" 
+                         x-transition.scale 
+                         x-data="raportTable({{ json_encode($raports) }})"
+                         class="relative bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        
+                        {{-- Header Modal --}}
+                        <div class="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4 flex justify-between items-center shrink-0">
+                            <div>
+                                <h3 class="text-lg font-bold text-white">Semua Data Raport</h3>
+                                <p class="text-xs text-cyan-100 mt-1">Riwayat lengkap performa latihan</p>
+                            </div>
+                            <button @click="toggleRaportModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                                <i data-feather="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        {{-- Section Filter --}}
+                        <div class="px-6 py-4 bg-white border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between">
+                            <div class="flex flex-wrap gap-3 w-full sm:w-auto">
+                                {{-- Filter Gaya --}}
+                                <div class="relative">
+                                    <select x-model="filterGaya" class="input-field py-2 pl-3 pr-8 text-sm w-full sm:w-40 cursor-pointer">
+                                        <option value="">Semua Gaya</option>
+                                        <option value="bebas">Gaya Bebas</option>
+                                        <option value="dada">Gaya Dada</option>
+                                        <option value="kupu">Gaya Kupu-kupu</option>
+                                        <option value="punggung">Gaya Punggung</option>
+                                    </select>
+                                </div>
+
+                                {{-- Filter Jarak --}}
+                                <div class="relative">
+                                    <select x-model="filterJarak" class="input-field py-2 pl-3 pr-8 text-sm w-full sm:w-32 cursor-pointer">
+                                        <option value="">Semua Jarak</option>
+                                        <option value="50">50 Meter</option>
+                                        <option value="100">100 Meter</option>
+                                        <option value="200">200 Meter</option>
+                                        <option value="400">400 Meter</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Counter Data --}}
+                            <div class="text-sm text-slate-500 font-medium">
+                                <span x-text="filteredItems.length" class="font-bold text-slate-800"></span> data ditemukan
+                            </div>
+                        </div>
+
+                        {{-- Tabel Data --}}
+                        <div class="p-0 overflow-y-auto bg-slate-50 flex-1">
                             <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50/80 dark:bg-slate-700/50">
+                                <table class="w-full min-w-[800px]">
+                                    <thead class="bg-slate-100 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Gaya & Jarak</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bulan/Tahun</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Waktu</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Coach</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Gaya & Jarak</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Periode</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Volume</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Coach</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                                        @forelse($raports->take(5) as $raport)
-                                            <tr class="hover:bg-green-50/30 dark:hover:bg-slate-700/50 transition-colors">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800 dark:text-gray-100">
-                                                    {{ ucfirst(str_replace('_', ' ', $raport->gaya)) }}
+                                    <tbody class="bg-white divide-y divide-slate-100">
+                                        {{-- Loop Data Kosong --}}
+                                        <tr x-show="filteredItems.length === 0">
+                                            <td colspan="5" class="px-6 py-8 text-center text-slate-400">
+                                                Tidak ada data yang cocok dengan filter.
+                                            </td>
+                                        </tr>
+
+                                        {{-- Loop Data Alpine --}}
+                                        <template x-for="item in filteredItems" :key="item.id">
+                                            <tr class="hover:bg-slate-50 transition-colors group">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
+                                                    <span x-text="formatGaya(item.gaya)"></span>
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ ucfirst($raport->month) }} {{ $raport->year }}
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                                    <span x-text="capitalize(item.month)"></span> <span x-text="item.year"></span>
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 font-mono">
-                                                    {{ $raport->formatted_value ?? '-' }}
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-cyan-600 font-bold bg-cyan-50/50 rounded-lg w-fit">
+                                                    <span x-text="item.formatted_value || '-'"></span>
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $raport->coach->user->name ?? '-' }}
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                                    <div class="flex flex-col">
+                                                        <span x-text="item.volume + ' m'"></span>
+                                                        <span class="text-[10px] text-slate-400" x-text="'Intensitas: ' + item.intensity + '%'"></span>
+                                                    </div>
                                                 </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                                    <div class="flex flex-col items-center justify-center opacity-60">
-                                                        <i data-feather="bar-chart-2" class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3"></i>
-                                                        <p class="text-sm">Belum ada data raport.</p>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                            <template x-if="item.coach && item.coach.user && item.coach.user.photo_url">
+                                                                <img :src="item.coach.user.photo_url" class="w-full h-full object-cover">
+                                                            </template>
+                                                            <template x-if="!item.coach || !item.coach.user || !item.coach.user.photo_url">
+                                                                <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                                                    <i data-feather="user" class="w-3 h-3"></i>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <span class="truncate max-w-[120px]" x-text="item.coach && item.coach.user ? item.coach.user.name : '-'"></span>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        @endforelse
+                                        </template>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- Grafik Performa --}}
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border-t-4 border-blue-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
-                    <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-red-50/50 dark:from-slate-800 dark:to-slate-800">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                                    <i data-feather="trending-up" class="text-blue-600 dark:text-blue-400 w-5 h-5"></i>
-                                </div>
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                    Grafik Performa
-                                </h3>
-                            </div>
-                            <div class="flex space-x-2">
-                                <select id="performanceGaya" class="border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-1 text-sm">
-                                    <option value="gaya_bebas_50">Gaya Bebas 50m</option>
-                                    <option value="gaya_bebas_100">Gaya Bebas 100m</option>
-                                    <option value="gaya_bebas_200">Gaya Bebas 200m</option>
-                                    <option value="gaya_dada_50">Gaya Dada 50m</option>
-                                    <option value="gaya_dada_100">Gaya Dada 100m</option>
-                                </select>
-                                <input type="number" id="performanceYear" value="{{ now()->year }}" 
-                                       class="w-20 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg px-3 py-1 text-sm">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div id="chartLoading" class="hidden text-center py-8">
-                            <div class="loading-spinner mx-auto"></div>
-                            <p class="mt-3 text-gray-600 dark:text-gray-400">Memuat data grafik...</p>
-                        </div>
-                        <div id="chartContainer">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">Waktu Tempuh (Detik)</h4>
-                                    <canvas id="performanceChartValue" class="w-full" style="max-height: 300px;"></canvas>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">Volume & Intensitas</h4>
-                                    <canvas id="performanceChartVolume" class="w-full" style="max-height: 300px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="chartError" class="hidden text-center py-8 text-red-600 dark:text-red-400">
-                            <i data-feather="alert-triangle" class="w-12 h-12 mx-auto mb-3"></i>
-                            <p>Gagal memuat data grafik. Silakan coba lagi.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
-    </main>
-</div>
 
-{{-- Modal untuk melihat semua raport --}}
-<div id="raportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-xl bg-white dark:bg-slate-800">
-        <div class="flex justify-between items-center pb-4 mb-4 border-b dark:border-slate-700">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Semua Data Raport</h3>
-            <button onclick="closeRaportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 dark:bg-slate-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gaya & Jarak</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Bulan/Tahun</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Waktu</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Volume</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Intensitas</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Peaking</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Coach</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                    @foreach($raports as $raport)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {{ ucfirst(str_replace('_', ' ', $raport->gaya)) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ ucfirst($raport->month) }} {{ $raport->year }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 font-mono">
-                            {{ $raport->formatted_value ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $raport->volume }} m
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $raport->intensity }}%
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $raport->peaking }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $raport->coach->user->name ?? '-' }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="mt-6 flex justify-end">
-            <button onclick="closeRaportModal()" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors">
-                Tutup
-            </button>
-        </div>
     </div>
-</div>
 
-<script>
-// Pastikan Chart.js tersedia
-function memberDashboard() {
-    return {
-        theme: localStorage.theme || 'system',
-        performanceChartValue: null,
-        performanceChartVolume: null,
-        
-        init() {
-            this.updateTheme();
-            this.loadPerformanceData();
+    {{-- Script untuk Chart & Feather Icons --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('raportTable', (initialData) => ({
+                items: initialData,
+                filterGaya: '',
+                filterJarak: '',
+
+                get filteredItems() {
+                    return this.items.filter(item => {
+                        // Logic filter Gaya (contoh data: 'gaya_bebas_50')
+                        const matchGaya = this.filterGaya === '' || item.gaya.toLowerCase().includes(this.filterGaya.toLowerCase());
+                        
+                        // Logic filter Jarak (cek apakah string mengandung angka jarak)
+                        // Kita asumsikan format selalu 'gaya_xxx_50' atau sejenisnya
+                        const matchJarak = this.filterJarak === '' || item.gaya.includes(this.filterJarak);
+
+                        return matchGaya && matchJarak;
+                    });
+                },
+
+                // Helper functions untuk formatting tampilan
+                formatGaya(gayaString) {
+                    if (!gayaString) return '-';
+                    // Mengubah 'gaya_bebas_50' menjadi 'Gaya Bebas 50'
+                    return gayaString.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                },
+
+                capitalize(str) {
+                    if (!str) return '';
+                    return str.charAt(0).toUpperCase() + str.slice(1);
+                }
+            }));
+        });
+
+        // VARIABLE GLOBAL UNTUK MENYIMPAN INSTANCE CHART
+        window.myChartValue = null;
+        window.myChartVolume = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof feather !== 'undefined') feather.replace();
             
-            // Event listeners untuk filter performa
+            initMemberCharts();
+
+            // Event Listeners untuk Filter
             const gayaSelect = document.getElementById('performanceGaya');
             const yearInput = document.getElementById('performanceYear');
             
-            if (gayaSelect) {
-                gayaSelect.addEventListener('change', () => this.loadPerformanceData());
-            }
-            if (yearInput) {
-                yearInput.addEventListener('input', () => this.loadPerformanceData());
-            }
-        },
-        
-        updateTheme() {
-            if (this.theme === 'dark' || (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            localStorage.theme = this.theme;
-        },
-        
-        async loadPerformanceData() {
+            if (gayaSelect) gayaSelect.addEventListener('change', initMemberCharts);
+            if (yearInput) yearInput.addEventListener('input', initMemberCharts);
+        });
+
+        function initMemberCharts() {
             const gaya = document.getElementById('performanceGaya')?.value || 'gaya_bebas_50';
             const year = document.getElementById('performanceYear')?.value || new Date().getFullYear();
-            
-            // Show loading
-            document.getElementById('chartLoading').classList.remove('hidden');
-            document.getElementById('chartContainer').classList.add('hidden');
-            document.getElementById('chartError').classList.add('hidden');
-            
-            try {
-                const response = await fetch(`/member/performance-data?gaya=${gaya}&year=${year}`);
-                const data = await response.json();
-                
-                document.getElementById('chartLoading').classList.add('hidden');
-                
-                if (data.success) {
-                    document.getElementById('chartContainer').classList.remove('hidden');
-                    this.updatePerformanceCharts(data.chartValue, data.chartVolume);
-                } else {
-                    document.getElementById('chartError').classList.remove('hidden');
-                    console.error('Failed to load performance data:', data.message);
-                }
-            } catch (error) {
-                document.getElementById('chartLoading').classList.add('hidden');
-                document.getElementById('chartError').classList.remove('hidden');
-                console.error('Error loading performance data:', error);
-            }
-        },
-        
-        updatePerformanceCharts(valueData, volumeData) {
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#e5e7eb' : '#374151';
-            const gridColor = isDark ? '#374151' : '#e5e7eb';
-            
-            // Destroy existing charts
-            if (this.performanceChartValue) {
-                this.performanceChartValue.destroy();
-            }
-            if (this.performanceChartVolume) {
-                this.performanceChartVolume.destroy();
-            }
-            
-            // Create new charts
-            const ctx1 = document.getElementById('performanceChartValue');
-            if (ctx1) {
-                this.performanceChartValue = new Chart(ctx1, {
-                    type: 'line',
-                    data: valueData,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: { display: true, text: 'Waktu (detik)', color: textColor },
-                                ticks: { color: textColor },
-                                grid: { color: gridColor }
-                            },
-                            x: {
-                                title: { display: true, text: 'Bulan', color: textColor },
-                                ticks: { color: textColor },
-                                grid: { color: gridColor }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: { color: textColor }
-                            }
-                        }
+            const container = document.getElementById('chartContainer');
+            const loading = document.getElementById('chartLoading');
+
+            if(loading) loading.classList.remove('hidden');
+            if(container) container.classList.add('opacity-50');
+
+            fetch(`/member/performance-data?gaya=${gaya}&year=${year}`)
+                .then(response => response.json())
+                .then(data => {
+                    if(loading) loading.classList.add('hidden');
+                    if(container) container.classList.remove('opacity-50');
+
+                    if (data.success) {
+                        updateCharts(data.chartValue, data.chartVolume);
                     }
-                });
-            }
-            
-            const ctx2 = document.getElementById('performanceChartVolume');
-            if (ctx2) {
-                this.performanceChartVolume = new Chart(ctx2, {
-                    type: 'line',
-                    data: volumeData,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: { display: true, text: 'Nilai', color: textColor },
-                                ticks: { color: textColor },
-                                grid: { color: gridColor }
-                            },
-                            x: {
-                                title: { display: true, text: 'Bulan', color: textColor },
-                                ticks: { color: textColor },
-                                grid: { color: gridColor }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: { color: textColor }
-                            }
-                        }
-                    }
-                });
-            }
+                })
+                .catch(err => console.error(err));
         }
-    }
-}
 
-function openRaportModal() {
-    document.getElementById('raportModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
+        function updateCharts(valueData, volumeData) {
+            if (typeof Chart === 'undefined') {
+                console.error("Chart.js belum dimuat.");
+                return;
+            }
 
-function closeRaportModal() {
-    document.getElementById('raportModal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
+            const canvasValue = document.getElementById('performanceChartValue');
+            const canvasVolume = document.getElementById('performanceChartVolume');
 
-// Initialize Feather Icons
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof feather !== 'undefined') {
-        feather.replace();
-    }
-});
-</script>
+            // --- PERBAIKAN LOOPING CHART DISINI ---
+            // 1. Hapus instance lama dari variabel global jika ada
+            if (window.myChartValue instanceof Chart) {
+                window.myChartValue.destroy();
+            }
+            if (window.myChartVolume instanceof Chart) {
+                window.myChartVolume.destroy();
+            }
+
+            // 2. Extra safety: Cek instance yg nempel di canvas via Chart.js registry
+            // Ini untuk memastikan bersih total
+            const existing1 = Chart.getChart(canvasValue);
+            if (existing1) existing1.destroy();
+            
+            const existing2 = Chart.getChart(canvasVolume);
+            if (existing2) existing2.destroy();
+            // --------------------------------------
+
+            const colorText = '#64748b'; 
+            const colorGrid = '#e2e8f0'; 
+            const primaryColor = '#0891b2'; 
+            const barColors = ['#0891b2', '#10b981', '#8b5cf6', '#f59e0b'];
+
+            // Chart Waktu (Line)
+            window.myChartValue = new Chart(canvasValue.getContext('2d'), {
+                type: 'line',
+                data: valueData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Wajib false agar ngikutin tinggi parent div
+                    elements: {
+                        line: { borderColor: primaryColor, borderWidth: 3, tension: 0.4 }, 
+                        point: { backgroundColor: '#ffffff', borderColor: primaryColor, borderWidth: 2, radius: 4 }
+                    },
+                    scales: {
+                        y: { reverse: true, ticks: { color: colorText, font: {size:10} }, grid: { color: colorGrid, drawBorder: false } },
+                        x: { ticks: { color: colorText, font: {size:10} }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart Volume (Bar)
+            if (volumeData && volumeData.datasets) {
+                volumeData.datasets.forEach((dataset, index) => {
+                    dataset.backgroundColor = barColors[index % barColors.length];
+                    dataset.borderRadius = 4;
+                    dataset.barPercentage = 0.6;
+                });
+            }
+
+            window.myChartVolume = new Chart(canvasVolume.getContext('2d'), {
+                type: 'bar',
+                data: volumeData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Wajib false agar ngikutin tinggi parent div
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: colorText, font: {size:10} }, grid: { color: colorGrid, drawBorder: false } },
+                        x: { ticks: { color: colorText, font: {size:10} }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: true, labels: { boxWidth: 10, font: {size:10} } } }
+                }
+            });
+        }
+    </script>
 @endif
 
 </body>
