@@ -428,6 +428,12 @@
                                                     title="Lihat Raport">
                                                 <i data-feather="file-text" class="w-4 h-4 text-slate-500"></i>
                                             </button>
+
+                                            <button onclick="openPhysicalModal({{ $member->id }}, '{{ $member->user->name }}')" 
+                                                class="p-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition-colors"
+                                                title="Tes Fisik">
+                                            <i data-feather="activity" class="w-4 h-4"></i>
+                                        </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1043,6 +1049,148 @@
         </div>
     </div>
 
+    {{-- MODAL DISPLAY FISIK --}}
+    <div id="physicalModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 modal-overlay transition-opacity" onclick="closePhysicalModal()"></div>
+        <div class="flex min-h-screen items-center justify-center px-4 py-10">
+            <div class="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border dark:border-slate-700">
+                {{-- Header --}}
+                <div class="bg-gradient-to-r from-pink-500 to-rose-600 px-6 py-5 flex justify-between items-center shrink-0">
+                    <div>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wider">Analisis Kondisi Fisik</h3>
+                        <p class="text-sm text-pink-100 mt-0.5">Atlet: <span id="physMemberName" class="font-black"></span></p>
+                    </div>
+                    <button onclick="closePhysicalModal()" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:rotate-90 transition-all">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                    {{-- Filter & Tombol Tambah --}}
+                    <div class="flex flex-wrap gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 items-end">
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Tahun Evaluasi</label>
+                            <input type="number" id="phys_year" value="{{ now()->year }}" class="input-field w-full py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl">
+                        </div>
+                        <button onclick="loadPhysicalData()" class="px-6 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-100 transition-all flex items-center gap-2">
+                            <i data-feather="refresh-cw" class="w-4 h-4"></i> Muat
+                        </button>
+                        <button onclick="openPhysForm()" class="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 shadow-lg shadow-rose-200 dark:shadow-none transition-all flex items-center gap-2">
+                            <i data-feather="plus" class="w-4 h-4"></i> Tambah Data
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {{-- Radar Chart --}}
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center">
+                            <h4 class="font-black text-slate-400 text-[10px] uppercase mb-4 tracking-[0.2em]">Spider Chart Analysis</h4>
+                            <div class="w-full aspect-square"><canvas id="chartRadar"></canvas></div>
+                        </div>
+
+                        {{-- Riwayat Tabel --}}
+                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table id="phys-table" class="w-full text-sm text-left">
+                                    <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 font-bold uppercase text-[10px]">
+                                        <tr>
+                                            <th class="px-6 py-4">Bulan</th>
+                                            <th class="px-6 py-4 text-rose-600">VO2 Max</th>
+                                            <th class="px-6 py-4">Sprint</th>
+                                            <th class="px-6 py-4">P.Up/S.Up</th>
+                                            <th class="px-6 py-4">Agility</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                        {{-- Data diisi via JS --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL FORM INPUT FISIK (Level 2) --}}
+    <div id="physFormModal" class="hidden fixed inset-0 overflow-y-auto" style="z-index: 100;">
+        <div class="fixed inset-0 modal-overlay transition-opacity" onclick="closePhysFormModal()"></div>
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border dark:border-slate-700">
+                {{-- Header --}}
+                <div class="bg-rose-600 px-6 py-5 flex justify-between items-center text-white">
+                    <div>
+                        <h3 class="text-xl font-bold uppercase tracking-wide">Input Data Fisik</h3>
+                        <p class="text-[10px] text-rose-100 uppercase opacity-70">Parameter Kebugaran Atlet</p>
+                    </div>
+                    <button onclick="closePhysFormModal()" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30"><i data-feather="x" class="w-4 h-4"></i></button>
+                </div>
+
+                {{-- Form Body --}}
+                <form id="physForm" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    @csrf
+                    <input type="hidden" name="member_id" id="phys_form_member_id">
+                    <input type="hidden" name="year" id="phys_form_year">
+                    
+                    {{-- Pemilihan Bulan --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Pilih Bulan Tes</label>
+                        <select name="month" id="phys_month" class="input-field w-full py-2.5 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl" required>
+                            @foreach(['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'] as $m)
+                                <option value="{{ $m }}">{{ ucfirst($m) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Bleep Test Calculator Section --}}
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                        <div class="text-[10px] font-black text-rose-600 uppercase mb-1 flex items-center gap-2">
+                            <i data-feather="zap" class="w-3 h-3"></i> Bleep Test (VO2 Max)
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold uppercase">Level</label>
+                                <input type="number" name="bleep_level" id="bleep_level" oninput="calculateBleep()" placeholder="8" class="input-field w-full py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold uppercase">Shuttle</label>
+                                <input type="number" name="bleep_shuttle" id="bleep_shuttle" oninput="calculateBleep()" placeholder="5" class="input-field w-full py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase">Hasil Estimasi VO2 Max</label>
+                            <input type="text" id="vo2max" readonly class="input-field w-full py-2 bg-rose-50 dark:bg-rose-900/20 border-none font-black text-rose-600 text-center rounded-xl">
+                        </div>
+                    </div>
+
+                    {{-- Komponen Fisik Lain --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-1">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">Sprint 20m (s)</label>
+                            <input type="number" step="0.01" name="sprint_20m" class="input-field w-full py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">Agility (s)</label>
+                            <input type="number" step="0.01" name="shuttle_run" class="input-field w-full py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">Push Up (x)</label>
+                            <input type="number" name="push_up" class="input-field w-full py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">Sit Up (x)</label>
+                            <input type="number" name="sit_up" class="input-field w-full py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 bg-rose-600 text-white rounded-[1.25rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-rose-200 dark:shadow-none hover:bg-rose-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4">
+                        <i data-feather="save" class="w-4 h-4"></i> Simpan Hasil Tes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     {{-- ========================================== --}}
     {{-- MODAL FORM TAMBAH/EDIT RAPORT (Level 2 - z-index: 100) --}}
     {{-- ========================================== --}}
@@ -1152,6 +1300,7 @@
         let currentMemberId = null;
         let chartValue = null;
         let chartVolume = null;
+        let chartRadar = null;
         let isEditMode = false;
         let coaches = [];
 
@@ -1579,6 +1728,199 @@
             div.textContent = message;
             document.body.appendChild(div);
             setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 3000);
+        }
+
+
+        // --- FUNCTION KHUSUS FISIK ---
+        function openPhysicalModal(memberId, memberName) {
+            currentMemberId = memberId;
+            document.getElementById('physMemberName').textContent = memberName;
+            document.getElementById('physicalModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            loadPhysicalData(); // Panggil loader fisik
+        }
+
+        function closePhysicalModal() {
+            document.getElementById('physicalModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            if (chartRadar) { chartRadar.destroy(); chartRadar = null; }
+        }
+
+        function loadPhysicalData() {
+            const year = document.getElementById('phys_year').value;
+            fetch(`/api/physical/data?member_id=${currentMemberId}&year=${year}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePhysicalTable(data.history);
+                        renderRadarChart(data.radarData);
+                    }
+                });
+        }
+
+        function updatePhysicalTable(history) {
+            const tbody = document.querySelector('#phys-table tbody');
+            tbody.innerHTML = history.length ? '' : '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada data fisik.</td></tr>';
+            
+            history.forEach(h => {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                        <td class="px-4 py-4 font-bold text-slate-800 capitalize">${h.month}</td>
+                        <td class="px-4 py-4 text-rose-600 font-black">${h.vo2max || '-'}</td>
+                        <td class="px-4 py-4 text-slate-600">${h.sprint_20m || '-'}s</td>
+                        <td class="px-4 py-4 text-slate-600">${h.push_up || 0}/${h.sit_up || 0}</td>
+                        <td class="px-4 py-4 text-slate-600">${h.shuttle_run || '-'}s</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function renderRadarChart(radarData) {
+            if (chartRadar) chartRadar.destroy();
+            const ctx = document.getElementById('chartRadar').getContext('2d');
+            chartRadar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
+                    datasets: [{
+                        label: 'Profil Atlet',
+                        data: radarData,
+                        backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                        borderColor: 'rgb(244, 63, 94)',
+                        pointBackgroundColor: 'rgb(244, 63, 94)',
+                    }]
+                },
+                options: { scales: { r: { min: 0, max: 5, ticks: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function handlePhysSubmit(e) {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            fetch('/api/physical/store', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                },
+                body: JSON.stringify(data)
+            }).then(res => res.json()).then(res => {
+                if (res.success) {
+                    showAlert('Data Fisik Tersimpan!', 'success');
+                    document.getElementById('physFormModal').classList.add('hidden');
+                    loadPhysicalData();
+                }
+            });
+        }
+
+        // ==========================================
+        // TAMBAHAN LOGIKA UNTUK JALUR FISIK
+        // ==========================================
+
+        // 1. Tambahkan listener submit untuk Form Fisik saat DOM Ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const physForm = document.getElementById('physForm');
+            if (physForm) {
+                physForm.addEventListener('submit', handlePhysSubmit);
+            }
+        });
+
+        // 2. Fungsi untuk membuka modal form fisik (Level 2)
+        function openPhysForm() {
+            const form = document.getElementById('physForm');
+            if (form) form.reset();
+
+            // Reset tampilan kalkulator vo2max
+            const vo2Field = document.getElementById('vo2max');
+            if (vo2Field) vo2Field.value = '';
+
+            // Injeksi ID Member dan Tahun dari konteks modal fisik yang aktif
+            const memberField = document.getElementById('phys_form_member_id');
+            const yearField = document.getElementById('phys_form_year');
+            const physYearInput = document.getElementById('phys_year');
+
+            if (memberField) memberField.value = currentMemberId;
+            if (yearField && physYearInput) yearField.value = physYearInput.value;
+
+            // Buka Modal Form
+            const modal = document.getElementById('physFormModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+            
+            if (typeof feather !== 'undefined') feather.replace();
+        }
+
+        // 3. Fungsi tutup modal form fisik
+        function closePhysFormModal() {
+            const modal = document.getElementById('physFormModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // 4. Kalkulator Bleep Test (VO2Max) Otomatis
+        function calculateBleep() {
+            const lvlInput = document.getElementById('bleep_level');
+            const shtInput = document.getElementById('bleep_shuttle');
+            const vo2Field = document.getElementById('vo2max');
+
+            if (!lvlInput || !shtInput || !vo2Field) return;
+
+            const lvl = parseInt(lvlInput.value) || 0;
+            const sht = parseInt(shtInput.value) || 0;
+            
+            if (lvl > 0) {
+                // Standar MSFT Table mapping
+                const shuttleTable = { 1: 9, 2: 8, 3: 8, 4: 9, 5: 9, 6: 10, 7: 10, 8: 11, 9: 11, 10: 11, 11: 12, 12: 12, 13: 13 };
+                const tsl = shuttleTable[lvl] || 10;
+                
+                // Rumus kalkulasi VO2Max
+                const vo2 = 3.46 * (lvl + (sht / tsl)) + 12.2;
+                vo2Field.value = vo2.toFixed(2);
+            } else {
+                vo2Field.value = '';
+            }
+        }
+
+        // 5. Perbaikan Render Radar (Memastikan Context Canvas Terbaca)
+        // (Fungsi ini akan melengkapi fungsi renderRadarChart yang sudah kamu punya agar lebih stabil)
+        function renderRadarChart(radarData) {
+            const canvas = document.getElementById('chartRadar');
+            if (!canvas) return;
+
+            if (chartRadar) chartRadar.destroy();
+            
+            const ctx = canvas.getContext('2d');
+            chartRadar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
+                    datasets: [{
+                        label: 'Profil Atlet',
+                        data: radarData || [0,0,0,0,0],
+                        backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                        borderColor: 'rgb(244, 63, 94)',
+                        pointBackgroundColor: 'rgb(244, 63, 94)',
+                        pointBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            beginAtZero: true,
+                            ticks: { display: false, stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            angleLines: { color: 'rgba(0,0,0,0.05)' },
+                            pointLabels: { font: { size: 10, weight: 'bold' } }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
         }
     </script>
 </body>
