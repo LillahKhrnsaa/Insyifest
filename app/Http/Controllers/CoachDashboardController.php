@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Coach;
 use App\Models\Member;
 use App\Models\Attendance;
+use App\Models\PhysicalTest;
 use App\Models\Raport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -73,7 +74,6 @@ class CoachDashboardController extends Controller
     public function getChartData(Request $request)
     {
         try {
-            // Validasi input
             $request->validate([
                 'member_id' => 'required|integer|exists:members,id',
                 'gaya' => 'required|string',
@@ -84,120 +84,78 @@ class CoachDashboardController extends Controller
             $gaya = $request->input('gaya');
             $year = $request->input('year');
 
-            // Opsional: Cek apakah coach berhak akses member ini
             $user = Auth::user();
             $coach = Coach::where('user_id', $user->id)->first();
             
-            if (!$coach) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Coach tidak ditemukan'
-                ], 404);
-            }
+            if (!$coach) return response()->json(['success' => false, 'message' => 'Coach tidak ditemukan'], 404);
 
-            // ✅ FIX: Tambahkan prefix tabel untuk menghindari ambiguous column
-            $member = $coach->members()
-                ->where('members.id', $memberId) // ← TAMBAHKAN 'members.' prefix
-                ->first();
-            
-            if (!$member) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses ke member ini'
-                ], 403);
-            }
+            $member = $coach->members()->where('members.id', $memberId)->first();
+            if (!$member) return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
 
-            // Query raport dengan ordering bulan
+            // 1. Ambil Data Renang (Raports)
             $raports = Raport::where('member_id', $memberId)
                 ->where('gaya', $gaya)
                 ->where('year', $year)
                 ->whereNotNull('value')
-                ->where('value', '>', 0)
                 ->orderByRaw("CASE month 
-                    WHEN 'januari' THEN 1 
-                    WHEN 'februari' THEN 2 
-                    WHEN 'maret' THEN 3 
-                    WHEN 'april' THEN 4 
-                    WHEN 'mei' THEN 5 
-                    WHEN 'juni' THEN 6 
-                    WHEN 'juli' THEN 7 
-                    WHEN 'agustus' THEN 8 
-                    WHEN 'september' THEN 9 
-                    WHEN 'oktober' THEN 10 
-                    WHEN 'november' THEN 11 
-                    WHEN 'desember' THEN 12 
+                    WHEN 'januari' THEN 1 WHEN 'februari' THEN 2 WHEN 'maret' THEN 3 WHEN 'april' THEN 4 
+                    WHEN 'mei' THEN 5 WHEN 'juni' THEN 6 WHEN 'juli' THEN 7 WHEN 'agustus' THEN 8 
+                    WHEN 'september' THEN 9 WHEN 'oktober' THEN 10 WHEN 'november' THEN 11 WHEN 'desember' THEN 12 
                     ELSE 13 END")
-                ->with(['coach.user'])
                 ->get();
 
-            // Format data untuk response
+            // 2. Ambil Data Fisik Terbaru (PhysicalTest) untuk Radar
+            $latestPhysical = \App\Models\PhysicalTest::where('member_id', $memberId)
+                ->where('year', $year)
+                ->orderByRaw("CASE month 
+                    WHEN 'desember' THEN 1 WHEN 'november' THEN 2 WHEN 'oktober' THEN 3 WHEN 'september' THEN 4 
+                    WHEN 'agustus' THEN 5 WHEN 'juli' THEN 6 WHEN 'juni' THEN 7 WHEN 'mei' THEN 8 
+                    WHEN 'april' THEN 9 WHEN 'maret' THEN 10 WHEN 'februari' THEN 11 WHEN 'januari' THEN 12 
+                    END")
+                ->first();
+
             $labels = $raports->pluck('month')->map(fn($m) => ucfirst($m))->toArray();
             
             return response()->json([
                 'success' => true,
                 'raports' => $raports,
-                
-                // Data untuk Chart 1 (Waktu Tempuh)
                 'chartValue' => [
                     'labels' => $labels,
-                    'datasets' => [
-                        [
-                            'label' => 'Waktu (detik)',
-                            'data' => $raports->pluck('value')->map(fn($v) => (float) $v)->toArray(),
-                            'borderColor' => 'rgb(59, 130, 246)',
-                            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                            'tension' => 0.4,
-                        ]
-                    ]
+                    'datasets' => [[
+                        'label' => 'Waktu (detik)',
+                        'data' => $raports->pluck('value')->map(fn($v) => (float) $v)->toArray(),
+                        'borderColor' => 'rgb(59, 130, 246)',
+                        'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                        'tension' => 0.4,
+                    ]]
                 ],
-                
-                // Data untuk Chart 2 (Volume, Peaking, Intensity)
                 'chartVolume' => [
                     'labels' => $labels,
                     'datasets' => [
-                        [
-                            'label' => 'Volume (meter)',
-                            'data' => $raports->pluck('volume')->map(fn($v) => (float) $v)->toArray(),
-                            'borderColor' => 'rgb(34, 197, 94)',
-                            'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
-                            'tension' => 0.4,
-                        ],
-                        [
-                            'label' => 'Peaking (%)',
-                            'data' => $raports->pluck('peaking')->map(fn($v) => (float) $v)->toArray(),
-                            'borderColor' => 'rgb(236, 72, 153)',
-                            'backgroundColor' => 'rgba(236, 72, 153, 0.2)',
-                            'tension' => 0.4,
-                        ],
-                        [
-                            'label' => 'Intensity (%)',
-                            'data' => $raports->pluck('intensity')->map(fn($v) => (float) $v)->toArray(),
-                            'borderColor' => 'rgb(234, 179, 8)',
-                            'backgroundColor' => 'rgba(234, 179, 8, 0.2)',
-                            'tension' => 0.4,
-                        ],
+                        ['label' => 'Volume (m)', 'data' => $raports->pluck('volume')->toArray(), 'borderColor' => 'rgb(34, 197, 94)'],
+                        ['label' => 'Intensity (%)', 'data' => $raports->pluck('intensity')->toArray(), 'borderColor' => 'rgb(234, 179, 8)'],
                     ]
                 ],
+                // DATA RADAR UNTUK SPIDER CHART
+                'chartRadar' => [
+                    'labels' => ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
+                    'datasets' => [[
+                        'label' => 'Profil Fisik Atlet',
+                        'data' => $latestPhysical ? [
+                            round(max(0, min(5, 5 - ($latestPhysical->sprint_20m / 2))), 2),
+                            round(min(5, ($latestPhysical->push_up + $latestPhysical->sit_up) / 16), 2),
+                            round(min(5, $latestPhysical->vo2max / 10), 2),
+                            round(min(5, $latestPhysical->v_sit_reach / 6), 2),
+                            round(max(0, min(5, 10 - $latestPhysical->shuttle_run)), 2),
+                        ] : [0, 0, 0, 0, 0],
+                        'borderColor' => 'rgb(236, 72, 153)',
+                        'backgroundColor' => 'rgba(236, 72, 153, 0.2)',
+                    ]]
+                ]
             ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $e->errors()
-            ], 422);
 
         } catch (\Exception $e) {
-            // Log error untuk debugging
-            Log::error('Raport Chart Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -215,47 +173,29 @@ class CoachDashboardController extends Controller
                 'year' => 'required|integer',
                 'month' => 'required|string',
                 'value' => 'required|numeric',
-                'volume' => 'required|numeric',
-                'intensity' => 'required|numeric',
-                'peaking' => 'required|numeric',
                 'coach_id' => 'required|integer|exists:coaches,id',
-                'note' => 'nullable|string',
             ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
+            if ($validator->fails()) return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+
+            // Cek duplikasi raport renang
+            $exists = Raport::where($request->only(['member_id', 'gaya', 'year', 'month']))->exists();
+            if ($exists) return response()->json(['success' => false, 'message' => 'Data renang bulan ini sudah ada!'], 422);
+
+            // 1. Simpan Data Renang
+            $raport = Raport::create($request->only(['gaya', 'coach_id', 'member_id', 'year', 'month', 'note', 'value', 'volume', 'intensity', 'peaking']));
+
+            // 2. Simpan/Update Data Fisik (Hanya jika bleep_level diisi)
+            if ($request->filled('bleep_level')) {
+                PhysicalTest::updateOrCreate(
+                    ['member_id' => $request->member_id, 'year' => $request->year, 'month' => $request->month],
+                    $request->only(['coach_id', 'sprint_20m', 'push_up', 'sit_up', 'run_300m', 'v_sit_reach', 'bleep_level', 'bleep_shuttle', 'shuttle_run', 'note'])
+                );
             }
 
-            // Cek duplikasi
-            $exists = Raport::where('member_id', $request->member_id)
-                ->where('gaya', $request->gaya)
-                ->where('year', $request->year)
-                ->where('month', $request->month)
-                ->exists();
-
-            if ($exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data raport untuk bulan ini sudah ada!'
-                ], 422);
-            }
-
-            $raport = Raport::create($request->all());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Raport berhasil ditambahkan',
-                'data' => $raport
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Raport & Data Fisik berhasil ditambahkan']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menambahkan raport: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -268,44 +208,21 @@ class CoachDashboardController extends Controller
     {
         try {
             $raport = Raport::findOrFail($id);
+            
+            // 1. Update Data Renang
+            $raport->update($request->only(['value', 'volume', 'intensity', 'peaking', 'coach_id', 'note']));
 
-            $validator = Validator::make($request->all(), [
-                'value' => 'required|numeric',
-                'volume' => 'required|numeric',
-                'intensity' => 'required|numeric',
-                'peaking' => 'required|numeric',
-                'coach_id' => 'required|integer|exists:coaches,id',
-                'note' => 'nullable|string',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
+            // 2. Update Data Fisik Terkait
+            if ($request->filled('bleep_level')) {
+                PhysicalTest::updateOrCreate(
+                    ['member_id' => $raport->member_id, 'year' => $raport->year, 'month' => $raport->month],
+                    $request->only(['coach_id', 'sprint_20m', 'push_up', 'sit_up', 'run_300m', 'v_sit_reach', 'bleep_level', 'bleep_shuttle', 'shuttle_run', 'note'])
+                );
             }
 
-            // Lock field penting (tidak bisa diubah)
-            $raport->update([
-                'value' => $request->value,
-                'volume' => $request->volume,
-                'intensity' => $request->intensity,
-                'peaking' => $request->peaking,
-                'coach_id' => $request->coach_id,
-                'note' => $request->note,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Raport berhasil diupdate',
-                'data' => $raport
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Raport & Data Fisik berhasil diupdate']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate raport: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
