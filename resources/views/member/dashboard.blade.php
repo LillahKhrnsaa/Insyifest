@@ -328,41 +328,45 @@
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
                         
                         <div class="space-y-6">
-                            
-                            {{-- Grafik Performa --}}
-                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover p-4">
-                                <div class="px-4 py-2 border-b border-slate-100 bg-slate-50 flex justify-between items-center flex-wrap gap-2">
-                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                                        <i data-feather="trending-up" class="w-5 h-5 text-red-500"></i>
-                                        Grafik Performa
-                                    </h3>
-                                    <div class="flex gap-2">
-                                        <select id="performanceGaya" class="input-field text-xs py-1 px-2">
-                                            <option value="gaya_bebas_50">Bebas 50m</option>
-                                            <option value="gaya_bebas_100">Bebas 100m</option>
-                                            <option value="gaya_dada_50">Dada 50m</option>
-                                            <option value="gaya_dada_100">Dada 100m</option>
-                                        </select>
-                                        <input type="number" id="performanceYear" value="{{ now()->year }}" class="input-field text-xs py-1 px-2 w-20">
-                                    </div>
+
+                        {{-- Grafik Performa --}}
+                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover p-4">
+                            <div class="px-4 py-2 border-b border-slate-100 bg-slate-50 flex justify-between items-center flex-wrap gap-2">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-feather="trending-up" class="w-5 h-5 text-red-500"></i>
+                                    Grafik Performa
+                                </h3>
+                                <div class="flex gap-2">
+                                    <select id="performanceGaya" class="input-field text-xs py-1 px-2">
+                                        @forelse($existingStyles as $style)
+                                            <option value="{{ $style }}">
+                                                {{ ucwords(str_replace('_', ' ', $style)) }}
+                                            </option>
+                                        @empty
+                                            <option value="" disabled>Belum ada data gaya</option>
+                                        @endforelse
+                                    </select>
+                                    
+                                    <input type="number" id="performanceYear" value="{{ now()->year }}" class="input-field text-xs py-1 px-2 w-20">
                                 </div>
-                                <div class="p-5">
-                                    <div id="chartLoading" class="text-center py-10 hidden">
-                                        <p class="text-slate-400 text-sm">Memuat data...</p>
+                            </div>
+                            
+                            <div class="p-5">
+                                <div id="chartLoading" class="text-center py-10 hidden">
+                                    <p class="text-slate-400 text-sm">Memuat data...</p>
+                                </div>
+                                <div id="chartContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="relative w-full h-64">
+                                        <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Waktu (Detik)</h4>
+                                        <canvas id="performanceChartValue"></canvas>
                                     </div>
-                                    <div id="chartContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {{-- PERBAIKAN LOOP: Wrapper dengan tinggi tetap (h-64) dan relative --}}
-                                        <div class="relative w-full h-64">
-                                            <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Waktu (Detik)</h4>
-                                            <canvas id="performanceChartValue"></canvas>
-                                        </div>
-                                        <div class="relative w-full h-64">
-                                            <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Volume & Intensitas</h4>
-                                            <canvas id="performanceChartVolume"></canvas>
-                                        </div>
+                                    <div class="relative w-full h-64">
+                                        <h4 class="text-center text-xs font-bold text-slate-400 uppercase mb-2">Volume & Intensitas</h4>
+                                        <canvas id="performanceChartVolume"></canvas>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
                         </div>
 
@@ -529,25 +533,14 @@
                         {{-- Section Filter --}}
                         <div class="px-6 py-4 bg-white border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between">
                             <div class="flex flex-wrap gap-3 w-full sm:w-auto">
-                                {{-- Filter Gaya --}}
                                 <div class="relative">
-                                    <select x-model="filterGaya" class="input-field py-2 pl-3 pr-8 text-sm w-full sm:w-40 cursor-pointer">
-                                        <option value="">Semua Gaya</option>
-                                        <option value="bebas">Gaya Bebas</option>
-                                        <option value="dada">Gaya Dada</option>
-                                        <option value="kupu">Gaya Kupu-kupu</option>
-                                        <option value="punggung">Gaya Punggung</option>
-                                    </select>
-                                </div>
-
-                                {{-- Filter Jarak --}}
-                                <div class="relative">
-                                    <select x-model="filterJarak" class="input-field py-2 pl-3 pr-8 text-sm w-full sm:w-32 cursor-pointer">
-                                        <option value="">Semua Jarak</option>
-                                        <option value="50">50 Meter</option>
-                                        <option value="100">100 Meter</option>
-                                        <option value="200">200 Meter</option>
-                                        <option value="400">400 Meter</option>
+                                    <select x-model="filterGaya" class="input-field py-2 pl-3 pr-8 text-sm w-full sm:w-64 cursor-pointer">
+                                        <option value="">Semua Kategori</option>
+                                        @foreach($existingStyles as $style)
+                                            <option value="{{ $style }}">
+                                                {{ ucwords(str_replace('_', ' ', $style)) }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -635,21 +628,14 @@
 
                 get filteredItems() {
                     return this.items.filter(item => {
-                        // Logic filter Gaya (contoh data: 'gaya_bebas_50')
-                        const matchGaya = this.filterGaya === '' || item.gaya.toLowerCase().includes(this.filterGaya.toLowerCase());
-                        
-                        // Logic filter Jarak (cek apakah string mengandung angka jarak)
-                        // Kita asumsikan format selalu 'gaya_xxx_50' atau sejenisnya
-                        const matchJarak = this.filterJarak === '' || item.gaya.includes(this.filterJarak);
-
-                        return matchGaya && matchJarak;
+                        const matchGaya = this.filterGaya === '' || item.gaya === this.filterGaya;
+                        return matchGaya;
                     });
                 },
 
                 // Helper functions untuk formatting tampilan
                 formatGaya(gayaString) {
                     if (!gayaString) return '-';
-                    // Mengubah 'gaya_bebas_50' menjadi 'Gaya Bebas 50'
                     return gayaString.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 },
 
@@ -678,7 +664,17 @@
         });
 
         function initMemberCharts() {
-            const gaya = document.getElementById('performanceGaya')?.value || 'gaya_bebas_50';
+        const selectGaya = document.getElementById('performanceGaya');
+            let gaya = selectGaya?.value;
+            
+            if (!gaya && selectGaya && selectGaya.options.length > 0) {
+                gaya = selectGaya.options[0].value;
+            }
+            
+            if (!gaya) {
+                console.warn('Tidak ada data gaya renang untuk ditampilkan di grafik.');
+                return; 
+            }
             const year = document.getElementById('performanceYear')?.value || new Date().getFullYear();
             const container = document.getElementById('chartContainer');
             const loading = document.getElementById('chartLoading');

@@ -108,6 +108,11 @@ class MemberDashboardController extends Controller
                 'total_coaches' => $totalCoaches
             ]);
 
+            $existingStyles = Raport::distinct()
+                                ->whereNotNull('gaya')
+                                ->orderBy('gaya', 'asc')
+                                ->pluck('gaya');
+
             return view('member.dashboard', compact(
                 'member',
                 'assignedCoaches',
@@ -116,7 +121,8 @@ class MemberDashboardController extends Controller
                 'raports',
                 'totalAttendances',
                 'totalRaports',
-                'totalCoaches'
+                'totalCoaches',
+                'existingStyles'
             ));
 
         } catch (\Exception $e) {

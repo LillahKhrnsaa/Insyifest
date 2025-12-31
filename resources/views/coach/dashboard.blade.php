@@ -968,18 +968,23 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Gaya</label>
                                 <select id="gaya" class="input-field w-full py-2 text-sm bg-white">
-                                    <option value="gaya_bebas_50">Gaya Bebas 50m</option>
-                                    <option value="gaya_bebas_100">Gaya Bebas 100m</option>
-                                    <option value="gaya_dada_50">Gaya Dada 50m</option>
-                                    {{-- Tambahkan opsi lain sesuai kebutuhan --}}
+                                    @forelse($existingStyles as $style)
+                                        <option value="{{ $style }}">
+                                            {{ ucwords(str_replace('_', ' ', $style)) }}
+                                        </option>
+                                    @empty
+                                        <option value="" disabled>Belum ada data gaya</option>
+                                    @endforelse
                                 </select>
                             </div>
                             
+                            {{-- Input Tahun --}}
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Tahun</label>
                                 <input type="number" id="year" value="{{ now()->year }}" class="input-field w-full py-2 text-sm bg-white">
                             </div>
                             
+                            {{-- Tombol Muat Data --}}
                             <div class="flex items-end">
                                 <button onclick="loadRaportData()" class="w-full btn-primary py-2 flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow-md">
                                     <i data-feather="refresh-cw" class="w-4 h-4"></i>
@@ -1037,6 +1042,8 @@
                                             <th class="px-5 py-3 text-left bg-slate-50">Waktu</th>
                                             <th class="px-5 py-3 text-left bg-slate-50">Volume</th>
                                             <th class="px-5 py-3 text-left bg-slate-50">Intensitas</th>
+                                            <th class="px-5 py-3 text-left bg-slate-50">Peaking</th>
+                                            <th class="px-5 py-3 text-center bg-slate-50">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 bg-white"></tbody>
@@ -1447,23 +1454,58 @@
         function updateTable(raports) {
             const tbody = document.querySelector('#raport-table tbody');
             tbody.innerHTML = '';
+            
             if (raports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Tidak ada data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Tidak ada data.</td></tr>';
                 return;
             }
+            
             raports.forEach(r => {
+                // Format waktu (00:00.00)
                 const formattedTime = `${String(Math.floor(r.value / 60)).padStart(2, '0')}:${(r.value % 60).toFixed(2).padStart(5, '0')}`;
+                
+                // Format Peaking
+                const peakingValue = r.peaking ? r.peaking : '-';
+
                 const row = `
                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                        <td class="px-6 py-4 font-bold text-slate-800 capitalize">${r.month}</td>
-                        <td class="px-6 py-4 text-cyan-600 font-mono font-bold">${formattedTime}</td>
-                        <td class="px-6 py-4 text-slate-600">${r.volume}m</td>
-                        <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">${r.intensity}%</span></td>
-                        </tr>
+                        <td class="px-5 py-3 font-bold text-slate-800 capitalize">${r.month}</td>
+                        <td class="px-5 py-3 text-cyan-600 font-mono font-bold">${formattedTime}</td>
+                        <td class="px-5 py-3 text-slate-600">${r.volume}m</td>
+                        <td class="px-5 py-3"><span class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">${r.intensity}%</span></td>
+                        <td class="px-5 py-3 font-medium text-slate-700">${peakingValue}</td>
+                        
+                        <td class="px-5 py-3 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openEditForm(${r.id}, '${r.month}', '${r.value}', '${r.volume}', '${r.intensity}', '${r.peaking || ''}', '${r.coach_id}', '${r.note || ''}')" 
+                                        class="btn-action btn-edit" 
+                                        title="Edit Data">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <button onclick="confirmDelete(${r.id}, '${r.month}')" 
+                                        class="btn-action btn-delete" 
+                                        title="Hapus Data">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
             });
-            if (typeof feather !== 'undefined') feather.replace();
+            
+            // Refresh icons feather setelah menambahkan elemen baru
+            if (typeof feather !== 'undefined') {
+                setTimeout(() => feather.replace(), 100);
+            }
         }
 
         function updateCharts(valueData, volumeData) {

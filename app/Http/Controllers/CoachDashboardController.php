@@ -31,8 +31,10 @@ class CoachDashboardController extends Controller
         $inactiveMembers = $coach->members->where('status', 'TIDAK_AKTIF')->count();
         $totalSchedules = $coach->trainingSchedules->count();
 
-
-        // --- INI UPDATE-NYA ---
+        $existingStyles = Raport::distinct()
+                        ->whereNotNull('gaya')
+                        ->orderBy('gaya', 'asc')
+                        ->pluck('gaya');
 
         // 3. Buat list BARU untuk MODAL (Filter ganda)
         $activeRegularMembers = $coach->members->filter(function ($member) {
@@ -67,7 +69,8 @@ class CoachDashboardController extends Controller
             'totalSchedules',
             'activeRegularMembers', // <-- Data BARU untuk modal checklist 1
             'allOtherMembers',      // Data BARU (terfilter) untuk modal checklist 2
-            'attendances'
+            'attendances',
+            'existingStyles'
         ));
     }
 
