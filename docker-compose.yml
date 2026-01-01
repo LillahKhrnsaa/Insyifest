@@ -36,7 +36,7 @@ services:
       - ./:/var/www
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     depends_on:
-      - app
+      - appwha
     networks:
       - laravel_net
 
