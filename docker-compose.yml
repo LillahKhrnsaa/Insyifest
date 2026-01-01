@@ -13,7 +13,7 @@ services:
     # --- BAGIAN INI YANG HILANG DI FILE ANDA ---
     environment:
       APP_ENV: local
-      APP_KEY: ${APP_KEY}
+      # APP_KEY: ${APP_KEY}
       APP_DEBUG: ${APP_DEBUG}
       DB_CONNECTION: pgsql
       DB_HOST: db               # <--- KUNCI UTAMA: Kita paksa ke 'db'
