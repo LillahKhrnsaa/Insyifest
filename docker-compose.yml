@@ -1,5 +1,4 @@
 services:
-  # Service Aplikasi Laravel
   app:
     build:
       context: .
@@ -10,25 +9,23 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
-    # --- BAGIAN INI YANG HILANG DI FILE ANDA ---
     environment:
       APP_ENV: local
       # APP_KEY: ${APP_KEY}
       APP_DEBUG: ${APP_DEBUG}
       DB_CONNECTION: pgsql
-      DB_HOST: db               # <--- KUNCI UTAMA: Kita paksa ke 'db'
+      DB_HOST: db
       DB_PORT: 5432
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
 
-    depends_on:   # <--- TAMBAHKAN INI
+    depends_on:
       - db
-    # -------------------------------------------
+
     networks:
       - laravel_net
 
-  # Service Web Server
   nginx:
     image: nginx:alpine
     container_name: laravel_nginx
@@ -43,7 +40,6 @@ services:
     networks:
       - laravel_net
 
-  # Service Database PostgreSQL
   db:
     image: postgres:17
     container_name: laravel_db

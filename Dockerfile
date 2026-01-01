@@ -1,7 +1,6 @@
 FROM php:8.3-fpm
 
 # 1. Install dependencies sistem
-# TAMBAHAN: libicu-dev (untuk intl) dan libzip-dev (untuk zip)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -20,7 +19,6 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 3. Install PHP extensions
-# TAMBAHAN: intl dan zip
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd intl zip
 
