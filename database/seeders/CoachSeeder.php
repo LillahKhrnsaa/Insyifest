@@ -24,13 +24,6 @@ class CoachSeeder extends Seeder
                 'bio' => ''
             ],
             [
-                'name' => 'Febri Maharatri Kharisma Amalia Suci',
-                'email' => 'febri.maharatri@cikampekswimming.gmail.com',
-                'phone' => '081291846070',
-                'gender' => 'FEMALE',
-                'bio' => ''
-            ],
-            [
                 'name' => 'Dony Adhi Nugroho Hidayat',
                 'email' => 'dony.adhi@cikampekswimming.gmail.com',
                 'phone' => '081292626315',
@@ -101,24 +94,10 @@ class CoachSeeder extends Seeder
                 'bio' => ''
             ],
             [
-                'name' => 'Arsad Fany Ibrahim',
-                'email' => 'arsad.fany@cikampekswimming.gmail.com',
-                'phone' => '0895348074062',
-                'gender' => 'MALE',
-                'bio' => ''
-            ],
-            [
                 'name' => 'Alif Ikrar Prabu',
                 'email' => 'alif.ikrar@cikampekswimming.gmail.com',
                 'phone' => '083804665952',
                 'gender' => 'MALE',
-                'bio' => ''
-            ],
-            [
-                'name' => 'Adinda Putri Larasati',
-                'email' => 'adinda.putri@cikampekswimming.gmail.com',
-                'phone' => '085885060925',
-                'gender' => 'FEMALE',
                 'bio' => ''
             ],
             [

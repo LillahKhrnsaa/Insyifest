@@ -281,7 +281,7 @@ class MemberSeeder extends Seeder
             ['name' => 'Rafif Ammar Irawan', 'phone' => '085759999141', 'gender' => 'MALE'],
             ['name' => 'Rafisqy evano alfareza ', 'phone' => '085725307124', 'gender' => 'MALE'],
             ['name' => 'Rafka Khairan Azzam ', 'phone' => '089634660974', 'gender' => 'MALE'],
-            ['name' => 'Rai jiwa Firdaus putra Maaruf', 'phone' => '081287399080', 'gender' => 'MALE'],
+            ['name' => 'Rai jiwa Firdaus putra Maa\'ruf', 'phone' => '081287399080', 'gender' => 'MALE'],
             ['name' => 'Raisa Aura Dewi', 'phone' => '083101457443', 'gender' => 'FEMALE'],
             ['name' => 'RAJENDRA ABID ZANATAN', 'phone' => '0895332383386', 'gender' => 'MALE'],
             ['name' => 'Rakhshandrina kaysa S F', 'phone' => '081289673444', 'gender' => 'FEMALE'],

@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        require_once __DIR__ . '/MemberTrainingAssignment.php';
+
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
@@ -23,6 +25,7 @@ class DatabaseSeeder extends Seeder
             CoachSeeder::class,
             TrainingScheduleSeeder::class,
             MemberSeeder::class,
+            MemberTrainingAssignmentSeeder::class,
         ]);
     }
 }
