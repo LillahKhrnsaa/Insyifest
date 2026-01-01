@@ -338,7 +338,7 @@ class MemberSeeder extends Seeder
         foreach ($membersData as $data) {
             if (!isset($data['email'])) {
                 $cleanName = Str::slug($data['name']);
-                $data['email'] = $cleanName . rand(10, 99) . '@cikampekswimming.local';
+                $data['email'] = $cleanName . rand(10, 99) . '@cikampekswimming.gmail.com';
             }
 
             $user = User::firstOrCreate(
