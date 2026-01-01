@@ -1,0 +1,67 @@
+services:
+  # Service Aplikasi Laravel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel_app
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    # --- BAGIAN INI YANG HILANG DI FILE ANDA ---
+    environment:
+      APP_ENV: local
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG}
+      DB_CONNECTION: pgsql
+      DB_HOST: db               # <--- KUNCI UTAMA: Kita paksa ke 'db'
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+    depends_on:   # <--- TAMBAHKAN INI
+      - db
+    # -------------------------------------------
+    networks:
+      - laravel_net
+
+  # Service Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+    networks:
+      - laravel_net
+
+  # Service Database PostgreSQL
+  db:
+    image: postgres:17
+    container_name: laravel_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - laravel_net
+
+networks:
+  laravel_net:
+    driver: bridge
+
+volumes:
+  db_data:

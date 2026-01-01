@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->timestamps();
         });
 
-                DB::statement("ALTER TABLE form_eksternals ADD CONSTRAINT form_eksternals_status_check CHECK (status IN ('ACTIVE','INACTIVE'));");
+        DB::statement("ALTER TABLE form_eksternals ADD CONSTRAINT form_eksternals_status_check CHECK (status IN ('ACTIVE','INACTIVE'));");
     }
 
     /**
