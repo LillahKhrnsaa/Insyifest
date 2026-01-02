@@ -967,15 +967,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Gaya</label>
-                                <select id="gaya" class="input-field w-full py-2 text-sm bg-white">
-                                    @forelse($existingStyles as $style)
-                                        <option value="{{ $style }}">
-                                            {{ ucwords(str_replace('_', ' ', $style)) }}
-                                        </option>
-                                    @empty
-                                        <option value="" disabled>Belum ada data gaya</option>
-                                    @endforelse
-                                </select>
+                            <select id="gaya" class="input-field w-full py-2 text-sm bg-white">
+                                {{-- Tambahkan baris ini sebagai default --}}
+                                <option value="" selected disabled>-- Pilih Gaya Renang --</option>
+
+                                @forelse($existingStyles as $style)
+                                    <option value="{{ $style }}">
+                                        {{ ucwords(str_replace('_', ' ', $style)) }}
+                                    </option>
+                                @empty
+                                    <option value="" disabled>Belum ada data gaya</option>
+                                @endforelse
+                            </select>
                             </div>
                             
                             {{-- Input Tahun --}}
@@ -1431,9 +1434,24 @@
 
         // Data Functions
         function loadRaportData() {
-            const gaya = document.getElementById('gaya').value;
+            const gayaSelect = document.getElementById('gaya');
+            const gaya = gayaSelect.value; // Ambil nilai gaya
             const year = document.getElementById('year').value;
             
+            // === [MULAI PERUBAHAN] ===
+            // Cek apakah gaya masih kosong?
+            if (!gaya) {
+                // Jika kosong, jangan lakukan apa-apa (Stop)
+                // Opsional: Kamu bisa reset tabel biar bersih
+                const tbody = document.querySelector('#raport-table tbody');
+                if(tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Silakan pilih Kategori Gaya terlebih dahulu.</td></tr>';
+                }
+                return; // <--- INI KUNCI UTAMANYA (Hentikan proses)
+            }
+            // === [AKHIR PERUBAHAN] ===
+
+            // Kode lama kamu di bawah ini tetap sama...
             fetch(`/api/raport/chart-data?member_id=${currentMemberId}&gaya=${gaya}&year=${year}`)
                 .then(response => response.json())
                 .then(data => {
@@ -1447,7 +1465,8 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('Gagal memuat data raport', 'error');
+                    // Hilangkan alert error ini agar tidak mengganggu jika data belum lengkap
+                    // showAlert('Gagal memuat data raport', 'error'); 
                 });
         }
 
