@@ -18,43 +18,48 @@ class CoachDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // 1. Load Coach, SEMUA member reguler + user-nya, dan jadwal
+        // 1. Load Coach, Member, dan User terkait
+        // Menggunakan firstOrFail agar jika user bukan coach, langsung 404 (atau bisa handle error lain)
         $coach = Coach::with([
             'user',
-            'members.user', // Load SEMUA member untuk stats & tabel
+            'members.user', // Eager load user dari setiap member
             'trainingSchedules',
         ])->where('user_id', $user->id)->firstOrFail();
 
-        // 2. Hitung Statistik (Dari SEMUA member reguler, sesuai kode aslimu)
+        // 2. Hitung Statistik
         $totalMembers = $coach->members->count();
         $activeMembers = $coach->members->where('status', 'AKTIF')->count();
         $inactiveMembers = $coach->members->where('status', 'TIDAK_AKTIF')->count();
         $totalSchedules = $coach->trainingSchedules->count();
 
-        $existingStyles = Raport::distinct()
-                        ->whereNotNull('gaya')
-                        ->orderBy('gaya', 'asc')
-                        ->pluck('gaya');
+        // 3. DAFTAR GAYA (HARDCODED)
+        // Ini solusi agar dropdown tidak kosong meskipun belum ada data di tabel raport
+        $existingStyles = [
+            'gaya_bebas_50', 'gaya_bebas_100', 'gaya_bebas_200', 'gaya_bebas_400', 'gaya_bebas_800', 'gaya_bebas_1500',
+            'gaya_dada_50', 'gaya_dada_100', 'gaya_dada_200',
+            'gaya_punggung_50', 'gaya_punggung_100', 'gaya_punggung_200',
+            'gaya_kupu_50', 'gaya_kupu_100', 'gaya_kupu_200',
+            'gaya_ganti_200', 'gaya_ganti_400'
+        ];
 
-        // 3. Buat list BARU untuk MODAL (Filter ganda)
+        // 4. List Member Reguler (Filter Aktif di Member & User)
+        // Digunakan untuk Modal Checklist Absensi
         $activeRegularMembers = $coach->members->filter(function ($member) {
-            // Cek status di tabel members DAN user
             return $member->status === 'AKTIF' && $member->user && $member->user->active === 1;
         });
         
-        // 4. Buat list EKSTRA untuk MODAL (Query DB dengan filter ganda)
+        // 5. List Member Lain (Di luar binaan coach ini)
+        // Jika nanti dibutuhkan untuk fitur transfer atlet atau melihat atlet lain
         $coachMemberIds = $coach->members->pluck('id');
         $allOtherMembers = Member::with('user')
-                            ->where('status', 'AKTIF') // Cek status di 'members'
+                            ->where('status', 'AKTIF')
                             ->whereHas('user', function ($q) {
-                                $q->where('active', 1); // Cek status di 'users'
+                                $q->where('active', 1);
                             })
-                            ->whereNotIn('id', $coachMemberIds) // Bukan member reguler
+                            ->whereNotIn('id', $coachMemberIds)
                             ->get();
 
-        // --- SELESAI UPDATE ---
-
-        // 5. Ambil Riwayat Absensi (Tidak berubah, sudah benar)
+        // 6. Riwayat Absensi
         $attendances = Attendance::where('coach_id', $coach->id)
                             ->with('schedule') 
                             ->withCount('members') 
@@ -62,15 +67,15 @@ class CoachDashboardController extends Controller
                             ->get();
 
         return view('coach.dashboard', compact(
-            'coach',                // Untuk tabel 'Atlet' (menampilkan semua)
-            'totalMembers',         // Stat
-            'activeMembers',        // Stat
-            'inactiveMembers',      // Stat
-            'totalSchedules',
-            'activeRegularMembers', // <-- Data BARU untuk modal checklist 1
-            'allOtherMembers',      // Data BARU (terfilter) untuk modal checklist 2
-            'attendances',
-            'existingStyles'
+            'coach', 
+            'totalMembers', 
+            'activeMembers', 
+            'inactiveMembers',
+            'totalSchedules', 
+            'activeRegularMembers', 
+            'allOtherMembers',
+            'attendances', 
+            'existingStyles' // <-- Array manual dikirim ke view
         ));
     }
 
