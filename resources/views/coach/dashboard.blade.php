@@ -192,49 +192,56 @@
             showAllMembers: false,
             showAllSchedules: false,
             showAllHistory: false,
+            showDetailModal: false,
 
             filterMonth: '{{ date('Y-m') }}',
-            
-            // Variabel Lama (Tetap dipertahankan agar tidak error)
+            detailMembers: [], 
+            detailTitle: '',
+
+            // Variabel Form
             selectedScheduleId: {{ old('schedule_id') ?? 'null' }}, 
             selectedSchedulePlace: '{{ old('place') ?? '' }}',
-            
-            // Variabel Baru untuk Fitur Fleksibel
             searchTerm: '',
             selectedSchedule: '', 
-            // Ambil data jadwal dari coach untuk dropdown
-            schedules: {{ $coach->trainingSchedules->map(fn($s) => ['id' => $s->id, 'time' => $s->time, 'place' => $s->place, 'label' => ucfirst($s->day).' ('.$s->time.')']) }},
             
+            // Data Jadwal
+            schedules: {{ $coach->trainingSchedules->map(fn($s) => ['id' => $s->id, 'time' => $s->time, 'place' => $s->place, 'label' => ucfirst($s->day).' ('.$s->time.')']) }},
+
+            // Fungsi Detail Kehadiran
+            openDetail(members, date) {
+                this.detailMembers = members;
+                this.detailTitle = 'Detail Kehadiran - ' + date;
+                this.showDetailModal = true;
+            }, // <--- Pastikan ada koma di sini
+
             // Fungsi Otomatis Isi (Auto-fill)
             autoFill() {
                 let found = this.schedules.find(s => s.id == this.selectedSchedule);
                 if (found) {
                     this.$refs.timeInput.value = found.time;
                     this.$refs.placeInput.value = found.place;
-                    // Sinkronkan ke variabel lama jika diperlukan
                     this.selectedScheduleId = found.id;
                     this.selectedSchedulePlace = found.place;
                 }
             },
 
-            // Fungsi Toggle Modal (Update agar lebih fleksibel)
+            // Fungsi Toggle Modal Absen
             toggleModal(id = null, place = '') {
                 this.selectedScheduleId = id;
                 this.selectedSchedule = id ? id : '';
                 this.selectedSchedulePlace = place;
                 this.showModal = true;
                 
-                // Jika buka modal kosong (tanpa ID), reset form
-                if(!id) {
-                    if(this.$refs.timeInput) this.$refs.timeInput.value = '';
-                    if(this.$refs.placeInput) this.$refs.placeInput.value = '';
-                } else {
-                    this.autoFill();
-                }
+                this.$nextTick(() => {
+                    if(!id) {
+                        if(this.$refs.timeInput) this.$refs.timeInput.value = '';
+                        if(this.$refs.placeInput) this.$refs.placeInput.value = '';
+                    } else {
+                        this.autoFill();
+                    }
+                });
             }
-         }"
-         class="min-h-screen"
-    >
+        }" class="min-h-screen">
         {{-- Navbar --}}
         <nav class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
             <div class="mx-auto px-4 sm:px-6 lg:px-8">
@@ -557,114 +564,125 @@
                             </div>
                         </div>
 
-                            {{-- KANAN: Riwayat Kehadiran Terakhir --}}
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover flex flex-col h-full">
-        {{-- Header Card dengan Filter Bulan --}}
-        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                    <i data-feather="clock" class="w-5 h-5 text-purple-600"></i>
-                    Riwayat Absensi
-                </h3>
-                {{-- Input Filter Bulan --}}
-                <div class="flex items-center gap-2">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Bulan:</label>
-                    <input type="month" x-model="filterMonth" 
-                        class="text-xs border-slate-200 rounded-lg px-2 py-1 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm">
-                </div>
-            </div>
-        </div>
-                                        
-        <div class="overflow-x-auto flex-1 w-full custom-scrollbar">
-            <table class="w-full min-w-[600px]">
-                <thead>
-                    <tr class="text-left text-[10px] text-slate-400 font-bold uppercase tracking-widest border-b border-slate-50">
-                        <th class="px-4 py-4">Waktu & Lokasi</th>
-                        <th class="px-4 py-4 text-center">Kehadiran</th>
-                        <th class="px-4 py-4">Catatan & Foto</th>
-                        <th class="px-4 py-4 text-right">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    @forelse($attendances as $attendance)
-                    {{-- Logika Filter Alpine.js --}}
-                    <tr x-show="filterMonth === '' || '{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m') }}' === filterMonth"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0"
-                        x-transition:enter-end="opacity-100"
-                        class="hover:bg-slate-50/50 transition-colors">
-                        
-                        {{-- 1. Tanggal, Jam & Lokasi --}}
-                        <td class="px-4 py-4">
-                            <div class="font-bold text-slate-800 text-sm">
-                                {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM YYYY') }}
-                            </div>
-                            <div class="flex flex-col gap-1 mt-1">
-                                <span class="text-[11px] text-blue-600 font-medium flex items-center gap-1">
-                                    <i data-feather="clock" class="w-3 h-3 text-slate-400"></i>
-                                    {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('H:i') : '--:--' }} WIB
-                                </span>
-                                <span class="text-[11px] text-slate-500 flex items-center gap-1">
-                                    <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
-                                    {{ Str::limit($attendance->place ?? '-', 20) }}
-                                </span>
-                            </div>
-                        </td>
-
-                        {{-- 2. Total Hadir (Binaan vs Lainnya) --}}
-                        <td class="px-4 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                @php
-                                    $binaanIds = $coach->members->pluck('id')->toArray();
-                                    $countBinaan = $attendance->members->whereIn('id', $binaanIds)->count();
-                                    $countLain = $attendance->members->whereNotIn('id', $binaanIds)->count();
-                                @endphp
-                                <div class="text-center px-2 py-1 bg-blue-50 rounded-lg border border-blue-100">
-                                    <p class="text-[9px] text-blue-500 font-bold uppercase">Binaan</p>
-                                    <p class="text-sm font-black text-blue-700">{{ $countBinaan }}</p>
-                                </div>
-                                <div class="text-center px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Lainnya</p>
-                                    <p class="text-sm font-black text-slate-600">{{ $countLain }}</p>
+                        {{-- KANAN: Riwayat Kehadiran Terakhir --}}
+                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover flex flex-col h-full">
+                            {{-- Header Card dengan Filter Bulan --}}
+                            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-feather="clock" class="w-5 h-5 text-purple-600"></i>
+                                        Riwayat Absensi
+                                    </h3>
+                                    {{-- Filter Bulan --}}
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Bulan:</label>
+                                        <input type="month" x-model="filterMonth" 
+                                            class="text-xs border-slate-200 rounded-lg px-2 py-1 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm">
+                                    </div>
                                 </div>
                             </div>
-                        </td>
+                                                            
+                            <div class="overflow-x-auto flex-1 w-full custom-scrollbar">
+                                <table class="w-full min-w-[600px]">
+                                    <thead>
+                                        <tr class="text-left text-[10px] text-slate-400 font-bold uppercase tracking-widest border-b border-slate-50">
+                                            <th class="px-4 py-4">Waktu & Lokasi</th>
+                                            <th class="px-4 py-4 text-center">Kehadiran</th>
+                                            <th class="px-4 py-4">Catatan & Foto</th>
+                                            <th class="px-4 py-4 text-right">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50">
+                                        @forelse($attendances as $attendance)
+                                        <tr x-show="filterMonth === '' || '{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m') }}' === filterMonth"
+                                            x-transition.opacity
+                                            class="hover:bg-slate-50/50 transition-colors">
+                                            
+                                            {{-- 1. Waktu --}}
+                                            <td class="px-4 py-4">
+                                                <div class="font-bold text-slate-800 text-sm">
+                                                    {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM YYYY') }}
+                                                </div>
+                                                <div class="flex flex-col gap-1 mt-1">
+                                                    <span class="text-[11px] text-blue-600 font-medium flex items-center gap-1">
+                                                        <i data-feather="clock" class="w-3 h-3 text-slate-400"></i>
+                                                        {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('H:i') : '--:--' }} WIB
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-500 flex items-center gap-1">
+                                                        <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
+                                                        {{ Str::limit($attendance->place ?? '-', 20) }}
+                                                    </span>
+                                                </div>
+                                            </td>
 
-                        {{-- 3. Catatan & Link Foto --}}
-                        <td class="px-4 py-4">
-                            <div class="max-w-[150px]">
-                                <p class="text-xs text-slate-600 italic line-clamp-2 mb-2">
-                                    {{ $attendance->notes ? '"'.$attendance->notes.'"' : '-' }}
-                                </p>
-                                
-                                @if($attendance->photo_path)
-                                    <a href="{{ asset('storage/' . $attendance->photo_path) }}" target="_blank" 
-                                    class="inline-flex items-center gap-1.5 text-[10px] font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 px-2 py-1 rounded-md">
-                                        <i data-feather="image" class="w-3 h-3"></i>
-                                        Foto
-                                    </a>
-                                @endif
+                                            {{-- 2. Kehadiran (Klik untuk Detail) --}}
+                                            <td class="px-4 py-4 text-center">
+                                                @php
+                                                    $binaanIds = $coach->members->pluck('id')->toArray();
+                                                    $countBinaan = $attendance->members->whereIn('id', $binaanIds)->count();
+                                                    $countLain = $attendance->members->whereNotIn('id', $binaanIds)->count();
+                                                    
+                                                    $detailData = $attendance->members->map(function($m) use ($binaanIds) {
+                                                        return [
+                                                            'name' => addslashes($m->user->name),
+                                                            'is_binaan' => in_array($m->id, $binaanIds),
+                                                            'photo' => $m->user->photo_url ?? null,
+                                                            'category' => $m->category ?? 'Umum'
+                                                        ];
+                                                    });
+                                                @endphp
+                                                
+                                                <button type="button" 
+                                                        @click="openDetail({{ json_encode($detailData) }}, '{{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM YYYY') }}')"
+                                                        class="flex items-center justify-center gap-2 hover:scale-105 transition-transform cursor-pointer group mx-auto">
+                                                    <div class="text-center px-2 py-1 bg-blue-50 rounded-lg border border-blue-100 group-hover:bg-blue-100 transition-colors">
+                                                        <p class="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Binaan</p>
+                                                        <p class="text-sm font-black text-blue-700">{{ $countBinaan }}</p>
+                                                    </div>
+                                                    <div class="text-center px-2 py-1 bg-slate-50 rounded-lg border border-slate-100 group-hover:bg-slate-200 transition-colors">
+                                                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Lainnya</p>
+                                                        <p class="text-sm font-black text-slate-600">{{ $countLain }}</p>
+                                                    </div>
+                                                </button>
+                                            </td>
+
+                                            {{-- 3. Catatan & Foto --}}
+                                            <td class="px-4 py-4">
+                                                <div class="max-w-[150px]">
+                                                    <p class="text-xs text-slate-600 italic line-clamp-2 mb-2" title="{{ $attendance->notes }}">
+                                                        {{ $attendance->notes ? '"'.$attendance->notes.'"' : '-' }}
+                                                    </p>
+                                                    
+                                                    @if($attendance->photo_path)
+                                                        <a href="{{ asset('storage/' . $attendance->photo_path) }}" target="_blank" 
+                                                        class="inline-flex items-center gap-1.5 text-[10px] font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 px-2 py-1 rounded-md transition-colors">
+                                                            <i data-feather="image" class="w-3 h-3"></i>
+                                                            Lihat Foto
+                                                        </a>
+                                                    @else
+                                                        <span class="text-[10px] text-slate-300 italic">Tanpa Foto</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+
+                                            {{-- 4. Status --}}
+                                            <td class="px-4 py-4 text-right">
+                                                <span class="inline-flex items-center justify-center w-7 h-7 bg-green-50 text-green-600 rounded-full border border-green-100 shadow-sm">
+                                                    <i data-feather="check" class="w-3.5 h-3.5"></i>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="px-5 py-20 text-center text-slate-400 font-medium">
+                                                Belum ada riwayat absensi.
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
-                        </td>
-
-                        {{-- 4. Status --}}
-                        <td class="px-4 py-4 text-right">
-                            <span class="inline-flex items-center justify-center w-7 h-7 bg-green-50 text-green-600 rounded-full border border-green-100">
-                                <i data-feather="check" class="w-3.5 h-3.5"></i>
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-5 py-20 text-center text-slate-400 font-medium">
-                            Belum ada riwayat absensi.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -822,6 +840,59 @@
                                 Simpan Absensi
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================== --}}
+        {{-- MODAL DETAIL MEMBER HADIR --}}
+        {{-- ========================================== --}}
+        <div x-show="showDetailModal" x-cloak class="relative z-[99999]">
+            <div x-show="showDetailModal" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showDetailModal = false"></div>
+
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div x-show="showDetailModal" x-transition.scale 
+                    class="relative w-full max-w-sm bg-white rounded-[2rem] shadow-2xl flex flex-col max-h-[80vh] overflow-hidden">
+                    
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h3 class="font-bold text-slate-800 text-sm" x-text="detailTitle"></h3>
+                        <button @click="showDetailModal = false" class="text-slate-400 hover:text-slate-600">
+                            <i data-feather="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                        <div class="space-y-3">
+                            <template x-for="(m, index) in detailMembers" :key="index">
+                                <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-50 bg-slate-50/50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-white border border-slate-200 overflow-hidden shrink-0">
+                                            <template x-if="m.photo">
+                                                <img :src="m.photo" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!m.photo">
+                                                <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                                    <i data-feather="user" class="w-4 h-4"></i>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-700" x-text="m.name"></p>
+                                            <p class="text-[10px] text-slate-400" x-text="m.category"></p>
+                                        </div>
+                                    </div>
+                                    <span :class="m.is_binaan ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'" 
+                                        class="text-[9px] font-bold px-2 py-1 rounded-full uppercase"
+                                        x-text="m.is_binaan ? 'Binaan' : 'Lainnya'">
+                                    </span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 text-center">
+                        <button @click="showDetailModal = false" class="text-xs font-bold text-blue-600">Tutup</button>
                     </div>
                 </div>
             </div>
