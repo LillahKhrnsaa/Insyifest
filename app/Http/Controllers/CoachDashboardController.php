@@ -61,7 +61,7 @@ class CoachDashboardController extends Controller
 
         // 6. Riwayat Absensi
         $attendances = Attendance::where('coach_id', $coach->id)
-                            ->with('schedule') 
+                            ->with(['members.user', 'schedule'])
                             ->withCount('members') 
                             ->orderBy('date', 'desc') 
                             ->get();

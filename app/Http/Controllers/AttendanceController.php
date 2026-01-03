@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Coach;
+use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,61 +15,71 @@ class AttendanceController extends Controller
     /**
      * Simpan data absensi baru.
      */
+    public function index()
+    {
+        // 1. Data Coach & Jadwalnya untuk dropdown di Modal
+        $coach = Coach::with('trainingSchedules')->where('user_id', Auth::id())->firstOrFail();
+
+        // 2. Data SEMUA Member untuk fitur Search di Modal
+        // Kita ambil id, nama (lewat user), dan kategori
+        $allMembers = Member::with('user:id,name')->get();
+
+        // 3. Data Riwayat Absensi untuk Tabel
+        $attendances = Attendance::where('coach_id', $coach->id)
+                        ->with(['schedule', 'members'])
+                        ->withCount('members')
+                        ->latest()
+                        ->get();
+
+        return view('coach.dashboard', compact('coach', 'allMembers', 'attendances'));
+    }
     public function store(Request $request)
     {
-        // 1. Validasi input dari form modal
+        // 1. Validasi
         $request->validate([
             'date' => 'required|date',
-            'schedule_id' => 'required|exists:training_schedules,id',
-            'place' => 'nullable|string|max:255',
-            'members' => 'nullable|array', // Member reguler
-            'members.*' => 'exists:members,id',
-            'extra_members' => 'nullable|array', // Member tambahan
-            'extra_members.*' => 'exists:members,id',
-            'photo' => 'nullable|image|max:2048', // Foto (maks 2MB)
+            'time' => 'required', // Jam latihan aktual
+            'schedule_id' => 'nullable|exists:training_schedules,id',
+            'place' => 'required|string|max:255',
+            'members' => 'nullable|array',
+            'notes' => 'nullable|string',
+            'photo' => 'nullable|image|max:2048',
         ]);
 
-        // 2. Dapatkan data coach yang sedang login
         $coach = Coach::where('user_id', Auth::id())->firstOrFail();
 
-        // 3. Handle upload foto (jika ada)
+        // 2. Handle Foto
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('attendance_photos', 'public');
         }
 
-        // 4. Gabungkan semua member yang hadir
-        $regularMembers = $request->input('members', []);
-        $extraMembers = $request->input('extra_members', []);
-        $allAttendingMemberIds = array_merge($regularMembers, $extraMembers);
-
-        // 5. Gunakan Transaksi Database (agar aman)
         try {
             DB::beginTransaction();
 
-            // Buat 'Attendance' (Header)
+            // 3. Simpan Header Absensi
             $attendance = Attendance::create([
-                'coach_id' => $coach->id,
-                'schedule_id' => $request->schedule_id,
-                'date' => $request->date,
-                'place' => $request->place,
-                'photo_path' => $photoPath,
+                'coach_id'    => $coach->id,
+                'schedule_id' => $request->schedule_id, // Bisa null jika luar jadwal
+                'date'        => $request->date,
+                'time'        => $request->time,     // Jam aktual
+                'place'       => $request->place,
+                'notes'       => $request->notes,    // Catatan tambahan
+                'photo_path'  => $photoPath,
             ]);
 
-            // Sinkronkan semua member ke tabel pivot 'attendance_members'
-            if (!empty($allAttendingMemberIds)) {
-                $attendance->members()->sync($allAttendingMemberIds);
+            // 4. Sinkronisasi Member (Absensi Lintas Murid)
+            if ($request->has('members')) {
+                $attendance->members()->sync($request->members);
             }
 
-            DB::commit(); // Simpan semua perubahan
-            
-        } catch (\Exception $e) {
-            DB::rollBack(); // Batalkan jika ada error
-            Log::error('Gagal simpan absensi: ' . $e->getMessage()); // Catat error
-            return back()->with('error', 'Terjadi kesalahan, absensi gagal disimpan.');
-        }
+            DB::commit();
+            return back()->with('success', 'Absensi berhasil dicatat!');
 
-        // 6. Redirect kembali ke dashboard
-        return back()->with('success', 'Absensi berhasil dicatat!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Gagal simpan absensi: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+        }
     }
 }

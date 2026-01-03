@@ -192,12 +192,45 @@
             showAllMembers: false,
             showAllSchedules: false,
             showAllHistory: false,
+
+            filterMonth: '{{ date('Y-m') }}',
+            
+            // Variabel Lama (Tetap dipertahankan agar tidak error)
             selectedScheduleId: {{ old('schedule_id') ?? 'null' }}, 
             selectedSchedulePlace: '{{ old('place') ?? '' }}',
-            toggleModal(id, place) {
+            
+            // Variabel Baru untuk Fitur Fleksibel
+            searchTerm: '',
+            selectedSchedule: '', 
+            // Ambil data jadwal dari coach untuk dropdown
+            schedules: {{ $coach->trainingSchedules->map(fn($s) => ['id' => $s->id, 'time' => $s->time, 'place' => $s->place, 'label' => ucfirst($s->day).' ('.$s->time.')']) }},
+            
+            // Fungsi Otomatis Isi (Auto-fill)
+            autoFill() {
+                let found = this.schedules.find(s => s.id == this.selectedSchedule);
+                if (found) {
+                    this.$refs.timeInput.value = found.time;
+                    this.$refs.placeInput.value = found.place;
+                    // Sinkronkan ke variabel lama jika diperlukan
+                    this.selectedScheduleId = found.id;
+                    this.selectedSchedulePlace = found.place;
+                }
+            },
+
+            // Fungsi Toggle Modal (Update agar lebih fleksibel)
+            toggleModal(id = null, place = '') {
                 this.selectedScheduleId = id;
+                this.selectedSchedule = id ? id : '';
                 this.selectedSchedulePlace = place;
                 this.showModal = true;
+                
+                // Jika buka modal kosong (tanpa ID), reset form
+                if(!id) {
+                    if(this.$refs.timeInput) this.$refs.timeInput.value = '';
+                    if(this.$refs.placeInput) this.$refs.placeInput.value = '';
+                } else {
+                    this.autoFill();
+                }
             }
          }"
          class="min-h-screen"
@@ -461,42 +494,50 @@
                         {{-- KIRI: Jadwal Minggu Ini --}}
                         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover h-fit">
                             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                                        <i data-feather="calendar" class="w-5 h-5 text-blue-600"></i>
-                                        Jadwal Minggu Ini
-                                    </h3>
-                                    <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ $coach->trainingSchedules->count() }} sesi</span>
+                                <div class="flex flex-col gap-3">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                            <i data-feather="calendar" class="w-5 h-5 text-blue-600"></i>
+                                            Jadwal Minggu Ini
+                                        </h3>
+                                        <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ $coach->trainingSchedules->count() }} sesi</span>
+                                    </div>
+
+                                    {{-- TOMBOL ABSEN UTAMA (PINDAH KE SINI) --}}
+                                    <button @click="toggleModal()" 
+                                            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95">
+                                        <i data-feather="plus-circle" class="w-4 h-4"></i>
+                                        Absen Sekarang
+                                    </button>
                                 </div>
                             </div>
                                             
                             <div class="overflow-hidden">
-                                <div class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+                                <div class="divide-y divide-slate-100 max-h-[350px] overflow-y-auto custom-scrollbar">
                                     @forelse($coach->trainingSchedules->take(5) as $schedule)
                                     <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
-                                        <div class="space-y-3">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                                                        <i data-feather="calendar" class="w-5 h-5 text-blue-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h4 class="font-bold text-slate-800">{{ ucfirst($schedule->day) }}</h4>
-                                                        <p class="text-sm text-slate-600">
+                                        <div class="flex items-center justify-between group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                                    <i data-feather="calendar" class="w-5 h-5 text-blue-600"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-800">{{ ucfirst($schedule->day) }}</h4>
+                                                    <div class="flex flex-col gap-0.5 mt-0.5">
+                                                        <p class="text-xs font-medium text-slate-600 flex items-center gap-1">
+                                                            <i data-feather="clock" class="w-3 h-3 text-slate-400"></i>
                                                             {{ $schedule->time ? \Carbon\Carbon::parse($schedule->time)->format('H:i') : '--:--' }} WIB
+                                                        </p>
+                                                        <p class="text-xs text-slate-500 flex items-center gap-1">
+                                                            <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
+                                                            {{ $schedule->place ?? 'Kolam Utama' }}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center text-sm text-slate-600">
-                                                <i data-feather="map-pin" class="w-4 h-4 mr-2 text-slate-400"></i>
-                                                <span>{{ $schedule->place ?? 'Kolam Utama' }}</span>
-                                            </div>
-                                            <button @click="toggleModal({{ $schedule->id }}, '{{ $schedule->place ?? '' }}')"
-                                                    class="w-full btn-primary flex items-center justify-center gap-2 text-sm">
-                                                <i data-feather="check" class="w-4 h-4"></i>
-                                                Absen Sekarang
-                                            </button>
+                                            
+                                            {{-- Opsional: Tambahkan indikator panah kecil agar list tetap terlihat interaktif --}}
+                                            <i data-feather="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-blue-400 transition-colors"></i>
                                         </div>
                                     </div>
                                     @empty
@@ -516,187 +557,271 @@
                             </div>
                         </div>
 
-                        {{-- KANAN: Riwayat Kehadiran Terakhir --}}
-                        {{-- PERUBAHAN 1: Tambahkan 'flex flex-col h-full' --}}
-                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover flex flex-col h-full">
-                            
-                            {{-- Header Card --}}
-                            {{-- Tambahkan shrink-0 agar header tidak mengecil --}}
-                            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                                        <i data-feather="clock" class="w-5 h-5 text-purple-600"></i>
-                                        Riwayat Terakhir
-                                    </h3>
-                                    <span class="text-xs text-slate-500">{{ count($attendances) }} sesi</span>
+                            {{-- KANAN: Riwayat Kehadiran Terakhir --}}
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover flex flex-col h-full">
+        {{-- Header Card dengan Filter Bulan --}}
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i data-feather="clock" class="w-5 h-5 text-purple-600"></i>
+                    Riwayat Absensi
+                </h3>
+                {{-- Input Filter Bulan --}}
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Bulan:</label>
+                    <input type="month" x-model="filterMonth" 
+                        class="text-xs border-slate-200 rounded-lg px-2 py-1 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm">
+                </div>
+            </div>
+        </div>
+                                        
+        <div class="overflow-x-auto flex-1 w-full custom-scrollbar">
+            <table class="w-full min-w-[600px]">
+                <thead>
+                    <tr class="text-left text-[10px] text-slate-400 font-bold uppercase tracking-widest border-b border-slate-50">
+                        <th class="px-4 py-4">Waktu & Lokasi</th>
+                        <th class="px-4 py-4 text-center">Kehadiran</th>
+                        <th class="px-4 py-4">Catatan & Foto</th>
+                        <th class="px-4 py-4 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @forelse($attendances as $attendance)
+                    {{-- Logika Filter Alpine.js --}}
+                    <tr x-show="filterMonth === '' || '{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m') }}' === filterMonth"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        class="hover:bg-slate-50/50 transition-colors">
+                        
+                        {{-- 1. Tanggal, Jam & Lokasi --}}
+                        <td class="px-4 py-4">
+                            <div class="font-bold text-slate-800 text-sm">
+                                {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM YYYY') }}
+                            </div>
+                            <div class="flex flex-col gap-1 mt-1">
+                                <span class="text-[11px] text-blue-600 font-medium flex items-center gap-1">
+                                    <i data-feather="clock" class="w-3 h-3 text-slate-400"></i>
+                                    {{ $attendance->time ? \Carbon\Carbon::parse($attendance->time)->format('H:i') : '--:--' }} WIB
+                                </span>
+                                <span class="text-[11px] text-slate-500 flex items-center gap-1">
+                                    <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
+                                    {{ Str::limit($attendance->place ?? '-', 20) }}
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- 2. Total Hadir (Binaan vs Lainnya) --}}
+                        <td class="px-4 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                @php
+                                    $binaanIds = $coach->members->pluck('id')->toArray();
+                                    $countBinaan = $attendance->members->whereIn('id', $binaanIds)->count();
+                                    $countLain = $attendance->members->whereNotIn('id', $binaanIds)->count();
+                                @endphp
+                                <div class="text-center px-2 py-1 bg-blue-50 rounded-lg border border-blue-100">
+                                    <p class="text-[9px] text-blue-500 font-bold uppercase">Binaan</p>
+                                    <p class="text-sm font-black text-blue-700">{{ $countBinaan }}</p>
+                                </div>
+                                <div class="text-center px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Lainnya</p>
+                                    <p class="text-sm font-black text-slate-600">{{ $countLain }}</p>
                                 </div>
                             </div>
-                                                
-                            {{-- Content / Table --}}
-                            {{-- PERUBAHAN 2: Tambahkan 'flex-1' agar area ini memenuhi ruang kosong --}}
-                            <div class="overflow-x-auto flex-1 w-full">
-                                <table class="w-full min-w-[500px]">
-                                    <thead>
-                                        <tr class="table-header text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
-                                            <th class="px-4 py-3">Waktu</th>
-                                            <th class="px-4 py-3">Lokasi</th>
-                                            <th class="px-4 py-3 text-center">Hadir</th>
-                                            <th class="px-4 py-3 text-right">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        @forelse($attendances->take(5) as $attendance)
-                                        <tr class="table-row hover:bg-slate-50 transition-colors">
-                                            <td class="px-4 py-3">
-                                                <div class="font-bold text-slate-800 text-sm">{{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM') }}</div>
-                                                <div class="text-xs text-slate-500">
-                                                    {{ $attendance->schedule ? \Carbon\Carbon::parse($attendance->schedule->time)->format('H:i') : '' }}
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3 text-slate-600 text-xs">
-                                                <div class="flex items-center gap-1">
-                                                    <i data-feather="map-pin" class="w-3 h-3 text-slate-400"></i>
-                                                    {{ Str::limit($attendance->place ?? '-', 15) }}
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3">
-                                                <div class="flex justify-center">
-                                                    <span class="font-bold text-slate-800 text-sm bg-slate-100 px-2 py-1 rounded-md">{{ $attendance->members_count }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3 text-right">
-                                                <i data-feather="check-circle" class="w-4 h-4 text-green-500 inline-block"></i>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            {{-- PERUBAHAN 3: Tambahkan h-64 (atau tinggi lain) agar saat kosong, card tetap terlihat proporsional & tombol di bawah --}}
-                                            <td colspan="4" class="px-5 py-8 text-center text-slate-400 h-64 align-middle">
-                                                <div class="flex flex-col items-center justify-center h-full">
-                                                    <i data-feather="clipboard" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
-                                                    <p class="font-medium">Belum ada data riwayat</p>
-                                                    <p class="text-xs mt-1 opacity-60">Data absensi akan muncul di sini</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                        </td>
+
+                        {{-- 3. Catatan & Link Foto --}}
+                        <td class="px-4 py-4">
+                            <div class="max-w-[150px]">
+                                <p class="text-xs text-slate-600 italic line-clamp-2 mb-2">
+                                    {{ $attendance->notes ? '"'.$attendance->notes.'"' : '-' }}
+                                </p>
+                                
+                                @if($attendance->photo_path)
+                                    <a href="{{ asset('storage/' . $attendance->photo_path) }}" target="_blank" 
+                                    class="inline-flex items-center gap-1.5 text-[10px] font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 px-2 py-1 rounded-md">
+                                        <i data-feather="image" class="w-3 h-3"></i>
+                                        Foto
+                                    </a>
+                                @endif
                             </div>
-                            
-                            {{-- Footer Button --}}
-                            {{-- Tambahkan shrink-0 dan mt-auto (optional, tapi good practice) --}}
-                            <div class="px-5 py-3 border-t border-slate-100 bg-slate-50 shrink-0 mt-auto">
-                                <button @click="showAllHistory = true" class="w-full text-sm font-bold text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1 transition-colors">
-                                    <span>Lihat Detail Lengkap</span>
-                                    <i data-feather="chevron-right" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
+                        </td>
+
+                        {{-- 4. Status --}}
+                        <td class="px-4 py-4 text-right">
+                            <span class="inline-flex items-center justify-center w-7 h-7 bg-green-50 text-green-600 rounded-full border border-green-100">
+                                <i data-feather="check" class="w-3.5 h-3.5"></i>
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-5 py-20 text-center text-slate-400 font-medium">
+                            Belum ada riwayat absensi.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
                     </div>
                 </div>
             </div>
         </main>
 
         {{-- ========================================== --}}
-        {{-- MODAL ABSENSI (Utama) --}}
+        {{-- MODAL ABSENSI (FIX LAYOUT SCROLLABLE) --}}
         {{-- ========================================== --}}
-        <div x-show="showModal" x-cloak class="relative z-50">
-            <div x-show="showModal" x-transition.opacity class="fixed inset-0 modal-overlay"></div>
-            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-                
-                {{-- PERUBAHAN: 'rounded-3xl' agar lebih melingkar --}}
-                <div x-show="showModal" @click.away="showModal = false" x-transition.scale 
-                    class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl slide-up max-h-[90vh] flex flex-col overflow-hidden">
+        <div x-show="showModal" x-cloak class="relative z-[9999]">
+            {{-- Overlay --}}
+            <div x-show="showModal" 
+                x-transition.opacity 
+                class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                @click="showModal = false"></div>
+
+            {{-- Modal Container --}}
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div x-show="showModal" 
+                    x-transition.scale.origin.center
+                    {{-- FIX: Tambahkan flex flex-col dan h-auto max-h-[90vh] --}}
+                    class="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
                     
-                    {{-- Header --}}
-                    <div class="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-5 flex items-center justify-between shrink-0">
+                    {{-- Header (Tetap di atas / Sticky) --}}
+                    <div class="bg-gradient-to-r from-cyan-600 to-blue-700 px-6 py-5 flex items-center justify-between shrink-0 shadow-sm">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Form Absensi</h3>
-                            <p class="text-sm text-cyan-100 mt-0.5">Isi data kehadiran atlet</p>
+                            <h3 class="text-xl font-bold text-white leading-tight">Form Absensi</h3>
+                            <p class="text-xs text-cyan-100 mt-0.5">Catat kehadiran latihan</p>
                         </div>
-                        <button @click="showModal = false" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                        <button @click="showModal = false" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
                             <i data-feather="x" class="w-5 h-5"></i>
                         </button>
                     </div>
 
-                    {{-- Body --}}
-                    <div class="p-6 overflow-y-auto">
-                        <form method="POST" action="{{ route('attendance.store') }}" enctype="multipart/form-data">
+                    {{-- Body (Area yang bisa di-scroll) --}}
+                    {{-- FIX: Tambahkan overflow-y-auto dan custom-scrollbar --}}
+                    <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
+                        <form method="POST" action="{{ route('attendance.store') }}" enctype="multipart/form-data" id="form-attendance">
                             @csrf
-                            <input type="hidden" name="schedule_id" x-model="selectedScheduleId">
-                            <input type="hidden" name="place" x-model="selectedSchedulePlace">
-
+                            
                             <div class="space-y-6">
-                                {{-- Tanggal --}}
+                                {{-- 1. Pilih Jadwal --}}
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Latihan</label>
-                                    <input type="date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required 
-                                           class="input-field w-full">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jadwal (Opsional)</label>
+                                    <select name="schedule_id" x-model="selectedSchedule" @change="autoFill()" 
+                                            class="input-field w-full border-slate-200 focus:border-cyan-500 rounded-2xl">
+                                        <option value="">-- Luar Jadwal / Tambahan --</option>
+                                        <template x-for="s in schedules" :key="s.id">
+                                            <option :value="s.id" x-text="s.label"></option>
+                                        </template>
+                                    </select>
                                 </div>
 
-                                {{-- Upload Foto --}}
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Foto Dokumentasi</label>
-                                    <div class="relative">
-                                        <input type="file" name="photo" id="photo-upload" class="hidden" accept="image/*">
-                                        <label for="photo-upload" class="block border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer group">
-                                            <div class="w-12 h-12 bg-gradient-to-r from-cyan-100 to-blue-100 text-cyan-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                                                <i data-feather="camera" class="w-5 h-5"></i>
-                                            </div>
-                                            <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
-                                            <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG (max 2MB)</p>
-                                        </label>
+                                {{-- 2. Tanggal & Jam --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Tanggal</label>
+                                        <input type="date" name="date" value="{{ date('Y-m-d') }}" required 
+                                            class="input-field w-full rounded-2xl border-slate-200">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jam</label>
+                                        <input type="time" name="time" x-ref="timeInput" required 
+                                            class="input-field w-full rounded-2xl border-slate-200">
                                     </div>
                                 </div>
 
-                                {{-- Daftar Atlet --}}
+                                {{-- 3. Lokasi --}}
                                 <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-sm font-bold text-slate-700">Daftar Kehadiran</label>
-                                        <span class="text-xs text-slate-500">{{ $activeRegularMembers->count() }} atlet aktif</span>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Lokasi</label>
+                                    <input type="text" name="place" x-ref="placeInput" required 
+                                        placeholder="Lokasi kolam..." 
+                                        class="input-field w-full rounded-2xl border-slate-200">
+                                </div>
+
+                                {{-- 4. Daftar Atlet (Area Scroll Kedua di dalam Form) --}}
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">Daftar Atlet</label>
+                                    
+                                    {{-- Search --}}
+                                    <div class="relative mb-3">
+                                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                            <i data-feather="search" class="w-4 h-4"></i>
+                                        </span>
+                                        <input type="text" x-model="searchTerm" placeholder="Cari nama atlet..." 
+                                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white transition-all">
                                     </div>
-                                    <div class="bg-slate-50 rounded-xl p-4 max-h-60 overflow-y-auto border border-slate-100 custom-scrollbar">
-                                        @forelse($activeRegularMembers as $member)
-                                        <label class="flex items-center p-3 rounded-lg hover:bg-white cursor-pointer transition-colors border border-transparent hover:border-slate-100 mb-2 last:mb-0">
-                                            <input type="checkbox" name="members[]" value="{{ $member->id }}" 
-                                                   class="w-4 h-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 bg-white">
-                                            <div class="ml-3 flex items-center gap-3">
-                                                <div class="w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
-                                                    @if ($member->user->photo_url)
-                                                        <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover">
-                                                    @else
-                                                        <div class="w-full h-full flex items-center justify-center text-slate-400">
-                                                            <i data-feather="user" class="w-4 h-4"></i>
-                                                        </div>
-                                                    @endif
+
+                                    {{-- Container List Murid dengan Scroll Internal --}}
+                                    <div class="bg-slate-50 rounded-[1.5rem] p-2 max-h-60 overflow-y-auto border border-slate-100 custom-scrollbar">
+                                        @php
+                                            $mergedMembers = $activeRegularMembers->concat($allOtherMembers);
+                                        @endphp
+
+                                        @forelse($mergedMembers as $member)
+                                            @php $safeName = addslashes(strtolower($member->user->name)); @endphp
+
+                                            <label x-show="'{{ $safeName }}'.includes(searchTerm.toLowerCase())"
+                                                class="flex items-center p-3 rounded-2xl hover:bg-white cursor-pointer transition-all border border-transparent hover:border-slate-100 mb-1 last:mb-0 group shadow-sm hover:shadow-md">
+                                                <input type="checkbox" name="members[]" value="{{ $member->id }}" 
+                                                    class="w-5 h-5 rounded-lg border-slate-300 text-cyan-600 focus:ring-cyan-500">
+                                                
+                                                <div class="ml-3 flex items-center gap-3 truncate">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                        @if ($member->user->photo_url)
+                                                            <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover">
+                                                        @else
+                                                            <div class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-200">
+                                                                <i data-feather="user" class="w-4 h-4"></i>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="truncate">
+                                                        <span class="text-sm font-bold text-slate-700 block truncate group-hover:text-cyan-600 transition-colors">{{ $member->user->name }}</span>
+                                                        <span class="text-[10px] {{ $activeRegularMembers->contains($member->id) ? 'text-blue-600 bg-blue-50' : 'text-slate-400 bg-slate-100' }} px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
+                                                            {{ $activeRegularMembers->contains($member->id) ? 'Binaan Saya' : 'Lainnya' }}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span class="text-sm font-bold text-slate-700">{{ $member->user->name }}</span>
-                                                    <p class="text-xs text-slate-500">{{ $member->user->email }}</p>
-                                                </div>
-                                            </div>
-                                        </label>
+                                            </label>
                                         @empty
-                                        <p class="text-sm text-slate-400 text-center py-4">Tidak ada atlet aktif.</p>
+                                            <p class="text-xs text-slate-400 text-center py-6">Tidak ada atlet aktif.</p>
                                         @endforelse
                                     </div>
                                 </div>
-                            </div>
 
-                            {{-- Actions --}}
-                            <div class="mt-8 flex gap-4">
-                                <button type="button" @click="showModal = false" 
-                                        class="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">
-                                    Batal
-                                </button>
-                                <button type="submit" 
-                                        class="flex-1 px-4 py-3.5 btn-primary flex items-center justify-center gap-2">
-                                    <i data-feather="save" class="w-4 h-4"></i>
-                                    Simpan Data
-                                </button>
+                                {{-- 5. Catatan & Foto --}}
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Catatan</label>
+                                        <textarea name="notes" rows="2" class="input-field w-full rounded-2xl text-sm" placeholder="Opsional..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Dokumentasi</label>
+                                        <input type="file" name="photo" id="photo-upload" class="hidden" accept="image/*">
+                                        <label for="photo-upload" class="flex items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer group">
+                                            <i data-feather="camera" class="w-5 h-5 text-slate-400 group-hover:text-cyan-600"></i>
+                                            <span class="text-xs text-slate-500 font-medium">Upload Foto</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </form>
+                    </div>
+
+                    {{-- Footer (Sticky di bawah) --}}
+                    <div class="p-6 border-t border-slate-50 bg-white shrink-0">
+                        <div class="flex gap-3">
+                            <button type="button" @click="showModal = false" 
+                                    class="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-sm">
+                                Batal
+                            </button>
+                            <button type="submit" form="form-attendance"
+                                    class="flex-[2] px-4 py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-200 hover:brightness-110 transition-all text-sm">
+                                <i data-feather="save" class="w-4 h-4"></i>
+                                Simpan Absensi
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

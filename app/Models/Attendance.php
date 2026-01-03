@@ -16,8 +16,10 @@ class Attendance extends Model
         'coach_id',
         'schedule_id',
         'date',
+        'time',      // Kolom baru
         'place',
         'photo_path',
+        'notes',     // Kolom baru
     ];
 
     /**
