@@ -29,7 +29,6 @@ class UsersTable
     {
         return $table
             ->columns([
-                // 1. Foto Profil
                 ImageColumn::make('photo_path')
                     ->label('Foto')
                     ->circular()
@@ -38,8 +37,6 @@ class UsersTable
                     ->width(40)
                     ->disk('public'),
 
-
-                // 2. Nama Lengkap
                 TextColumn::make('name')
                     ->label('Nama Lengkap')
                     ->searchable()
@@ -48,9 +45,8 @@ class UsersTable
                     ->color('primary')
                     ->icon('heroicon-o-user-circle')
                     ->tooltip(fn ($state) => $state)
-                    ->wrap(), // biar gak kepotong
+                    ->wrap(),
 
-                // 3. Email
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
@@ -60,9 +56,8 @@ class UsersTable
                     ->copyable()
                     ->copyMessage('Email disalin!')
                     ->tooltip(fn ($state) => $state)
-                    ->wrap(), // biar kalau panjang pecah baris
+                    ->wrap(),
 
-                // 4. Nomor Telepon
                 TextColumn::make('phone')
                     ->label('Nomor Telepon')
                     ->searchable()
@@ -74,7 +69,6 @@ class UsersTable
                     ->tooltip(fn ($state) => $state)
                     ->wrap(),
 
-                // 5. Jenis Kelamin
                 TextColumn::make('gender')
                     ->label('Gender')
                     ->badge()
@@ -86,14 +80,12 @@ class UsersTable
                         default => 'gray',
                     }),
 
-                // 6. Tanggal Lahir
                 TextColumn::make('birth_date')
                     ->label('Tgl. Lahir')
                     ->date('d M Y')
                     ->alignCenter()
                     ->sortable(),
 
-                // 7. Status Akun
                 ToggleColumn::make('active')
                     ->label('Aktif')
                     ->alignCenter()
@@ -104,30 +96,29 @@ class UsersTable
                     ->offIcon('heroicon-o-x-circle')
                     ->sortable(),
 
-                // 8. Role Pengguna (pakai accessor dari model)
-                TextColumn::make('role')
+                TextColumn::make('roles.name')
                     ->label('Role')
                     ->badge()
                     ->alignCenter()
-                    ->colors([
+                    ->color(fn (string $state): string => match ($state) {
                         'super admin' => 'danger',
                         'owner' => 'primary',
-                        'admin' => 'blue',
+                        'admin' => 'info',
                         'coach' => 'warning',
                         'staff' => 'success',
                         'member' => 'gray',
-                    ])
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => Str::ucfirst($state))
                     ->sortable()
                     ->searchable(),
 
-                // 9. Dibuat
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y')
                     ->alignCenter()
                     ->sortable(),
 
-                // 10. Diupdate
                 TextColumn::make('updated_at')
                     ->label('Diupdate')
                     ->dateTime('d M Y')
@@ -154,7 +145,6 @@ class UsersTable
                         
                         // 1. Schema yang disederhanakan
                         ->schema(function (User $record) {
-                            // Ambil SEMUA permission yang ada, lalu kelompokkan
                             $permissions = Permission::query()->get()->groupBy(function ($permission) {
                                 return explode('.', $permission->name)[1] ?? 'Lainnya';
                             });
@@ -168,13 +158,12 @@ class UsersTable
     
                                 $tabs[] = Tab::make(Str::ucfirst($group))
                                     ->schema([
-                                        CheckboxList::make("permissions.{$group}") // Gunakan nested key
+                                        CheckboxList::make("permissions.{$group}")
                                             ->label(false)
                                             ->options($options)
                                             ->columns(2)
-                                            // ✅ Default-nya hanya mengambil direct permissions milik user
                                             ->default(
-                                                $record->permissions // <-- Jauh lebih sederhana
+                                                $record->permissions
                                                     ->whereIn('id', $perms->pluck('id'))
                                                     ->pluck('id')
                                                     ->toArray()
@@ -188,9 +177,7 @@ class UsersTable
                             ];
                         })
                         
-                        // 2. Action yang disederhanakan
                         ->action(function (User $record, array $data): void {
-                            // Ambil semua ID dari semua tab
                             $selectedIds = collect($data['permissions'] ?? [])
                                 ->flatten()
                                 ->filter()
@@ -198,10 +185,8 @@ class UsersTable
                                 ->unique()
                                 ->toArray();
     
-                            // ✅ Langsung sinkronkan permission yang dipilih ke user
                             $record->syncPermissions($selectedIds);
     
-                            // Reset cache Spatie
                             app(PermissionRegistrar::class)->forgetCachedPermissions();
                         }),
                     ViewAction::make()
@@ -232,7 +217,7 @@ class UsersTable
                         ->extraAttributes([
                             'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
                     ])
-                    ->icon('heroicon-o-bars-4') // ini ikon burger menu (⋮)
+                    ->icon('heroicon-o-bars-4')
                     ->label('')
                     ->button()
                 ])
@@ -249,7 +234,7 @@ class UsersTable
                         ->modalCancelActionLabel('Batal'),
                 ])
                 ->dropdownWidth('w-48')
-                ->button() // Tampilkan sebagai button, bukan dropdown
+                ->button()
                 ->label('')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
