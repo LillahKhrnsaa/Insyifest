@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Coaches\Tables;
 
 use App\Filament\Widgets\AttendanceTable;
+use App\Filament\Widgets\AttendanceTableFilamentCoach;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -179,26 +180,17 @@ class CoachesTable
                         ->tooltip('Lihat Kehadiran Coach')
                         ->icon('heroicon-o-calendar-days')
                         ->color('info')
-                        ->modalHeading(fn ($record) => 'Kehadiran Coach: ' . $record->user->name)
-                        ->modalWidth('4xl')
-                        ->form(function ($record) {
-                            return [
-                                Section::make('Data Kehadiran')
-                                    ->schema([
-                                        Livewire::make(
-                                            AttendanceTable::class,
-                                            fn ($component) => [
-                                                'coachId' => $component->getRecord()->id,
-                                            ]
-                                        )
-                                        ->key('attendance-table-' . $record->id)
-                                        ->lazy()
-                                        ->dehydrated(false)
-                                        ->live(),
-                                    ])
-                                    ->columnSpanFull(),
-                            ];
-                        })
+                        ->modalHeading(fn ($record) => 'Riwayat Kehadiran: ' . $record->user->name)
+                        ->modalWidth('5xl') 
+                        ->form([
+                            Livewire::make(
+                                AttendanceTableFilamentCoach::class,
+                                fn ($record) => [
+                                    'coachId' => $record->id,
+                                ]
+                            )
+                            ->key(fn ($record) => 'attendance-table-' . $record->id)
+                        ])
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Tutup'),
 
