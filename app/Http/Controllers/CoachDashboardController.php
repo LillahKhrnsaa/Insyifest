@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\PhysicalTest;
 use App\Models\Raport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -444,5 +445,61 @@ class CoachDashboardController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'Data fisik berhasil disimpan!']);
+    }
+
+    public function updateAttendance(Request $request, $id)
+    {
+        try {
+            $attendance = Attendance::where('coach_id', Auth::user()->coach->id)->findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'date' => 'required|date',
+                'time' => 'required',
+                'place' => 'required|string|max:255',
+                'notes' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+            }
+
+            $attendance->update([
+                'date' => $request->date,
+                'time' => $request->time,
+                'place' => $request->place,
+                'notes' => $request->notes,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data absensi berhasil diperbarui!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal update: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyAttendance($id)
+    {
+        try {
+            // Pastikan hanya menghapus milik coach yang sedang login
+            $attendance = Attendance::where('coach_id', Auth::user()->coach->id)->findOrFail($id);
+
+            DB::transaction(function () use ($attendance) {
+                // Hapus relasi member (pivot table)
+                $attendance->members()->detach();
+                // Hapus record absensi
+                $attendance->delete();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Riwayat absensi berhasil dihapus permanen.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal hapus: ' . $e->getMessage()], 500);
+        }
     }
 }
