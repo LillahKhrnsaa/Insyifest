@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\Attendance;
 use App\Models\Raport;
 use App\Models\Coach;
+use App\Models\PhysicalTest;
 use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -18,14 +19,6 @@ class MemberDashboardController extends Controller
         $user = Auth::user();
         
         try {
-            // Debug: Cek user
-            Log::info('Member Dashboard Access', [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_email' => $user->email
-            ]);
-
-            // 1. Load member data
             $member = Member::with([
                 'user',
                 'trainingPackage',
@@ -35,26 +28,12 @@ class MemberDashboardController extends Controller
                 'attendances.coach.user'
             ])->where('user_id', $user->id)->first();
 
-            // Debug: Cek data member
-            if ($member) {
-                Log::info('Member Data Found', [
-                    'member_id' => $member->id,
-                    'member_status' => $member->status,
-                    'has_training_package' => !is_null($member->trainingPackage),
-                    'assigned_coaches_count' => $member->assignedCoaches->count(),
-                    'attendances_count' => $member->attendances->count(),
-                    'raports_count' => $member->raports->count()
-                ]);
-            } else {
-                Log::warning('Member Data Not Found', ['user_id' => $user->id]);
-                return redirect()->route('dashboard')->with('error', 'Data member tidak ditemukan. Silakan hubungi administrator.');
+            if (!$member) {
+                return redirect()->route('dashboard')->with('error', 'Data member tidak ditemukan.');
             }
 
-            // 2. Get coach terkait
             $assignedCoaches = $member->assignedCoaches ?? collect();
-            Log::info('Assigned Coaches', ['count' => $assignedCoaches->count()]);
 
-            // 3. Get jadwal latihan
             $coachIds = $assignedCoaches->pluck('id');
             $trainingSchedules = TrainingSchedule::when($coachIds->isNotEmpty(), function($query) use ($coachIds) {
                 $query->whereHas('coaches', function($q) use ($coachIds) {
@@ -64,54 +43,28 @@ class MemberDashboardController extends Controller
             ->with('coaches.user')
             ->get();
 
-            Log::info('Training Schedules', ['count' => $trainingSchedules->count()]);
-
-            // 4. Get riwayat absensi member
             $attendances = $member->attendances()
                 ->with(['schedule', 'coach.user'])
                 ->orderBy('date', 'desc')
                 ->take(10)
                 ->get();
 
-            Log::info('Attendances', ['count' => $attendances->count()]);
-
-            // 5. Get riwayat raport
             $raports = $member->raports()
                 ->with(['coach.user'])
                 ->orderBy('year', 'desc')
-                ->orderByRaw("CASE month 
-                    WHEN 'januari' THEN 1 
-                    WHEN 'februari' THEN 2 
-                    WHEN 'maret' THEN 3 
-                    WHEN 'april' THEN 4 
-                    WHEN 'mei' THEN 5 
-                    WHEN 'juni' THEN 6 
-                    WHEN 'juli' THEN 7 
-                    WHEN 'agustus' THEN 8 
-                    WHEN 'september' THEN 9 
-                    WHEN 'oktober' THEN 10 
-                    WHEN 'november' THEN 11 
-                    WHEN 'desember' THEN 12 
-                    ELSE 13 END")
                 ->get();
 
-            Log::info('Raports', ['count' => $raports->count()]);
-
-            // 6. Hitung statistik
             $totalAttendances = $member->attendances()->count();
             $totalRaports = $member->raports()->count();
             $totalCoaches = $assignedCoaches->count();
 
-            Log::info('Statistics', [
-                'total_attendances' => $totalAttendances,
-                'total_raports' => $totalRaports,
-                'total_coaches' => $totalCoaches
-            ]);
-
-            $existingStyles = Raport::distinct()
-                                ->whereNotNull('gaya')
-                                ->orderBy('gaya', 'asc')
-                                ->pluck('gaya');
+            $existingStyles = [
+                'gaya_bebas_50', 'gaya_bebas_100', 'gaya_bebas_200', 'gaya_bebas_400', 'gaya_bebas_800', 'gaya_bebas_1500',
+                'gaya_dada_50', 'gaya_dada_100', 'gaya_dada_200',
+                'gaya_punggung_50', 'gaya_punggung_100', 'gaya_punggung_200',
+                'gaya_kupu_50', 'gaya_kupu_100', 'gaya_kupu_200',
+                'gaya_ganti_200', 'gaya_ganti_400'
+            ];
 
             return view('member.dashboard', compact(
                 'member',
@@ -126,11 +79,8 @@ class MemberDashboardController extends Controller
             ));
 
         } catch (\Exception $e) {
-            Log::error('Member Dashboard Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'user_id' => $user->id ?? 'unknown'
-            ]);
-            return redirect()->route('dashboard')->with('error', 'Terjadi kesalahan saat memuat dashboard member: ' . $e->getMessage());
+            Log::error('Member Dashboard Error: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Terjadi kesalahan sistem.');
         }
     }
 
@@ -146,10 +96,7 @@ class MemberDashboardController extends Controller
             $member = Member::where('user_id', $user->id)->first();
 
             if (!$member) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data member tidak ditemukan',
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'Data member tidak ditemukan'], 404);
             }
 
             $gaya = $request->input('gaya');
@@ -182,18 +129,16 @@ class MemberDashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'raports' => $raports,
-                
+        
                 'chartValue' => [
                     'labels' => $labels,
-                    'datasets' => [
-                        [
-                            'label' => 'Waktu (detik)',
-                            'data' => $raports->pluck('value')->map(fn($v) => (float) $v)->toArray(),
-                            'borderColor' => 'rgb(59, 130, 246)',
-                            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                            'tension' => 0.4,
-                        ]
-                    ]
+                    'datasets' => [[
+                        'label' => 'Waktu (detik)',
+                        'data' => $raports->pluck('value')->map(fn($v) => (float) $v)->toArray(),
+                        'borderColor' => 'rgb(59, 130, 246)',
+                        'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                        'tension' => 0.4,
+                    ]]
                 ],
                 
                 'chartVolume' => [
@@ -225,16 +170,45 @@ class MemberDashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Member Performance Data Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
-            ], 500);
+            Log::error('Member Performance Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem'], 500);
         }
+    }
+
+    public function getPhysicalData(Request $request)
+    {
+        $user = Auth::user();
+        $member = Member::where('user_id', $user->id)->first();
+
+        if (!$member) {
+            return response()->json(['success' => false, 'message' => 'Member not found'], 404);
+        }
+
+        $history = PhysicalTest::where('member_id', $member->id)
+            ->where('year', $request->year)
+            ->orderByRaw("CASE month 
+                WHEN 'januari' THEN 1 WHEN 'februari' THEN 2 WHEN 'maret' THEN 3 
+                WHEN 'april' THEN 4 WHEN 'mei' THEN 5 WHEN 'juni' THEN 6 
+                WHEN 'juli' THEN 7 WHEN 'agustus' THEN 8 WHEN 'september' THEN 9 
+                WHEN 'oktober' THEN 10 WHEN 'november' THEN 11 WHEN 'desember' THEN 12 
+                ELSE 13 END")
+            ->get();
+
+        $latest = $history->last();
+
+        $radarData = $latest ? [
+            round(max(0, min(5, 5 - ($latest->sprint_20m / 2))), 2),
+            round(min(5, $latest->push_up / 10), 2),
+            round(min(5, $latest->vo2max / 10), 2),
+            round(min(5, $latest->v_sit_reach / 6), 2),
+            round(max(0, min(5, 10 - $latest->shuttle_run)), 2),
+        ] : [0,0,0,0,0];
+
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+            'radarData' => $radarData
+        ]);
     }
 
     public function getAttendanceHistory(Request $request)
