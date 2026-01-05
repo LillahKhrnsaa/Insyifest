@@ -589,7 +589,7 @@
                                             <th class="px-4 py-4">Waktu & Lokasi</th>
                                             <th class="px-4 py-4 text-center">Kehadiran</th>
                                             <th class="px-4 py-4">Catatan & Foto</th>
-                                            <th class="px-4 py-4 text-right">Status</th>
+                                            <th class="px-4 py-4 text-right">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-50">
@@ -664,12 +664,21 @@
                                                     @endif
                                                 </div>
                                             </td>
-
-                                            {{-- 4. Status --}}
+                                            {{-- 4. Aksi (Edit & Delete) --}}
                                             <td class="px-4 py-4 text-right">
-                                                <span class="inline-flex items-center justify-center w-7 h-7 bg-green-50 text-green-600 rounded-full border border-green-100 shadow-sm">
-                                                    <i data-feather="check" class="w-3.5 h-3.5"></i>
-                                                </span>
+                                                <div class="flex items-center justify-end gap-2">
+                                                    {{-- Tombol Edit --}}
+                                                    <button onclick="openEditAttendanceModal({{ $attendance->id }}, '{{ $attendance->date }}', '{{ $attendance->time }}', '{{ $attendance->place }}', '{{ $attendance->notes ?? '' }}')" 
+                                                            class="p-2 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors" title="Edit Data">
+                                                        <i data-feather="edit-2" class="w-4 h-4"></i>
+                                                    </button>
+
+                                                    {{-- Tombol Hapus --}}
+                                                    <button onclick="deleteAttendance({{ $attendance->id }})" 
+                                                            class="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Hapus Riwayat">
+                                                        <i data-feather="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         @empty
@@ -1131,6 +1140,54 @@
             </div>
         </div>
 
+        {{-- ========================================== --}}
+        {{-- MODAL EDIT ABSENSI --}}
+        {{-- ========================================== --}}
+        <div id="editAttendanceModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+            <div class="fixed inset-0 modal-overlay transition-opacity" onclick="closeEditAttendanceModal()"></div>
+            <div class="flex min-h-screen items-center justify-center p-4">
+                <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                    
+                    {{-- Header --}}
+                    <div class="bg-yellow-500 px-6 py-4 flex justify-between items-center text-white">
+                        <h3 class="text-lg font-bold">Edit Absensi</h3>
+                        <button onclick="closeEditAttendanceModal()" class="text-white hover:text-yellow-100"><i data-feather="x" class="w-5 h-5"></i></button>
+                    </div>
+
+                    {{-- Form --}}
+                    <form id="formEditAttendance" class="p-6 space-y-4">
+                        <input type="hidden" id="edit_attendance_id">
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal</label>
+                            <input type="date" id="edit_date" class="input-field w-full rounded-xl" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Jam</label>
+                            <input type="time" id="edit_time" class="input-field w-full rounded-xl" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Lokasi</label>
+                            <input type="text" id="edit_place" class="input-field w-full rounded-xl" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Catatan</label>
+                            <textarea id="edit_notes" rows="3" class="input-field w-full rounded-xl"></textarea>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" class="w-full py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-yellow-200">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {{-- Modal Raport --}}
@@ -1141,7 +1198,6 @@
         <div class="flex min-h-screen items-center justify-center px-4 py-10 text-center sm:px-6">
             
             {{-- Modal Content --}}
-            {{-- PERUBAHAN: 'rounded-3xl' --}}
             <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-6xl flex flex-col max-h-[85vh]">
                 
                 {{-- Modal Header --}}
@@ -2179,6 +2235,85 @@
                 }
             });
         }
+
+        // --- FUNGSI CRUD ABSENSI ---
+
+    // 1. Buka Modal Edit
+    function openEditAttendanceModal(id, date, time, place, notes) {
+        document.getElementById('edit_attendance_id').value = id;
+        document.getElementById('edit_date').value = date;
+        // Format time mungkin perlu disesuaikan tergantung output DB (biasanya HH:MM:SS -> HH:MM)
+        document.getElementById('edit_time').value = time.substring(0, 5); 
+        document.getElementById('edit_place').value = place;
+        document.getElementById('edit_notes').value = notes;
+
+        document.getElementById('editAttendanceModal').classList.remove('hidden');
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+
+    // 2. Tutup Modal Edit
+    function closeEditAttendanceModal() {
+        document.getElementById('editAttendanceModal').classList.add('hidden');
+    }
+
+    // 3. Handle Submit Edit
+    document.getElementById('formEditAttendance').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('edit_attendance_id').value;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const data = {
+            date: document.getElementById('edit_date').value,
+            time: document.getElementById('edit_time').value,
+            place: document.getElementById('edit_place').value,
+            notes: document.getElementById('edit_notes').value
+        };
+
+        fetch(`/attendance/update/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert('Berhasil diperbarui!'); // Bisa ganti dengan custom alert yang kamu punya
+                location.reload(); // Reload page untuk refresh tabel
+            } else {
+                alert('Gagal: ' + data.message);
+            }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // 4. Handle Delete
+    function deleteAttendance(id) {
+        if(!confirm('Yakin ingin menghapus riwayat absensi ini? Data tidak bisa dikembalikan.')) return;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/attendance/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert('Riwayat berhasil dihapus.');
+                location.reload();
+            } else {
+                alert('Gagal menghapus: ' + data.message);
+            }
+        })
+        .catch(err => console.error(err));
+    }
     </script>
 </body>
 </html>
