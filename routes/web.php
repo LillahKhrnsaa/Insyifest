@@ -45,6 +45,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/attendance/store', [AttendanceController::class, 'store'])
          ->name('attendance.store');
+
+    // [TAMBAHAN BARU] Update & Delete Absensi - Arahkan ke CoachDashboardController
+    Route::put('/attendance/update/{id}', [CoachDashboardController::class, 'updateAttendance'])
+        ->name('attendance.update');
+
+    Route::delete('/attendance/delete/{id}', [CoachDashboardController::class, 'destroyAttendance'])
+        ->name('attendance.destroy');
     
     // Coach Raport API Routes
     Route::get('/api/raport/chart-data', [CoachDashboardController::class, 'getChartData'])
