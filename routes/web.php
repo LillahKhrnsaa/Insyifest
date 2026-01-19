@@ -14,8 +14,13 @@ Livewire::setUpdateRoute(function ($handle) {
     return Route::post('/livewire/update', $handle)
         ->middleware('web');
 });
+
 Route::get('/debug-scheme', function () {
-    return request()->scheme();
+    return [
+        'is_secure' => request()->isSecure(),
+        'scheme' => request()->getScheme(),
+        'url' => request()->fullUrl(),
+    ];
 });
 
 
