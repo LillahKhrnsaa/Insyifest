@@ -15,10 +15,6 @@ Livewire::setUpdateRoute(function ($handle) {
         ->middleware('web');
 });
 
-Livewire::setScriptRoute(function ($handle) {
-    return Route::get('/livewire/livewire.js', $handle);
-});
-
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::get('/form/{slug}', [FormEksternalController::class, 'show'])->name('form.show');
