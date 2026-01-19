@@ -8,7 +8,6 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\CoachDashboardController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\MemberDashboardController;
-use Livewire\Features\SupportFileUploads\FileUploadController;
 use Livewire\Livewire;
 
 Livewire::setUpdateRoute(function ($handle) {
@@ -19,10 +18,6 @@ Livewire::setUpdateRoute(function ($handle) {
 Livewire::setScriptRoute(function ($handle) {
     return Route::get('/livewire/livewire.js', $handle);
 });
-
-Route::post('/livewire/upload-file', FileUploadController::class)
-    ->middleware('web');
-
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
