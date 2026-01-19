@@ -32,6 +32,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->middleware([
+                'web',
+            ])
             ->authMiddleware([
                 Authenticate::class, // <-- Baris ini sudah cukup untuk melindungi panel
             ])
