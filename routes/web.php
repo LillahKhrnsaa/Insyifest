@@ -15,13 +15,13 @@ Livewire::setUpdateRoute(function ($handle) {
         ->middleware('web');
 });
 
-Route::get('/debug-scheme', function () {
-    return [
-        'is_secure' => request()->isSecure(),
-        'scheme' => request()->getScheme(),
-        'url' => request()->fullUrl(),
-    ];
-});
+// Route::get('/debug-scheme', function () {
+//     return [
+//         'is_secure' => request()->isSecure(),
+//         'scheme' => request()->getScheme(),
+//         'url' => request()->fullUrl(),
+//     ];
+// });
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
