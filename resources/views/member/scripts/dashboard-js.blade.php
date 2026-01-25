@@ -2,20 +2,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') feather.replace();
         });
-
-        // ==========================================
-        // CONFIG & VARIABLES
-        // ==========================================
-        // ID Member dari PHP Blade (Member yang sedang login)
+        
         const currentMemberId = {{ $member->id }}; 
         
         let chartValue = null;
         let chartVolume = null;
         let chartRadar = null;
 
-        // ==========================================
-        // FUNGSI MODAL RAPORT (READ ONLY)
-        // ==========================================
         function openRaportModal() {
             document.getElementById('raportModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -35,7 +28,6 @@
             const gaya = gayaSelect.value;
             const year = document.getElementById('year').value;
             
-            // Validasi: Jangan fetch jika gaya belum dipilih
             if (!gaya) {
                 const tbody = document.querySelector('#raport-table tbody');
                 const detail = document.getElementById('raport-detail');
@@ -127,7 +119,6 @@
                 }
             };
 
-            // Chart Waktu
             const ctx1 = document.getElementById('chartValue').getContext('2d');
             chartValue = new Chart(ctx1, {
                 type: 'line',
@@ -139,7 +130,6 @@
                 }
             });
 
-            // Chart Volume
             const ctx2 = document.getElementById('chartVolume').getContext('2d');
             if(volumeData.datasets) {
                 const colors = ['#0891b2', '#10b981', '#8b5cf6'];
@@ -159,9 +149,6 @@
             });
         }
 
-        // ==========================================
-        // FUNGSI MODAL FISIK (READ ONLY)
-        // ==========================================
         function openPhysicalModal() {
             document.getElementById('physicalModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -228,4 +215,46 @@
                 }
             });
         }
+
+        let memberStatus = "{{ $member->status }}";
+
+        function toggleMemberStatus() {
+            fetch("{{ route('member.toggle-status') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json",
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
+
+                memberStatus = data.status;
+
+                // Badge
+                const badge = document.getElementById('member-status');
+                badge.innerText = memberStatus;
+                badge.classList.remove('status-active', 'status-inactive');
+                badge.classList.add(
+                    memberStatus === 'AKTIF' ? 'status-active' : 'status-inactive'
+                );
+
+                // Toggle UI
+                const toggle = document.getElementById('status-toggle');
+                const knob = document.getElementById('status-knob');
+
+                toggle.classList.remove('bg-emerald-500', 'bg-slate-300');
+                knob.classList.remove('translate-x-5', 'translate-x-1');
+
+                if (memberStatus === 'AKTIF') {
+                    toggle.classList.add('bg-emerald-500');
+                    knob.classList.add('translate-x-5');
+                } else {
+                    toggle.classList.add('bg-slate-300');
+                    knob.classList.add('translate-x-1');
+                }
+            });
+        }
+
     </script>
