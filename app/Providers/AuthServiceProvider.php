@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\FormRegistration;
+use App\Policies\FormRegistrationPolicy;
+
 use App\Models\Salary;
 use App\Policies\SalaryPolicy;
 use App\Models\Member;

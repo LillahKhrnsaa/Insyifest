@@ -65,4 +65,9 @@ class Coach extends Model
     {
         return $this->hasMany(Attendance::class);
     }
+
+    public function scheduleCoaches(): HasMany
+    {
+        return $this->hasMany(ScheduleCoach::class);
+    }
 }

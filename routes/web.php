@@ -7,6 +7,7 @@ use App\Http\Controllers\FormEksternalController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\CoachDashboardController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\FormExternalController;
 use App\Http\Controllers\MemberDashboardController;
 use Livewire\Livewire;
 
@@ -23,6 +24,11 @@ Livewire::setUpdateRoute(function ($handle) {
 //     ];
 // });
 
+
+Route::get('/form/pendaftaran/{slug}', [FormExternalController::class, 'show'])
+    ->name('form.external.show');
+Route::post('/form/pendaftaran/{slug}', [FormExternalController::class, 'submit'])
+    ->name('form.external.submit');
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
