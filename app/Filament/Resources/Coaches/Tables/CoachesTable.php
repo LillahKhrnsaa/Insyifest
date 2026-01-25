@@ -35,115 +35,77 @@ class CoachesTable
     {
         return $table
             ->columns([
-                Split::make([
-                    ImageColumn::make('user.photo_path')->label('Foto')
-                        ->size(120)
-                        ->disk('public')
-                        ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'M'))
-                        ->extraAttributes([
-                            'style' => 'height: 100%; object-fit: cover; border-radius: 4px;'
-                        ])
-                        ->grow(false),
+                TextColumn::make('no')
+                    ->label('No')
+                    ->state(function ($rowLoop, $livewire) {
+                        return
+                            ($livewire->getTablePage() - 1)
+                            * $livewire->getTableRecordsPerPage()
+                            + $rowLoop->iteration;
+                    })
+                    ->alignCenter()
+                    ->sortable(false)
+                    ->searchable(false),
 
-                    Stack::make([
-                        // 2. Nama Lengkap Coach
-                        TextColumn::make('user.name')
-                            ->label('Nama Coach')
-                            ->searchable()
-                            ->sortable()
-                            ->weight('bold')
-                            ->color('primary')
-                            ->icon('heroicon-o-user-circle')
-                            ->tooltip(fn ($record) => $record->user?->name)
-                        ,
+                ImageColumn::make('user.photo_path')
+                    ->label('Foto')
+                    ->circular()
+                    ->alignCenter()
+                    ->imageHeight(40)
+                    ->width(40)
+                    ->disk('public'),
 
-                        TextColumn::make('user.role')
-                            ->label('Role')
-                            ->badge()
-                            ->color('warning')
-                            ->default('coach')
-                            ->formatStateUsing(fn () => 'Coach'),
-        
-                        // 3. Email
-                        TextColumn::make('user.email')
-                            ->label('Email')
-                            ->searchable()
-                            ->sortable()
-                            ->icon('heroicon-o-envelope')
-                            ->iconColor('blue')
-                            ->copyable()
-                            ->copyMessage('Email disalin!')
-                            ->tooltip(fn ($record) => $record->user?->email)
-                        ,
-        
-                        // 4. Nomor Telepon
-                        TextColumn::make('user.phone')
-                            ->label('Nomor Telepon')
-                            ->searchable()
-                            ->sortable()
-                            ->icon('heroicon-o-phone')
-                            ->color('success')
-                            ->copyable()
-                            ->copyMessage('Nomor telepon disalin!')
-                            ->tooltip(fn ($record) => $record->user?->phone)
-                        ,
-                        Split::make([
-                            // 5. Jenis Kelamin
-                            TextColumn::make('user.gender')
-                                ->label('Gender')
-                                ->badge()
-                                ->sortable()
-                                ->color(fn (string $state): string => match ($state) {
-                                    'MALE' => 'blue',
-                                    'FEMALE' => 'pink',
-                                    default => 'gray',
-                                })
-                                ->formatStateUsing(fn (string $state): string => match ($state) {
-                                    'MALE' => 'Laki-laki',
-                                    'FEMALE' => 'Perempuan',
-                                    default => $state,
-                                }),
+                TextColumn::make('user.name')
+                    ->label('Nama Lengkap')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->color('primary')
+                    ->icon('heroicon-o-user-circle')
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(),
 
-                                // 6. Tanggal Lahir
-                                TextColumn::make('user.birth_date')
-                                    ->label('Tgl. Lahir')
-                                    ->date('d M Y')
-                                    ->sortable()
-                                    ->hidden(),
-                        ]),
-        
-                        // 7. Bio Coach (snippet)
-                        TextColumn::make('bio')
-                            ->label('Biografi')
-                            ->limit(50)
-                            ->tooltip(fn ($record) => $record->bio)
-                            ->toggleable(isToggledHiddenByDefault: true),
-        
-        
-                        // 10. Dibuat
-                        TextColumn::make('created_at')
-                            ->label('Dibuat')
-                            ->dateTime('d M Y')
-                            ->sortable()
-                            ->hidden()
-                            ->toggleable(isToggledHiddenByDefault: true),
-        
-                        // 11. Diupdate
-                        TextColumn::make('updated_at')
-                            ->label('Diupdate')
-                            ->dateTime('d M Y')
-                            ->sortable()
-                            ->hidden()
-                            ->toggleable(isToggledHiddenByDefault: true),
-                    ]),
-                ])
+                TextColumn::make('user.email')
+                    ->label('Email')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-envelope')
+                    ->iconColor('blue')
+                    ->copyable()
+                    ->copyMessage('Email disalin!')
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(),
+
+                TextColumn::make('user.phone')
+                    ->label('Nomor Telepon')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-phone')
+                    ->color('success')
+                    ->copyable()
+                    ->copyMessage('Nomor telepon disalin!')
+                    ->tooltip(fn ($state) => $state)
+                    ->wrap(),
+
+                TextColumn::make('user.gender')
+                    ->label('Gender')
+                    ->badge()
+                    ->alignCenter()
+                    ->sortable()
+                    ->color(fn (string $state): string => match ($state) {
+                        'MALE' => 'blue',
+                        'FEMALE' => 'pink',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('user.birth_date')
+                    ->label('Tgl. Lahir')
+                    ->date('d M Y')
+                    ->alignCenter()
+                    ->sortable(),
             ])
-            ->contentGrid([
-                'md' => 2,
-                'xl' => 2,
-            ])
+
             ->filters([
-                // Filter berdasarkan status aktif
                 SelectFilter::make('active')
                     ->label('Status Akun')
                     ->options([
@@ -158,7 +120,6 @@ class CoachesTable
                         }
                     }),
 
-                // Filter berdasarkan gender
                 SelectFilter::make('gender')
                     ->label('Jenis Kelamin')
                     ->options([
@@ -173,10 +134,11 @@ class CoachesTable
                         }
                     }),
             ])
+
             ->recordActions([
+                ActionGroup::make([
                     Action::make('lihat_kehadiran')
-                        ->label('')
-                        ->button()
+                        ->label('Lihat Kehadiran')
                         ->tooltip('Lihat Kehadiran Coach')
                         ->icon('heroicon-o-calendar-days')
                         ->color('info')
@@ -192,11 +154,13 @@ class CoachesTable
                             ->key(fn ($record) => 'attendance-table-' . $record->id)
                         ])
                         ->modalSubmitAction(false)
-                        ->modalCancelActionLabel('Tutup'),
+                        ->modalCancelActionLabel('Tutup')
+                        ->extraAttributes([
+                            'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
+                        ]),
 
                     Action::make('viewMembers')
-                        ->label('')
-                        ->button()
+                        ->label('View Member')
                         ->icon('heroicon-o-users')
                         ->color('info')
                         ->modalHeading(fn ($record) => 'Member yang Di-assign')
@@ -247,9 +211,9 @@ class CoachesTable
                         ->modalCancelActionLabel('Tutup')
                         ->slideOver()
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
+
                     Action::make('assignMember')
-                        ->label('')
-                        ->button()
+                        ->label('Atlet Binaan')
                         ->icon('heroicon-o-users')
                         ->form([
                             Select::make('members')
@@ -259,35 +223,34 @@ class CoachesTable
                                     ->with('user')
                                     ->get()
                                     ->mapWithKeys(function ($member) {
-                                        // Tampilkan nama member dengan email
                                         $label = $member->user?->name ?? "Member #{$member->id}";
                                         
                                         if ($member->user?->email) {
                                             $label .= " ({$member->user->email})";
                                         }
-                                        
+                                    
                                         return [$member->id => $label];
                                     })
                                 )
-                                ->multiple() // Relasi Many-to-Many
+                                ->multiple()
                                 ->preload()
                                 ->searchable()
-                                // ✅ DEFAULT VALUE dari member yang sudah di-assign
                                 ->default(fn (Coach $record) => $record->members->pluck('id')->toArray()),
                         ])
                         ->action(function (Coach $record, array $data): void {
-                            // Sinkronkan (sync) relasi members dengan data yang dipilih
                             $record->members()->sync($data['members']);
                         })
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
+
                     ViewAction::make()
-                        ->label('')
-                        ->button()
+                        ->label('Lihat Detail')
                         ->tooltip('Lihat detail')
-                        ->icon('heroicon-o-eye'),
+                        ->icon('heroicon-o-eye')
+                        ->extraAttributes([
+                            'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2']),
+
                     EditAction::make()
-                        ->label('')
-                        ->button()
+                        ->label('Edit Coach')
                         ->tooltip('Edit coach')
                         ->icon('heroicon-o-pencil-square')
                         ->color('primary')
@@ -295,10 +258,9 @@ class CoachesTable
                         ->extraAttributes([
                             'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2'
                         ]),
-    
+
                     DeleteAction::make()
-                        ->label('')
-                        ->button()
+                        ->label('Hapus Coach')
                         ->tooltip('Hapus coach')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
@@ -312,20 +274,17 @@ class CoachesTable
                             'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2'
                         ])
                         ->before(function ($record) {
-                            // Hapus user terkait juga
                             $record->user?->delete();
                         }),
-    
+                        
                     Action::make('assignSchedule')
-                        ->label('')
-                        ->button()
+                        ->label('Tambahkan Jadwal')
                         ->icon('heroicon-o-calendar-days')
                         ->form([
                             Select::make('schedules')
                                 ->label('Jadwal Latihan')
                                 ->placeholder('Pilih jadwal yang diajar')
                                 ->options(TrainingSchedule::pluck('day', 'id')->map(function ($day, $id) {
-                                    // Tampilkan hari dengan terjemahan (seperti di table)
                                     $translatedDay = match ($day) {
                                         'MONDAY' => 'Senin',
                                         'TUESDAY' => 'Selasa',
@@ -336,22 +295,23 @@ class CoachesTable
                                         'SUNDAY' => 'Minggu',
                                         default => $day,
                                     };
-                                    // Tambahkan ID dan Place untuk kejelasan di Select
                                     $schedule = TrainingSchedule::find($id);
                                     return "{$translatedDay} - {$schedule->time} ({$schedule->place})";
                                 }))
-                                ->multiple() // Relasi Many-to-Many
+                                ->multiple()
                                 ->preload()
-                                // ✅ PERBAIKAN: DEFAULT VALUE
                                 ->default(fn (Coach $record) => $record->schedules->pluck('id')->toArray()),
                         ])
                         ->action(function (Coach $record, array $data): void {
-                            // Sinkronkan (sync) relasi schedules dengan data yang dipilih
                             $record->schedules()->sync($data['schedules']);
                         })
-                        // ✅ PERBAIKAN: VISIBLE DENGAN MULTIPLE ROLES
                         ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
+                ])
+                ->icon('heroicon-o-bars-4')
+                ->label('')
+                ->button()
             ])
+
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
@@ -364,7 +324,6 @@ class CoachesTable
                         ->modalSubmitActionLabel('Hapus')
                         ->modalCancelActionLabel('Batal')
                         ->before(function ($records) {
-                            // Hapus semua user terkait
                             $userIds = $records->pluck('user_id')->toArray();
                             \App\Models\User::whereIn('id', $userIds)->delete();
                         }),
