@@ -29,6 +29,18 @@ class UsersTable
     {
         return $table
             ->columns([
+                 TextColumn::make('no')
+                    ->label('No')
+                    ->state(function ($rowLoop, $livewire) {
+                        return
+                            ($livewire->getTablePage() - 1)
+                            * $livewire->getTableRecordsPerPage()
+                            + $rowLoop->iteration;
+                    })
+                    ->alignCenter()
+                    ->sortable(false)
+                    ->searchable(false),
+
                 ImageColumn::make('photo_path')
                     ->label('Foto')
                     ->circular()
@@ -125,9 +137,10 @@ class UsersTable
                     ->alignCenter()
                     ->sortable(),
             ])
+
             ->filters([
-                // Bisa tambahin filter aktif / role kalau perlu
             ])
+
             ->recordActions([
                 ActionGroup::make([
                     Action::make('managePermissions')
@@ -143,7 +156,6 @@ class UsersTable
                             'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
                         ])
                         
-                        // 1. Schema yang disederhanakan
                         ->schema(function (User $record) {
                             $permissions = Permission::query()->get()->groupBy(function ($permission) {
                                 return explode('.', $permission->name)[1] ?? 'Lainnya';
@@ -189,6 +201,7 @@ class UsersTable
     
                             app(PermissionRegistrar::class)->forgetCachedPermissions();
                         }),
+
                     ViewAction::make()
                         ->label('Lihat')
                         ->tooltip('View details')
@@ -221,6 +234,7 @@ class UsersTable
                     ->label('')
                     ->button()
                 ])
+
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
