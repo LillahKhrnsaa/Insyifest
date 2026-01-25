@@ -241,4 +241,20 @@ class MemberDashboardController extends Controller
             ], 500);
         }
     }
+
+    public function toggleStatus(Request $request)
+    {
+        $member = Member::where('user_id', Auth::id())->firstOrFail();
+
+        $member->status = $member->status === 'AKTIF'
+            ? 'TIDAK_AKTIF'
+            : 'AKTIF';
+
+        $member->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $member->status,
+        ]);
+    }
 }
