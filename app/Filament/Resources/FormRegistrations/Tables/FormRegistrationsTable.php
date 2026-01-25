@@ -34,7 +34,7 @@ class FormRegistrationsTable
                     ->url(fn ($state) => url("/form/pendaftaran/{$state}"), true)
                     ->copyable()
                     ->copyMessage('Link berhasil disalin')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
 
 
                 ToggleColumn::make('is_active')
