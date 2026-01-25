@@ -1,4 +1,4 @@
-<div class="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
+<div class="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden md:overflow-visible card-hover">
     {{-- Header Card --}}
     <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
         <div class="flex items-center justify-between">
@@ -11,8 +11,8 @@
     </div>
                 
     {{-- Body List --}}
-    <div class="overflow-hidden">
-        <div class="divide-y divide-slate-100">
+    <div class="overflow-x-auto md:overflow-visible">
+        <div class="min-w-[520px] divide-y divide-slate-100">
             @php
                 $sortedMembers = $coach->members->sortBy(function($member) {
                     return $member->user->name;
@@ -20,7 +20,7 @@
             @endphp
 
             @forelse($sortedMembers as $member)
-            <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
+            <div class="px-5 py-4 hover:bg-slate-50 transition-colors relative min-h-[72px] flex items-center">
                 <div class="flex items-center justify-between">
                     {{-- Sisi Kiri --}}
                     <div class="flex items-center gap-4">
@@ -35,8 +35,8 @@
                             @endif
                         </div>
                         <div>
-                            <h4 class="font-bold text-slate-800 text-sm">{{ $member->user->name }}</h4>
-                            <p class="text-xs text-slate-500">{{ $member->user->email }}</p> 
+                            <h4 class="font-bold text-slate-800 text-sm truncate max-w-[200px]">{{ $member->user->name }}</h4>
+                            <p class="text-xs text-slate-500 truncate max-w-[200px]">{{ $member->user->email }}</p> 
                         </div>
                     </div>
 
