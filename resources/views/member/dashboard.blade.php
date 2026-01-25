@@ -1,110 +1,167 @@
 @extends('layouts.member')
 
-@section('title', 'Dashboard Saya')
+@section('title', 'Dashboard Member')
 
 @section('content')
 
 @if(!isset($member))
-    {{-- Tampilan Non-Member --}}
-    <div class="min-h-screen flex items-center justify-center bg-slate-50">
-        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">Data Tidak Ditemukan</h2>
-            <p class="text-slate-500 mb-6">Akun Anda belum terhubung dengan data member.</p>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn-primary w-full">Keluar</button>
-            </form>
+
+<div class="min-h-screen flex items-center justify-center bg-slate-50">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
+        <h2 class="text-xl font-semibold text-slate-800 mb-2">Data Tidak Ditemukan</h2>
+        <p class="text-sm text-slate-500 mb-6">
+            Akun Anda belum terhubung dengan data member.
+        </p>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="w-full btn-primary">Keluar</button>
+        </form>
+    </div>
+</div>
+
+@else
+
+<main class="min-h-screen bg-slate-50 py-6">
+
+    <div class="w-full px-4 sm:px-6 lg:px-8 space-y-6">
+
+        <div class="bg-white border border-slate-200 rounded-xl p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+                        @if ($member->user->photo_url)
+                            <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                <i data-feather="user" class="w-6 h-6"></i>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800">
+                            {{ Auth::user()->name }}
+                        </h1>
+                        <p class="text-sm text-slate-500">
+                            Member Dashboard
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 sm:items-center">
+
+                    <div class="px-4 py-2 rounded-lg border bg-slate-50 text-sm">
+                        <span class="text-slate-500">Paket Latihan</span><br>
+                        <span class="font-semibold text-slate-800">
+                            {{ $member->trainingPackage->name ?? 'Tidak ada paket' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 px-4 py-2 rounded-lg border bg-slate-50">
+                        <span class="text-sm text-slate-500">Status</span>
+
+                        <span id="member-status"
+                            class="px-3 py-1 rounded-full text-xs font-semibold
+                            {{ $member->status === 'AKTIF'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-rose-100 text-rose-700' }}">
+                            {{ $member->status }}
+                        </span>
+
+                        <div class="flex items-center gap-4 px-4 py-2 rounded-lg border bg-slate-50">
+                            <div>
+                                <p class="text-xs text-slate-500">Status Akun</p>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ $member->status === 'AKTIF' ? 'Aktif' : 'Nonaktif' }}
+                                </p>
+                            </div>
+
+                            <button
+                                id="status-toggle"
+                                onclick="toggleMemberStatus()"
+                                data-status="{{ $member->status }}"
+                                class="relative inline-flex h-6 w-11 items-center rounded-full transition
+                                    {{ $member->status === 'AKTIF' ? 'bg-emerald-500' : 'bg-slate-300' }}"
+                            >
+                                <span
+                                    id="status-knob"
+                                    class="inline-block h-5 w-5 transform rounded-full bg-white transition
+                                        {{ $member->status === 'AKTIF' ? 'translate-x-5' : 'translate-x-1' }}">
+                                </span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        @include('member.partials.stats-cards')
+
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+
+            <div class="xl:col-span-1 space-y-4">
+
+                <div class="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <i data-feather="bar-chart-2" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">Raport Performa</h3>
+                            <p class="text-xs text-slate-500">
+                                Grafik waktu & volume latihan
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="openRaportModal()"
+                        class="w-full btn-primary text-sm flex items-center justify-center gap-2">
+                        <i data-feather="eye" class="w-4 h-4"></i>
+                        Lihat Raport
+                    </button>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+                            <i data-feather="activity" class="w-5 h-5 text-pink-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">Tes Fisik</h3>
+                            <p class="text-xs text-slate-500">
+                                VO2 Max, sprint, agility
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="openPhysicalModal()"
+                        class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition">
+                        <i data-feather="eye" class="w-4 h-4"></i>
+                        Lihat Hasil
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                @include('member.partials.schedule-list')
+                @include('member.partials.attendance-history')
+            </div>
+
         </div>
     </div>
-@else
-    {{-- Tampilan Member Aktif --}}
-    <main class="py-6">
-        <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-full">
-            
-            {{-- 1. Header Profile Section --}}
-            <div class="mb-8 fade-in">
-                <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between">
-                        <div class="flex items-center gap-6">
-                            <div class="hidden md:block w-20 h-20 rounded-full bg-white p-1 shadow-md">
-                                @if ($member->user->photo_url)
-                                    <img src="{{ $member->user->photo_url }}" class="w-full h-full rounded-full object-cover">
-                                @else
-                                    <div class="w-full h-full rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                                        <i data-feather="user" class="w-8 h-8"></i>
-                                    </div>
-                                @endif
-                            </div>
-                            <div>
-                                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-1">
-                                    Halo, {{ explode(' ', Auth::user()->name)[0] }}
-                                </h1>
-                                <div class="flex items-center gap-3 text-slate-600 text-sm">
-                                    <span class="flex items-center gap-1">
-                                        <i data-feather="mail" class="w-3 h-3"></i> {{ $member->user->email }}
-                                    </span>
-                                    <span class="status-badge {{ $member->status == 'AKTIF' ? 'status-active' : 'status-inactive' }}">
-                                        {{ $member->status }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 md:mt-0 text-right">
-                            <p class="text-sm text-slate-500">Paket Latihan</p>
-                            <p class="text-lg font-bold text-cyan-600">{{ $member->trainingPackage->name ?? 'Tidak ada' }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+</main>
 
-            {{-- 2. Stats Cards --}}
-            @include('member.partials.stats-cards')
-
-            {{-- 3. Konten Utama (Action Buttons & Jadwal) --}}
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-                
-                {{-- Kolom Kiri: Action Buttons --}}
-                <div class="space-y-6">
-                    {{-- Tombol Raport --}}
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover p-6 text-center">
-                        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i data-feather="bar-chart-2" class="w-8 h-8 text-blue-600"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">Raport Performa</h3>
-                        <p class="text-sm text-slate-500 mb-6">Lihat grafik perkembangan waktu, volume, dan intensitas latihan Anda.</p>
-                        <button onclick="openRaportModal()" class="w-full btn-primary flex justify-center items-center gap-2">
-                            <i data-feather="eye" class="w-4 h-4"></i> Buka Raport Lengkap
-                        </button>
-                    </div>
-
-                    {{-- Tombol Fisik --}}
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover p-6 text-center">
-                        <div class="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i data-feather="activity" class="w-8 h-8 text-pink-600"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">Tes Fisik</h3>
-                        <p class="text-sm text-slate-500 mb-6">Lihat hasil analisis kondisi fisik (VO2 Max, Sprint, Agility).</p>
-                        <button onclick="openPhysicalModal()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold transition-colors flex justify-center items-center gap-2">
-                            <i data-feather="eye" class="w-4 h-4"></i> Lihat Hasil Tes
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Kolom Tengah & Kanan: Jadwal & Riwayat --}}
-                <div class="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    @include('member.partials.schedule-list')
-                    @include('member.partials.attendance-history')
-                </div>
-            </div>
-        </div>
-    </main>
-
-    @include('member.partials.modals.raport')
-    @include('member.partials.modals.physical')
+@include('member.partials.modals.raport')
+@include('member.partials.modals.physical')
 
 @endif
 @endsection
 
 @push('scripts')
-    @include('member.scripts.dashboard-js') 
+    @include('member.scripts.dashboard-js')
 @endpush
