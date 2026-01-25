@@ -100,4 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/member/attendance-history', [MemberDashboardController::class, 'getAttendanceHistory'])
         ->name('member.attendance.history');
+
+    Route::post('/member/status/toggle', [MemberDashboardController::class, 'toggleStatus'])
+        ->name('member.toggle-status');
 });
