@@ -79,7 +79,6 @@ class FormRegistrationForm
                                     ->label('Coach')
                                     ->options(
                                         User::query()
-                                            ->role('coach')
                                             ->pluck('name', 'id')
                                     )
                                     ->searchable()
