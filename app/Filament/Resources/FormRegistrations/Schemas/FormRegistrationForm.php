@@ -22,83 +22,102 @@ class FormRegistrationForm
             ->components([
                 TextInput::make('title')
                     ->label('Nama Form')
+                    ->placeholder('Contoh: Pendaftaran Atlet U-12')
                     ->required()
-                    ->live(onBlur: true) // atau ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        $set('slug', Str::slug($state));
-                    }),
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($state, callable $set) =>
+                        $set('slug', Str::slug($state))
+                    )
+                    ->columnSpan(2),
 
                 TextInput::make('slug')
+                    ->label('Slug / URL')
                     ->disabled()
                     ->dehydrated()
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->helperText('Otomatis dibuat dari nama form')
+                    ->columnSpan(2),
 
                 Textarea::make('description')
+                    ->label('Deskripsi')
+                    ->placeholder('Deskripsi singkat mengenai form pendaftaran')
+                    ->rows(3)
                     ->columnSpanFull(),
 
                 Toggle::make('is_active')
-                    ->default(true),
-
+                    ->label('Status Form')
+                    ->default(true)
+                    ->helperText('Nonaktifkan jika form tidak bisa diakses publik'),
 
                 Repeater::make('schedules')
-                ->label('Jadwal')
-                ->required()
-                ->schema([
-
-                    TextInput::make('day')
-                        ->required(),
-
-                    TimePicker::make('time')
-                        ->required(),
-
-                    DatePicker::make('date')
-                        ->required(),
-
-                    /* =====================
-                     * COACHES (NESTED)
-                     * ===================== */
-                    Repeater::make('coaches')
-                        ->label('Pelatih')
-                        ->required()
-                        ->schema([
-
-                            Select::make('coach_id')
-                                ->label('Coach')
-                                ->options(
-                                    User::query()
-                                        ->role('coach') // spatie
-                                        ->pluck('name', 'id')
-                                )
-                                ->searchable()
-                                ->required(),
-
-                            TextInput::make('quota')
-                                ->numeric()
-                                ->minValue(1)
-                                ->required(),
-                        ])
-                        ->columns(2)
-                        ->minItems(1),
-                ])
-                ->columnSpanFull()
-                ->minItems(1),
-                 /* =====================
-                * FORM FIELDS
-                * ===================== */
-                Repeater::make('fields')
-                    ->label('Field Form')
+                    ->label('Jadwal Pendaftaran')
                     ->required()
+                    ->minItems(1)
+                    ->schema([
+
+                        TextInput::make('day')
+                            ->label('Hari')
+                            ->placeholder('Senin')
+                            ->required(),
+
+                        DatePicker::make('date')
+                            ->label('Tanggal')
+                            ->required(),
+
+                        TimePicker::make('time')
+                            ->label('Jam')
+                            ->required(),
+
+                        Repeater::make('coaches')
+                            ->label('Pelatih')
+                            ->required()
+                            ->minItems(1)
+                            ->schema([
+
+                                Select::make('coach_id')
+                                    ->label('Coach')
+                                    ->options(
+                                        User::query()
+                                            ->role('coach')
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->searchable()
+                                    ->placeholder('Pilih coach')
+                                    ->required(),
+
+                                TextInput::make('quota')
+                                    ->label('Kuota')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->placeholder('Contoh: 10')
+                                    ->required(),
+                            ])
+                            ->columnSpanFull()
+                            ->columns(1),
+                    ])
+                    ->columns(3)
+                    ->columnSpanFull(),
+
+                Repeater::make('fields')
+                    ->label('Field Pendaftaran')
+                    ->required()
+                    ->minItems(1)
                     ->schema([
 
                         TextInput::make('label')
+                            ->label('Label')
+                            ->placeholder('Nama Lengkap')
                             ->required(),
 
                         TextInput::make('name')
-                            ->required()
-                            ->helperText('Harus unik, contoh: nama_lengkap'),
+                            ->label('Nama Field')
+                            ->placeholder('nama_lengkap')
+                            ->helperText('Harus unik, tanpa spasi')
+                            ->required(),
 
                         Select::make('type')
+                            ->label('Tipe Input')
                             ->required()
                             ->options([
                                 'text' => 'Text',
@@ -112,12 +131,16 @@ class FormRegistrationForm
 
                         Textarea::make('options')
                             ->label('Options (JSON)')
-                            ->helperText('Khusus select / checkbox')
-                            ->visible(fn ($get) => in_array($get('type'), ['select', 'checkbox'])),
+                            ->rows(3)
+                            ->helperText('Contoh: ["A","B","C"]')
+                            ->visible(fn ($get) =>
+                                in_array($get('type'), ['select', 'checkbox'])
+                            )
+                            ->columnSpanFull(),
                     ])
-                    ->columnSpanFull()
-                    ->minItems(1),
-
-            ]);
+                    ->columns(4)
+                    ->columnSpanFull(),
+            ])
+            ->columns(4);
     }
 }
