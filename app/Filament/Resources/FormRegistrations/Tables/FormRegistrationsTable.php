@@ -17,6 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class FormRegistrationsTable
@@ -104,6 +105,8 @@ class FormRegistrationsTable
                         $record->load([
                             'fields',
                             'submissions.answers',
+                            'submissions.scheduleCoach.coach.user', // ← TAMBAHIN INI
+                            'submissions.scheduleCoach.schedule',
                         ]);
 
                         $pdf = Pdf::loadView('pdf.form-registration-submissions', [
@@ -131,74 +134,134 @@ class FormRegistrationsTable
 
                         $fields = $record->fields;
 
-                        $tableColumns = collect($fields)
-                            ->map(fn ($field) => TableColumn::make($field->label))
-                            ->push(TableColumn::make('Waktu Submit'))
-                            ->toArray();
+                        /**
+                         * =============================
+                         * SCHEMA
+                         * =============================
+                         */
+                        $schema = [
+                            TextInput::make('coach')
+                                ->label('Coach')
+                                ->disabled()
+                                ->dehydrated(false),
 
-                        $schema = collect($fields)->map(function ($field) {
+                            TextInput::make('schedule')
+                                ->label('Jadwal')
+                                ->disabled()
+                                ->dehydrated(false),
+                        ];
 
+                        foreach ($fields as $field) {
                             if ($field->type === 'file') {
-                                return TextInput::make($field->name)
+                                $schema[] = TextInput::make($field->name)
                                     ->label($field->label)
                                     ->disabled()
                                     ->dehydrated(false)
                                     ->suffixAction(
                                         Action::make('lihat_file')
                                             ->icon('heroicon-o-eye')
-                                            ->url(fn ($state) => $state ? Storage::url($state) : null, true)
+                                            ->url(
+                                                fn ($state) => $state ? Storage::url($state) : null,
+                                                true
+                                            )
                                     );
+                            } else {
+                                $schema[] = TextInput::make($field->name)
+                                    ->label($field->label)
+                                    ->disabled()
+                                    ->dehydrated(false);
                             }
-
-                            return TextInput::make($field->name)
-                                ->label($field->label)
-                                ->disabled()
-                                ->dehydrated(false);
-
-                        })->toArray();
+                        }
 
                         $schema[] = TextInput::make('submitted_at')
                             ->label('Waktu Submit')
                             ->disabled()
                             ->dehydrated(false);
 
+                        /**
+                         * =============================
+                         * LOAD SUBMISSIONS
+                         * =============================
+                         */
                         $submissions = $record->submissions()
-                            ->with('answers')
-                            ->latest()
+                            ->with([
+                                'answers',
+                                'scheduleCoach.coach.user',
+                                'scheduleCoach.schedule',
+                            ])
+                            ->orderByDesc('created_at')
                             ->get();
 
+                        /**
+                         * =============================
+                         * RENDER REPEATER
+                         * =============================
+                         */
                         return [
                             Repeater::make('submissions')
                                 ->label('Jawaban Peserta')
-                                ->table($tableColumns)
                                 ->schema($schema)
+                                ->columns(4)
                                 ->default(
                                     $submissions->map(function ($s) use ($fields) {
 
                                         $row = [];
 
+                                        $scheduleCoach = $s->scheduleCoach;
+                                        $schedule      = $scheduleCoach?->schedule;
+                                        $coach         = $scheduleCoach?->coach;
+                                        $user          = $coach?->user;
+
+                                        // Coach
+                                        $row['coach'] = $user?->name
+                                            ?? $user?->email
+                                            ?? '-';
+
+                                        // Jadwal
+                                        $row['schedule'] = $schedule
+                                            ? "{$schedule->day} {$schedule->time} - {$schedule->date}"
+                                            : '-';
+
+                                        // Jawaban field
                                         foreach ($fields as $field) {
                                             $answer = $s->answers
                                                 ->firstWhere('registration_field_id', $field->id);
 
-                                            $row[$field->name] = $answer?->value;
+                                            $row[$field->name] = $answer?->value ?? '-';
                                         }
 
                                         $row['id'] = $s->id;
                                         $row['submitted_at'] = $s->created_at->format('d M Y H:i');
 
                                         return $row;
-
                                     })->toArray()
                                 )
+                                ->addable(false)
                                 ->reorderable(false)
+                                ->collapsible()
+                                ->itemLabel(fn (array $state): ?string =>
+                                    isset($state['coach'], $state['submitted_at'])
+                                        ? '📋 ' . $state['coach'] . ' • ' . $state['submitted_at']
+                                        : 'Submission'
+                                )
                                 ->deleteAction(
                                     fn (Action $action) =>
-                                        $action->requiresConfirmation()
+                                        $action
+                                            ->requiresConfirmation()
+                                            ->modalHeading('Hapus Submission?')
+                                            ->modalDescription('Data jawaban akan dihapus permanen.')
                                             ->before(function ($arguments, Repeater $component) {
+
                                                 $item = $component->getState()[$arguments['item']] ?? null;
+
                                                 if ($item && isset($item['id'])) {
-                                                    RegistrationSubmission::find($item['id'])?->delete();
+                                                    $submission = RegistrationSubmission::find($item['id']);
+
+                                                    if ($submission && $submission->scheduleCoach) {
+                                                        $submission->scheduleCoach->decrement('quota_used');
+                                                    }
+
+                                                    $submission?->delete();
                                                 }
                                             })
                                 ),
