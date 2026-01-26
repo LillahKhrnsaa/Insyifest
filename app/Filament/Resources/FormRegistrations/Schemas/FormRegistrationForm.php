@@ -80,7 +80,9 @@ class FormRegistrationForm
                                     ->label('Coach')
                                     ->options(
                                         Coach::query()
-                                            ->pluck('name', 'id')
+                                            ->join('users', 'users.id', '=', 'coaches.user_id')
+                                            ->orderBy('users.name')
+                                            ->pluck('users.name', 'coaches.id')
                                     )
                                     ->searchable()
                                     ->placeholder('Pilih coach')
