@@ -8,13 +8,58 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class EditFormRegistration extends EditRecord
 {
     protected static string $resource = FormRegistrationResource::class;
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $record = $this->record->load([
+            'schedules.coaches.coach',
+            'fields',
+        ]);
+
+        $data['schedules'] = $record->schedules->map(function ($schedule) {
+            return [
+                'id'   => $schedule->id, // penting kalau edit
+                'day'  => $schedule->day,
+                'time' => $schedule->time,
+                'date' => $schedule->date,
+
+                'coaches' => $schedule->coaches->map(function ($sc) {
+                    return [
+                        'id'       => $sc->id,
+                        'coach_id' => $sc->coach_id,
+                        'quota'    => $sc->quota,
+                    ];
+                })->toArray(),
+            ];
+        })->toArray();
+
+        $data['fields'] = $record->fields->map(function ($field) {
+            return [
+                'id'          => $field->id,
+                'label'       => $field->label,
+                'name'        => $field->name,
+                'type'        => $field->type,
+                'is_required' => $field->is_required,
+                'options'     => $field->options,
+            ];
+        })->toArray();
+
+        return $data;
+    }
+
+
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        Log::info('=== DATA UPDATE ===', [
+            'schedules' => $data['schedules'] ?? [],
+            'fields' => $data['fields'] ?? [],
+        ]);
+
         return app(RegistrationFormService::class)->update($record, $data);
     }
 
