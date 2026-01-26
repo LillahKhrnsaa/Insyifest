@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\FormRegistrations\Tables;
 
 use App\Models\RegistrationSubmission;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -91,6 +93,30 @@ class FormRegistrationsTable
                 //
             ])
             ->recordActions([
+                Action::make('download_pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->button()
+                    ->tooltip('Download hasil pendaftaran (PDF)')
+                    ->action(function ($record) {
+
+                        $record->load([
+                            'fields',
+                            'submissions.answers',
+                        ]);
+
+                        $pdf = Pdf::loadView('pdf.form-registration-submissions', [
+                            'form' => $record,
+                            'fields' => $record->fields,
+                            'submissions' => $record->submissions,
+                        ])->setPaper('a4', 'landscape');
+
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'form-' . $record->id . '-submissions-' . now()->format('Ymd_His') . '.pdf'
+                        );
+                    }),
                 Action::make('lihat_hasil')
                     ->label('Lihat Hasil')
                     ->icon('heroicon-o-table-cells')
@@ -182,6 +208,7 @@ class FormRegistrationsTable
                     ->modalCancelActionLabel('Tutup'),
                 ViewAction::make(),
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
