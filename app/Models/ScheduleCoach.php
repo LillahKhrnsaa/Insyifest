@@ -26,11 +26,9 @@ class ScheduleCoach extends Model
 
     public function coach()
     {
-        return $this->belongsTo(User::class, 'coach_id')
-            ->whereHas('roles', fn ($q) => $q->where('name', 'coach'));
+        return $this->belongsTo(Coach::class, 'coach_id');
     }
     
-
     public function submissions()
     {
         return $this->hasMany(RegistrationSubmission::class);
