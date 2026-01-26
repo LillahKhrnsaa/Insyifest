@@ -25,4 +25,42 @@ class EditFormRegistration extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $record = $this->record->load([
+            'schedules.coaches',
+            'fields',
+        ]);
+
+        $data['schedules'] = $record->schedules->map(function ($schedule) {
+            return [
+                'day' => $schedule->day,
+                'time' => $schedule->time,
+                'date' => $schedule->date,
+                'coaches' => $schedule->coaches->map(function ($coach) {
+                    return [
+                        'coach_id' => $coach->coach_id,
+                        'quota' => $coach->quota,
+                    ];
+                })->toArray(),
+            ];
+        })->toArray();
+
+        $data['fields'] = $record->fields
+            ->sortBy('order')
+            ->map(function ($field) {
+                return [
+                    'label' => $field->label,
+                    'name' => $field->name,
+                    'type' => $field->type,
+                    'is_required' => $field->is_required,
+                    'options' => $field->options,
+                ];
+            })
+            ->toArray();
+
+        return $data;
+    }
+
 }
