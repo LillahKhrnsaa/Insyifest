@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RegistrationField extends Model
 {
@@ -26,6 +27,11 @@ class RegistrationField extends Model
     public function form()
     {
         return $this->belongsTo(RegistrationForm::class);
+    }
+
+    public function answers(): HasMany
+    {
+        return $this->hasMany(RegistrationAnswer::class, 'registration_field_id');
     }
 
 }
