@@ -27,8 +27,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RegistrationSubmission::observe(RegistrationSubmissionObserver::class);
-        // if (\Illuminate\Support\Facades\App::environment('production') || \Illuminate\Support\Facades\App::environment('local')) {
-        // \Illuminate\Support\Facades\URL::forceScheme('https');
-    	// }
+        if (\Illuminate\Support\Facades\App::environment('production') || \Illuminate\Support\Facades\App::environment('local')) {
+        \Illuminate\Support\Facades\URL::forceScheme('https');
+    	}
     }
 }
