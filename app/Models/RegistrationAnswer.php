@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RegistrationAnswer extends Model
 {
@@ -14,14 +15,14 @@ class RegistrationAnswer extends Model
         'value'
     ];
 
-    public function submission()
+    public function submission(): BelongsTo
     {
-        return $this->belongsTo(RegistrationSubmission::class);
+        return $this->belongsTo(RegistrationSubmission::class, 'registration_submission_id');
     }
 
-    public function field()
+    public function field(): BelongsTo
     {
-        return $this->belongsTo(RegistrationField::class);
+        return $this->belongsTo(RegistrationField::class, 'registration_field_id');
     }
 }
 
