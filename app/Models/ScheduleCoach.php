@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleCoach extends Model
 {
@@ -34,8 +35,16 @@ class ScheduleCoach extends Model
         return $this->hasMany(RegistrationSubmission::class);
     }
 
+    // Model ScheduleCoach
     public function getRemainingQuotaAttribute()
     {
+        Log::info('ACCESSOR CALLED', [
+            'id' => $this->id,
+            'quota' => $this->quota,
+            'quota_used' => $this->quota_used,
+            'remaining' => $this->quota - $this->quota_used,
+        ]);
+        
         return $this->quota - $this->quota_used;
     }
 }

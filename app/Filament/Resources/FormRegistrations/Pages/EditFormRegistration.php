@@ -16,14 +16,15 @@ class EditFormRegistration extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $record = $this->record->load([
+        // ✅ FIX: Refresh data sebelum fill biar dapat data terbaru
+        $record = $this->record->fresh([
             'schedules.coaches.coach',
             'fields',
         ]);
 
         $data['schedules'] = $record->schedules->map(function ($schedule) {
             return [
-                'id'   => $schedule->id, // penting kalau edit
+                'id'   => $schedule->id,
                 'day'  => $schedule->day,
                 'time' => $schedule->time,
                 'date' => $schedule->date,
@@ -32,7 +33,7 @@ class EditFormRegistration extends EditRecord
                     return [
                         'id'       => $sc->id,
                         'coach_id' => $sc->coach_id,
-                        'quota'    => $sc->quota,
+                        'quota'    => $sc->quota, // ✅ Ini ambil dari DB yang udah bener
                     ];
                 })->toArray(),
             ];
@@ -69,6 +70,18 @@ class EditFormRegistration extends EditRecord
             ViewAction::make(),
             DeleteAction::make(),
         ];
+    }
+
+     protected function afterSave(): void
+    {
+        // Refresh record biar data yang ditampilkan update
+        $this->record = $this->record->fresh([
+            'schedules.coaches.coach',
+            'fields',
+        ]);
+        
+        // Re-fill form dengan data baru
+        $this->fillForm();
     }
 
 }

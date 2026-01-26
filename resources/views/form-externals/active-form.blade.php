@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>{{ $form->title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     @vite('resources/css/app.css')
 </head>
 <body class="bg-slate-100">
@@ -21,6 +24,25 @@
                 {{ $form->description }}
             </p>
         </div>
+
+        @if (session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                <p class="text-green-700 font-medium text-center">
+                    ✅ {{ session('success') }}
+                </p>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-red-700 font-medium">❌ Terdapat kesalahan:</p>
+                <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form
             method="POST"
@@ -42,7 +64,7 @@
                     @foreach ($form->schedules as $schedule)
                         @foreach ($schedule->coaches as $scheduleCoach)
                             @if ($scheduleCoach->remaining_quota > 0)
-                                <option value="{{ $scheduleCoach->id }}">
+                                <option value="{{ $scheduleCoach->id }}" {{ old('schedule_coach_id') == $scheduleCoach->id ? 'selected' : '' }}>
                                     {{ $schedule->day }},
                                     {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
                                     ({{ $schedule->time }})
@@ -70,6 +92,45 @@
                             <input
                                 type="text"
                                 name="answers[{{ $field->id }}]"
+                                value="{{ old('answers.'.$field->id) }}"
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                @required($field->is_required)>
+                            @break
+
+                        @case('email')
+                            <input
+                                type="email"
+                                name="answers[{{ $field->id }}]"
+                                value="{{ old('answers.'.$field->id) }}"
+                                placeholder="contoh@email.com"
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                @required($field->is_required)>
+                            @break
+
+                        @case('tel')
+                            <input
+                                type="tel"
+                                name="answers[{{ $field->id }}]"
+                                value="{{ old('answers.'.$field->id) }}"
+                                placeholder="08123456789"
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                @required($field->is_required)>
+                            @break
+
+                        @case('number')
+                            <input
+                                type="number"
+                                name="answers[{{ $field->id }}]"
+                                value="{{ old('answers.'.$field->id) }}"
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                @required($field->is_required)>
+                            @break
+
+                        @case('date')
+                            <input
+                                type="date"
+                                name="answers[{{ $field->id }}]"
+                                value="{{ old('answers.'.$field->id) }}"
                                 class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                                 @required($field->is_required)>
                             @break
@@ -79,7 +140,7 @@
                                 name="answers[{{ $field->id }}]"
                                 rows="4"
                                 class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                                @required($field->is_required)></textarea>
+                                @required($field->is_required)>{{ old('answers.'.$field->id) }}</textarea>
                             @break
 
                         @case('select')
@@ -89,19 +150,39 @@
                                 @required($field->is_required)>
                                 <option value="">-- Pilih --</option>
                                 @foreach (json_decode($field->options ?? '[]', true) as $opt)
-                                    <option value="{{ $opt }}">{{ $opt }}</option>
+                                    <option value="{{ $opt }}" {{ old('answers.'.$field->id) == $opt ? 'selected' : '' }}>
+                                        {{ $opt }}
+                                    </option>
                                 @endforeach
                             </select>
+                            @break
+
+                        @case('radio')
+                            <div class="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                @foreach (json_decode($field->options ?? '[]', true) as $opt)
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="answers[{{ $field->id }}]"
+                                            value="{{ $opt }}"
+                                            {{ old('answers.'.$field->id) == $opt ? 'checked' : '' }}
+                                            class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                            @required($field->is_required)>
+                                        <span class="text-slate-700">{{ $opt }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                             @break
 
                         @case('checkbox')
                             <div class="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
                                 @foreach (json_decode($field->options ?? '[]', true) as $opt)
-                                    <label class="flex items-center gap-3">
+                                    <label class="flex items-center gap-3 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             name="answers[{{ $field->id }}][]"
                                             value="{{ $opt }}"
+                                            {{ in_array($opt, old('answers.'.$field->id, [])) ? 'checked' : '' }}
                                             class="h-5 w-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                         <span class="text-slate-700">{{ $opt }}</span>
                                     </label>
@@ -110,6 +191,10 @@
                             @break
 
                     @endswitch
+
+                    @error('answers.'.$field->id)
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
             @endforeach
 

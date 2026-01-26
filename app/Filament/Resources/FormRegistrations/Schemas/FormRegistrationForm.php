@@ -128,10 +128,16 @@ class FormRegistrationForm
                         Select::make('type')
                             ->label('Tipe Input')
                             ->required()
+                            ->live() // ✅ Biar options muncul/hilang sesuai tipe
                             ->options([
                                 'text' => 'Text',
+                                'email' => 'Email',
+                                'tel' => 'Telepon',
+                                'number' => 'Number',
+                                'date' => 'Date',
                                 'textarea' => 'Textarea',
-                                'select' => 'Select',
+                                'select' => 'Select/Dropdown',
+                                'radio' => 'Radio Button',
                                 'checkbox' => 'Checkbox',
                             ]),
 
@@ -141,9 +147,12 @@ class FormRegistrationForm
                         Textarea::make('options')
                             ->label('Options (JSON)')
                             ->rows(3)
-                            ->helperText('Contoh: ["A","B","C"]')
+                            ->helperText('Contoh: ["Laki-laki","Perempuan"] atau ["Paket A","Paket B","Paket C"]')
                             ->visible(fn ($get) =>
-                                in_array($get('type'), ['select', 'checkbox'])
+                                in_array($get('type'), ['select', 'checkbox', 'radio']) // ✅ Tambah 'radio'
+                            )
+                            ->required(fn ($get) =>
+                                in_array($get('type'), ['select', 'checkbox', 'radio']) // ✅ Wajib diisi kalo tipe ini
                             )
                             ->columnSpanFull(),
                     ])

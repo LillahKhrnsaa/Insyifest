@@ -13,6 +13,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -131,14 +132,8 @@ class FormRegistrationsTable
                     ->modalIconColor('info')
                     ->modalWidth('7xl')
                     ->form(function ($record) {
-
                         $fields = $record->fields;
 
-                        /**
-                         * =============================
-                         * SCHEMA
-                         * =============================
-                         */
                         $schema = [
                             TextInput::make('coach')
                                 ->label('Coach')
@@ -178,25 +173,15 @@ class FormRegistrationsTable
                             ->disabled()
                             ->dehydrated(false);
 
-                        /**
-                         * =============================
-                         * LOAD SUBMISSIONS
-                         * =============================
-                         */
-                        $submissions = $record->submissions()
-                            ->with([
-                                'answers',
-                                'scheduleCoach.coach.user',
-                                'scheduleCoach.schedule',
-                            ])
+                        // ✅ FIX: Fresh data setiap kali modal dibuka
+                        $submissions = $record->fresh([
+                            'submissions.answers',
+                            'submissions.scheduleCoach.coach.user',
+                            'submissions.scheduleCoach.schedule',
+                        ])->submissions()
                             ->orderByDesc('created_at')
                             ->get();
 
-                        /**
-                         * =============================
-                         * RENDER REPEATER
-                         * =============================
-                         */
                         return [
                             Repeater::make('submissions')
                                 ->label('Jawaban Peserta')
@@ -204,7 +189,6 @@ class FormRegistrationsTable
                                 ->columns(4)
                                 ->default(
                                     $submissions->map(function ($s) use ($fields) {
-
                                         $row = [];
 
                                         $scheduleCoach = $s->scheduleCoach;
@@ -212,21 +196,14 @@ class FormRegistrationsTable
                                         $coach         = $scheduleCoach?->coach;
                                         $user          = $coach?->user;
 
-                                        // Coach
-                                        $row['coach'] = $user?->name
-                                            ?? $user?->email
-                                            ?? '-';
-
-                                        // Jadwal
+                                        $row['coach'] = $user?->name ?? $user?->email ?? '-';
                                         $row['schedule'] = $schedule
                                             ? "{$schedule->day} {$schedule->time} - {$schedule->date}"
                                             : '-';
 
-                                        // Jawaban field
                                         foreach ($fields as $field) {
                                             $answer = $s->answers
                                                 ->firstWhere('registration_field_id', $field->id);
-
                                             $row[$field->name] = $answer?->value ?? '-';
                                         }
 
@@ -251,24 +228,30 @@ class FormRegistrationsTable
                                             ->modalHeading('Hapus Submission?')
                                             ->modalDescription('Data jawaban akan dihapus permanen.')
                                             ->before(function ($arguments, Repeater $component) {
-
                                                 $item = $component->getState()[$arguments['item']] ?? null;
 
                                                 if ($item && isset($item['id'])) {
                                                     $submission = RegistrationSubmission::find($item['id']);
 
-                                                    if ($submission && $submission->scheduleCoach) {
-                                                        $submission->scheduleCoach->decrement('quota_used');
-                                                    }
-
+                                                    // ✅ HAPUS MANUAL DECREMENT, biar auto-handle sama observer
+                                                    // Cuma delete aja
                                                     $submission?->delete();
                                                 }
+                                            })
+                                            ->after(function () {
+                                                // ✅ Notif + hint user untuk refresh
+                                                Notification::make()
+                                                    ->success()
+                                                    ->title('Submission berhasil dihapus')
+                                                    ->body('Tutup dan buka kembali modal ini untuk melihat data terbaru.')
+                                                    ->send();
                                             })
                                 ),
                         ];
                     })
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Tutup'),
+
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
