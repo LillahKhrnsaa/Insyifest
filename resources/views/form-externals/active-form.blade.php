@@ -46,7 +46,7 @@
                                     {{ $schedule->day }},
                                     {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
                                     ({{ $schedule->time }})
-                                    - {{ $scheduleCoach->coach->name }}
+                                    - {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
                                     | Sisa: {{ $scheduleCoach->remaining_quota }}
                                 </option>
                             @endif
