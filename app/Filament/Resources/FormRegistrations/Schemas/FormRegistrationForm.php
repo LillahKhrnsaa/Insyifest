@@ -6,6 +6,7 @@ use App\Models\Coach;
 use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -57,6 +58,8 @@ class FormRegistrationForm
                     ->minItems(1)
                     ->schema([
 
+                        Hidden::make('id'),
+
                         TextInput::make('day')
                             ->label('Hari')
                             ->placeholder('Senin')
@@ -76,6 +79,8 @@ class FormRegistrationForm
                             ->minItems(1)
                             ->schema([
 
+                                Hidden::make('id'),
+                                
                                 Select::make('coach_id')
                                     ->label('Coach')
                                     ->options(
@@ -106,6 +111,8 @@ class FormRegistrationForm
                     ->required()
                     ->minItems(1)
                     ->schema([
+
+                        Hidden::make('id'),
 
                         TextInput::make('label')
                             ->label('Label')
