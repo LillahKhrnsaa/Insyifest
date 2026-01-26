@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FormRegistrations\Schemas;
 
+use App\Models\Coach;
 use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -78,7 +79,7 @@ class FormRegistrationForm
                                 Select::make('coach_id')
                                     ->label('Coach')
                                     ->options(
-                                        User::query()
+                                        Coach::query()
                                             ->pluck('name', 'id')
                                     )
                                     ->searchable()
