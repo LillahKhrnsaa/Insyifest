@@ -142,45 +142,40 @@ class RegistrationFormService
         }
     }
 
-    protected function updateScheduleCoaches(RegistrationSchedule $schedule, array $coaches): void
-    {
-        $incomingIds = collect($coaches)
-            ->pluck('id')
-            ->filter()
-            ->toArray();
+    protected function updateScheduleCoaches(
+        RegistrationSchedule $schedule,
+        array $coaches
+    ): void {
+        // ambil coach existing
+        $existingCoaches = $schedule->coaches()->get()->keyBy('id');
 
-        // 🔥 DELETE coach yang dihapus dari form
-        $schedule->coaches()
-            ->whereNotIn('id', $incomingIds)
-            ->each(function ($scheduleCoach) {
-                if ($scheduleCoach->quota_used > 0) {
+        foreach ($coaches as $coachData) {
+            // UPDATE
+            if (!empty($coachData['id'])) {
+                $scheduleCoach = $existingCoaches->get($coachData['id']);
+
+                if (! $scheduleCoach) {
                     throw ValidationException::withMessages([
-                        'coach' => 'Tidak bisa menghapus coach yang sudah memiliki peserta terdaftar.',
+                        'coach' => 'Coach tidak valid untuk jadwal ini.',
                     ]);
                 }
 
-                $scheduleCoach->delete();
-            });
-
-        // 🔄 UPDATE / CREATE
-        foreach ($coaches as $coachData) {
-            if (!empty($coachData['id'])) {
-                $scheduleCoach = ScheduleCoach::findOrFail($coachData['id']);
-
-                if (
-                    $scheduleCoach->quota_used > 0 &&
-                    $scheduleCoach->coach_id != $coachData['coach_id']
-                ) {
+                // safeguard quota
+                if ($coachData['quota'] < $scheduleCoach->quota_used) {
                     throw ValidationException::withMessages([
-                        'coach' => 'Tidak bisa mengubah coach yang sudah memiliki peserta terdaftar.',
+                        'quota' => 'Quota tidak boleh lebih kecil dari peserta terdaftar.',
                     ]);
                 }
 
                 $scheduleCoach->update([
                     'coach_id' => $coachData['coach_id'],
-                    'quota' => $coachData['quota'],
+                    'quota'    => $coachData['quota'],
                 ]);
-            } else {
+
+                $existingCoaches->forget($scheduleCoach->id);
+            }
+            // CREATE
+            else {
                 ScheduleCoach::create([
                     'registration_schedule_id' => $schedule->id,
                     'coach_id' => $coachData['coach_id'],
@@ -189,7 +184,19 @@ class RegistrationFormService
                 ]);
             }
         }
+
+        // DELETE SISA (yang nggak dikirim lagi)
+        foreach ($existingCoaches as $scheduleCoach) {
+            if ($scheduleCoach->quota_used > 0) {
+                throw ValidationException::withMessages([
+                    'coach' => 'Tidak bisa menghapus coach yang sudah memiliki peserta.',
+                ]);
+            }
+
+            $scheduleCoach->delete();
+        }
     }
+
 
 
     protected function updateFields(RegistrationForm $form, array $fields): void
