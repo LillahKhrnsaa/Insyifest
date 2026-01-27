@@ -10,6 +10,8 @@ class RegistrationSchedule extends Model
 
     protected $fillable = [
         'registration_form_id', 
+        'schedule_group', 
+        'location',        
         'day', 
         'time', 
         'date'
