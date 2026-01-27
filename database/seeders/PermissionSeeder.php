@@ -96,6 +96,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.members','guard_name' => 'web','description' => 'Akses Create Members','display_name' => 'Create Members',],
             ['name' => 'update.members','guard_name' => 'web','description' => 'Akses Update Members','display_name' => 'Update Members',],
             ['name' => 'delete.members','guard_name' => 'web','description' => 'Akses Delete Members','display_name' => 'Delete Members',],
+
+            // ==== FORM REGISTRATIONS ====
+            ['name' => 'viewAny.form_registrations', 'guard_name' => 'web', 'description' => 'Akses ViewAny Form Registrations', 'display_name' => 'ViewAny Form Registrations'],
+            ['name' => 'view.form_registrations',    'guard_name' => 'web', 'description' => 'Akses View Form Registrations',    'display_name' => 'View Form Registrations'],
+            ['name' => 'create.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Create Form Registrations',  'display_name' => 'Create Form Registrations'],
+            ['name' => 'update.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Update Form Registrations',  'display_name' => 'Update Form Registrations'],
+            ['name' => 'delete.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Delete Form Registrations',  'display_name' => 'Delete Form Registrations'],
         ];
 
         $now = Carbon::now();
@@ -119,6 +126,10 @@ class PermissionSeeder extends Seeder
             ['created_at' => $now, 'updated_at' => $now]
         );
 
-        $staffRole->syncPermissions(Permission::all());
+        $newPermissions = Permission::whereDoesntHave('roles', function ($q) use ($staffRole) {
+            $q->where('roles.id', $staffRole->id);
+        })->get();
+
+        $staffRole->givePermissionTo($newPermissions);
     }
 }
