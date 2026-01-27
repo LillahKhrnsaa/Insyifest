@@ -28,17 +28,17 @@ class FormRegistrationsTable
         return $table
             ->columns([
                 TextColumn::make('title')
+                    ->label('Judul Form')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
                 TextColumn::make('slug')
-                    ->label('Link Form')
+                    ->label('Tautan Form')
                     ->formatStateUsing(fn ($state) => url("/form/pendaftaran/{$state}"))
                     ->url(fn ($state) => url("/form/pendaftaran/{$state}"), true)
-                    ->copyable()
-                    ->copyMessage('Link berhasil disalin')
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->openUrlInNewTab()
+                    ->color('primary'),
 
 
                 ToggleColumn::make('is_active')
