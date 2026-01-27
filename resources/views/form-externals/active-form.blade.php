@@ -50,33 +50,6 @@
             class="space-y-6">
             @csrf
 
-            <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
-                <label class="block font-semibold text-slate-700 mb-2">
-                    Pilih Jadwal & Pelatih
-                </label>
-
-                <select
-                    name="schedule_coach_id"
-                    required
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    <option value="">-- Pilih Jadwal --</option>
-
-                    @foreach ($form->schedules as $schedule)
-                        @foreach ($schedule->coaches as $scheduleCoach)
-                            @if ($scheduleCoach->remaining_quota > 0)
-                                <option value="{{ $scheduleCoach->id }}" {{ old('schedule_coach_id') == $scheduleCoach->id ? 'selected' : '' }}>
-                                    {{ $schedule->day }},
-                                    {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
-                                    ({{ $schedule->time }})
-                                    - {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
-                                    | Sisa: {{ $scheduleCoach->remaining_quota }}
-                                </option>
-                            @endif
-                        @endforeach
-                    @endforeach
-                </select>
-            </div>
-
             @foreach ($form->fields as $field)
                 <div>
                     <label class="block font-medium text-slate-700 mb-1">
@@ -197,6 +170,33 @@
                     @enderror
                 </div>
             @endforeach
+            
+            <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                <label class="block font-semibold text-slate-700 mb-2">
+                    Pilih Jadwal & Pelatih
+                </label>
+
+                <select
+                    name="schedule_coach_id"
+                    required
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="">-- Pilih Jadwal --</option>
+
+                    @foreach ($form->schedules as $schedule)
+                        @foreach ($schedule->coaches as $scheduleCoach)
+                            @if ($scheduleCoach->remaining_quota > 0)
+                                <option value="{{ $scheduleCoach->id }}" {{ old('schedule_coach_id') == $scheduleCoach->id ? 'selected' : '' }}>
+                                    {{ $schedule->day }},
+                                    {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
+                                    ({{ $schedule->time }})
+                                    - {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
+                                    | Sisa: {{ $scheduleCoach->remaining_quota }}
+                                </option>
+                            @endif
+                        @endforeach
+                    @endforeach
+                </select>
+            </div>
 
             <button
                 type="submit"
