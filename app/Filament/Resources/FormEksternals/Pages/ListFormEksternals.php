@@ -10,6 +10,11 @@ class ListFormEksternals extends ListRecords
 {
     protected static string $resource = FormEksternalResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Form Serbaguna';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
