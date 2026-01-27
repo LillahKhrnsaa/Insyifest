@@ -25,7 +25,7 @@ class FormEksternalResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Form';
+        return 'Form Serbaguna';
     }
 
     public static function getNavigationGroup(): ?string
