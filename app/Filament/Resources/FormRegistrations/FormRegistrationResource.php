@@ -28,6 +28,16 @@ class FormRegistrationResource extends Resource
         return FormRegistrationForm::configure($schema);
     }
 
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Managemen Form';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Form Kelas Kilat';
+    }
+
     public static function infolist(Schema $schema): Schema
     {
         return FormRegistrationInfolist::configure($schema);
