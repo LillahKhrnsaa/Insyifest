@@ -74,6 +74,8 @@ class RegistrationFormService
         foreach ($schedules as $scheduleData) {
 
             $schedule = $form->schedules()->create([
+                'schedule_group' => $scheduleData['schedule_group'] ?? null,
+                'location'       => $scheduleData['location'] ?? null, 
                 'day'  => $scheduleData['day'],
                 'time' => $scheduleData['time'],
                 'date' => $scheduleData['date'],
@@ -117,6 +119,8 @@ class RegistrationFormService
                 $schedule = RegistrationSchedule::findOrFail($scheduleData['id']);
                 
                 $schedule->update([
+                    'schedule_group' => $scheduleData['schedule_group'] ?? null, 
+                    'location'       => $scheduleData['location'] ?? null,         
                     'day'  => $scheduleData['day'],
                     'time' => $scheduleData['time'],
                     'date' => $scheduleData['date'],
@@ -125,6 +129,8 @@ class RegistrationFormService
             // 🆕 CREATE schedule baru
             else {
                 $schedule = $form->schedules()->create([
+                    'schedule_group' => $scheduleData['schedule_group'] ?? null, 
+                    'location'       => $scheduleData['location'] ?? null,
                     'day'  => $scheduleData['day'],
                     'time' => $scheduleData['time'],
                     'date' => $scheduleData['date'],
