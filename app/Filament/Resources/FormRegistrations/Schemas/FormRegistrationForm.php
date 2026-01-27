@@ -13,6 +13,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
@@ -52,6 +53,13 @@ class FormRegistrationForm
                     ->default(true)
                     ->helperText('Nonaktifkan jika form tidak bisa diakses publik'),
 
+                Toggle::make('use_grouping')
+                    ->label('Gunakan Grouping Jadwal?')
+                    ->helperText('Aktifkan jika ingin mengelompokkan jadwal (contoh: JADWAL 3, JADWAL 4)')
+                    ->default(false)
+                    ->live()
+                    ->columnSpanFull(),
+
                 Repeater::make('schedules')
                     ->label('Jadwal Pendaftaran')
                     ->required()
@@ -60,18 +68,36 @@ class FormRegistrationForm
 
                         Hidden::make('id'),
 
+                        TextInput::make('schedule_group')
+                            ->label('Nama Group Jadwal')
+                            ->placeholder('Contoh: JADWAL 3')
+                            ->helperText('Digunakan untuk mengelompokkan beberapa jadwal')
+                            ->visible(fn (Get $get) => $get('../../use_grouping'))
+                            ->required(fn (Get $get) => $get('../../use_grouping'))
+                            ->columnSpan(3),
+
+                        TextInput::make('location')
+                            ->label('Tempat/Lokasi')
+                            ->placeholder('Contoh: SANTIKA, PUCUNG')
+                            ->visible(fn (Get $get) => $get('../../use_grouping'))
+                            ->required(fn (Get $get) => $get('../../use_grouping'))
+                            ->columnSpan(3),
+                        
                         TextInput::make('day')
                             ->label('Hari')
                             ->placeholder('Senin')
-                            ->required(),
+                            ->required()
+                            ->columnSpan(fn (Get $get) => $get('../../use_grouping') ? 2 : 1),
 
                         DatePicker::make('date')
                             ->label('Tanggal')
-                            ->required(),
+                            ->required()
+                            ->columnSpan(fn (Get $get) => $get('../../use_grouping') ? 2 : 1),
 
                         TimePicker::make('time')
                             ->label('Jam')
-                            ->required(),
+                            ->required()
+                            ->columnSpan(fn (Get $get) => $get('../../use_grouping') ? 2 : 1),
 
                         Repeater::make('coaches')
                             ->label('Pelatih')
@@ -104,7 +130,21 @@ class FormRegistrationForm
                             ->columns(1),
                     ])
                     ->columns(3)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->itemLabel(function (array $state): ?string {
+                        // Grouping mode
+                        if (!empty($state['schedule_group'])) {
+                            $parts = [
+                                "📅 {$state['schedule_group']}",
+                                $state['location'] ?? '',
+                                "({$state['day']}, {$state['date']})"
+                            ];
+                            return implode(' - ', array_filter($parts));
+                        }
+                        
+                        // Non-grouping mode
+                        return "{$state['day']}, {$state['date']} - {$state['time']}";
+                    }),
 
                 Repeater::make('fields')
                     ->label('Field Pendaftaran')

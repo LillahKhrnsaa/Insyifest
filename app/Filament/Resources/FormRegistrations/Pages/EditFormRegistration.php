@@ -22,9 +22,13 @@ class EditFormRegistration extends EditRecord
             'fields',
         ]);
 
+        $data['use_grouping'] = $record->schedules->whereNotNull('schedule_group')->isNotEmpty();
+
         $data['schedules'] = $record->schedules->map(function ($schedule) {
             return [
                 'id'   => $schedule->id,
+                'schedule_group'  => $schedule->schedule_group, 
+                'location'        => $schedule->location,
                 'day'  => $schedule->day,
                 'time' => $schedule->time,
                 'date' => $schedule->date,
