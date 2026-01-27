@@ -63,8 +63,7 @@ class FormEksternalsTable
                     ->label('Dibuat')
                     ->dateTime('d M Y')
                     ->sortable()
-                    ->icon('heroicon-o-calendar-days')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->icon('heroicon-o-calendar-days'),
 
                 TextColumn::make('updated_at')
                     ->label('Diperbarui')
