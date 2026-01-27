@@ -10,6 +10,7 @@ use App\Policies\SalaryPolicy;
 use App\Models\Member;
 use App\Policies\MemberPolicy;
 use App\Models\PaymentHistory;
+use App\Models\RegistrationForm;
 use App\Policies\PaymentHistoryPolicy;
 use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -26,6 +27,7 @@ class AuthServiceProvider extends ServiceProvider
         Salary::class => SalaryPolicy::class,
         Member::class => MemberPolicy::class,
         PaymentHistory::class => PaymentHistoryPolicy::class,
+        RegistrationForm::class => FormRegistrationPolicy::class,
     ];
 
     /**
