@@ -10,6 +10,11 @@ class ListFormRegistrations extends ListRecords
 {
     protected static string $resource = FormRegistrationResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Form Kelas Kilat';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
