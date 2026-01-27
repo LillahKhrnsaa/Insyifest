@@ -50,6 +50,7 @@
             class="space-y-6">
             @csrf
 
+            {{-- FORM FIELDS --}}
             @foreach ($form->fields as $field)
                 <div>
                     <label class="block font-medium text-slate-700 mb-1">
@@ -171,32 +172,106 @@
                 </div>
             @endforeach
             
-            <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
-                <label class="block font-semibold text-slate-700 mb-2">
-                    Pilih Jadwal & Pelatih
-                </label>
+            {{-- ========================================
+                SCHEDULE SELECTION
+                Conditional: Grouping vs Non-Grouping
+            ======================================== --}}
+            
+            @php
+                // Check if ANY schedule has grouping
+                $hasGrouping = $form->schedules->whereNotNull('schedule_group')->isNotEmpty();
+            @endphp
 
-                <select
-                    name="schedule_coach_id"
-                    required
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    <option value="">-- Pilih Jadwal --</option>
+            @if ($hasGrouping)
+                {{-- ✅ GROUPED VIEW (Radio Buttons per Schedule Group) --}}
+                <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-6">
+                    <label class="block font-semibold text-slate-700 mb-2">
+                        Pilih Jadwal & Pelatih <span class="text-red-500">*</span>
+                    </label>
 
-                    @foreach ($form->schedules as $schedule)
-                        @foreach ($schedule->coaches as $scheduleCoach)
-                            @if ($scheduleCoach->remaining_quota > 0)
-                                <option value="{{ $scheduleCoach->id }}" {{ old('schedule_coach_id') == $scheduleCoach->id ? 'selected' : '' }}>
-                                    {{ $schedule->day }},
-                                    {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
-                                    ({{ $schedule->time }})
-                                    - {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
-                                    | Sisa: {{ $scheduleCoach->remaining_quota }}
-                                </option>
-                            @endif
-                        @endforeach
+                    @php
+                        $groupedSchedules = $form->schedules->groupBy('schedule_group');
+                    @endphp
+
+                    @foreach ($groupedSchedules as $groupName => $schedules)
+                        <div class="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+                            <h3 class="font-bold text-lg text-indigo-700 mb-3">
+                                📅 {{ $groupName }}
+                            </h3>
+
+                            @foreach ($schedules as $schedule)
+                                <div class="mb-4 pl-4 border-l-4 border-indigo-300">
+                                    <p class="font-medium text-slate-700 mb-2">
+                                        {{ $schedule->day }}, 
+                                        {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
+                                        ({{ $schedule->time }}) 
+                                        @if ($schedule->location)
+                                            - <span class="text-indigo-600">{{ $schedule->location }}</span>
+                                        @endif
+                                    </p>
+
+                                    <div class="space-y-2">
+                                        @foreach ($schedule->coaches as $scheduleCoach)
+                                            @if ($scheduleCoach->remaining_quota > 0)
+                                                <label class="flex items-center gap-3 cursor-pointer hover:bg-indigo-50 p-2 rounded transition">
+                                                    <input 
+                                                        type="radio" 
+                                                        name="schedule_coach_id" 
+                                                        value="{{ $scheduleCoach->id }}"
+                                                        {{ old('schedule_coach_id') == $scheduleCoach->id ? 'checked' : '' }}
+                                                        class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                                        required>
+                                                    <span class="text-slate-700">
+                                                        {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
+                                                        | <span class="text-green-600 font-medium">Sisa: {{ $scheduleCoach->remaining_quota }}</span>
+                                                    </span>
+                                                </label>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     @endforeach
-                </select>
-            </div>
+
+                    @error('schedule_coach_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+            @else
+                {{-- ✅ NON-GROUPED VIEW (Original Dropdown) --}}
+                <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                    <label class="block font-semibold text-slate-700 mb-2">
+                        Pilih Jadwal & Pelatih
+                    </label>
+
+                    <select
+                        name="schedule_coach_id"
+                        required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="">-- Pilih Jadwal --</option>
+
+                        @foreach ($form->schedules as $schedule)
+                            @foreach ($schedule->coaches as $scheduleCoach)
+                                @if ($scheduleCoach->remaining_quota > 0)
+                                    <option value="{{ $scheduleCoach->id }}" {{ old('schedule_coach_id') == $scheduleCoach->id ? 'selected' : '' }}>
+                                        {{ $schedule->day }},
+                                        {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
+                                        ({{ $schedule->time }})
+                                        - {{ $scheduleCoach->coach?->user?->name ?? 'Coach tidak tersedia' }}
+                                        | Sisa: {{ $scheduleCoach->remaining_quota }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        @endforeach
+                    </select>
+
+                    @error('schedule_coach_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
 
             <button
                 type="submit"
