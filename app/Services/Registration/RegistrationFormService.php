@@ -144,26 +144,43 @@ class RegistrationFormService
 
     protected function updateScheduleCoaches(RegistrationSchedule $schedule, array $coaches): void
     {
-        foreach ($coaches as $coachData) {
-            
-            // 🔄 UPDATE coach yang sudah ada
-            if (!empty($coachData['id'])) {
-                $scheduleCoach = ScheduleCoach::findOrFail($coachData['id']);
-                
-                // ⚠️ VALIDASI: Jangan ubah coach_id kalau udah ada submission
-                if ($scheduleCoach->quota_used > 0 && $scheduleCoach->coach_id != $coachData['coach_id']) {
+        $incomingIds = collect($coaches)
+            ->pluck('id')
+            ->filter()
+            ->toArray();
+
+        // 🔥 DELETE coach yang dihapus dari form
+        $schedule->coaches()
+            ->whereNotIn('id', $incomingIds)
+            ->each(function ($scheduleCoach) {
+                if ($scheduleCoach->quota_used > 0) {
                     throw ValidationException::withMessages([
-                        'coaches' => 'Tidak bisa mengubah coach yang sudah memiliki peserta terdaftar.',
+                        'coach' => 'Tidak bisa menghapus coach yang sudah memiliki peserta terdaftar.',
                     ]);
                 }
-                
+
+                $scheduleCoach->delete();
+            });
+
+        // 🔄 UPDATE / CREATE
+        foreach ($coaches as $coachData) {
+            if (!empty($coachData['id'])) {
+                $scheduleCoach = ScheduleCoach::findOrFail($coachData['id']);
+
+                if (
+                    $scheduleCoach->quota_used > 0 &&
+                    $scheduleCoach->coach_id != $coachData['coach_id']
+                ) {
+                    throw ValidationException::withMessages([
+                        'coach' => 'Tidak bisa mengubah coach yang sudah memiliki peserta terdaftar.',
+                    ]);
+                }
+
                 $scheduleCoach->update([
                     'coach_id' => $coachData['coach_id'],
                     'quota' => $coachData['quota'],
                 ]);
-            } 
-            // 🆕 CREATE coach baru
-            else {
+            } else {
                 ScheduleCoach::create([
                     'registration_schedule_id' => $schedule->id,
                     'coach_id' => $coachData['coach_id'],
@@ -173,6 +190,7 @@ class RegistrationFormService
             }
         }
     }
+
 
     protected function updateFields(RegistrationForm $form, array $fields): void
     {
