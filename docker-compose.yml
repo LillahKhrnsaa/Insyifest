@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   app:
     image: laravel-app
@@ -30,3 +32,23 @@ services:
       - app
     networks:
       - laravel_net
+
+  db:
+    image: postgres:17
+    container_name: laravel_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - laravel_net
+
+networks:
+  laravel_net:
+    driver: bridge
+
+volumes:
+  db_data:
