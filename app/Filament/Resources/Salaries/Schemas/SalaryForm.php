@@ -7,6 +7,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use App\Models\Coach;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
 
@@ -28,31 +30,75 @@ class SalaryForm
                     ->searchable()
                     ->required()
                     ->live()
+                    ->afterStateHydrated(function ($state, Set $set) {
+                    if ($state) {
+                        $coach = Coach::withCount('members')->find($state);
+                        $dbCount = $coach?->members_count ?? 0;
+                        $set('original_member_count', $dbCount); 
+                    }
+                })
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         if ($state) {
-                            // Ambil jumlah member dari pivot table member_training_assignments
                             $coach = Coach::withCount('members')->find($state);
                             $memberCount = $coach?->members_count ?? 0;
-                            $set('member_count', $memberCount);
                             
-                            // Trigger recalculation total
-                            $set('total_amount', self::calculateTotal($get, $memberCount));
+                            $set('original_member_count', $memberCount); 
+                            
+                            $currentAdditional = count($get('additional_athletes') ?? []);
+                            $set('member_count', $memberCount + $currentAdditional);
+                            
+                            $set('total_amount', self::calculateTotal($get));
                         } else {
+                            $set('original_member_count', 0);
                             $set('member_count', 0);
                             $set('total_amount', 0);
                         }
                     }),
+                    
+                TagsInput::make('additional_athletes')
+                    ->label('Atlet Tambahan / Substitusi')
+                    ->placeholder('Ketik nama atlet lalu tekan Enter')
+                    ->helperText('Masukkan nama atlet di luar binaan coach ini (misal: atlet titipan/pengganti).')
+                    ->reorderable()
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                        $original = (int) $get('original_member_count');
+                        $additional = count($state ?? []);
+                        
+                        $set('member_count', $original + $additional);
+                        
+                        $set('total_amount', self::calculateTotal($get));
+                    }),
 
-                // 👥 Jumlah Member (otomatis dari pivot)
+                Hidden::make('original_member_count')
+                    ->default(0)
+                    ->dehydrated(false),
+
                 TextInput::make('member_count')
                     ->label('Jumlah Atlet')
                     ->numeric()
                     ->default(0)
                     ->disabled()
-                    ->dehydrated(false) // Virtual field, tidak disimpan ke DB
-                    ->helperText('Otomatis dihitung dari jumlah atlet yang ditugaskan'),
+                    ->readOnly()
+                    ->dehydrated(false)
+                    ->helperText('Otomatis dihitung dari jumlah atlet yang ditugaskan')
+                    ->formatStateUsing(function ($state, Get $get, $record) {
+                    if (!$record) return $state;
+
+                    $coachId = $get('coach_id');
+                    $original = 0;
                     
-                // 🏋️ Jumlah Pertemuan
+                    if ($coachId) {
+                        $coach = Coach::withCount('members')->find($coachId);
+                        $original = $coach?->members_count ?? 0;
+                    }
+
+                    $additionalData = $get('additional_athletes');
+                    $additional = is_array($additionalData) ? count($additionalData) : 0;
+                    
+                    return $original + $additional;
+                }),
+                    
                 TextInput::make('training_sessions')
                     ->label('Jumlah Pertemuan')
                     ->numeric()
@@ -65,7 +111,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // 💵 Nominal per Pertemuan
                 TextInput::make('per_meeting_fee')
                     ->label('Nominal per Pertemuan')
                     ->numeric()
@@ -79,7 +124,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // 💰 Nominal per Atlet
                 TextInput::make('per_member_fee')
                     ->label('Nominal per Atlet')
                     ->numeric()
@@ -93,7 +137,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // 💸 Uang Transport
                 TextInput::make('transport_fee')
                     ->label('Uang Transport')
                     ->numeric()
@@ -106,7 +149,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // ❤️ Uang Kesehatan
                 TextInput::make('health_fee')
                     ->label('Uang Kesehatan')
                     ->numeric()
@@ -119,7 +161,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // 🎁 Bonus Tambahan
                 TextInput::make('bonus')
                     ->label('Bonus Tambahan')
                     ->numeric()
@@ -132,7 +173,6 @@ class SalaryForm
                         $set('total_amount', self::calculateTotal($get, $memberCount));
                     }),
 
-                // 🧮 Total Otomatis
                 TextInput::make('total_amount')
                     ->label('Total Gaji')
                     ->prefix('Rp')
@@ -142,14 +182,12 @@ class SalaryForm
                     ->default(0)
                     ->helperText('Dihitung otomatis berdasarkan komponen gaji'),
 
-                // 🗓 Bulan Gaji
                 TextInput::make('month')
                     ->label('Periode (Bulan)')
                     ->placeholder('Contoh: Oktober 2025')
                     ->required()
                     ->maxLength(50),
 
-                // 📋 Status Pembayaran
                 Select::make('status')
                     ->label('Status')
                     ->options([
@@ -161,7 +199,6 @@ class SalaryForm
                     ->native(false)
                     ->live(),
 
-                // 📅 Tanggal Dibayar
                 DatePicker::make('paid_at')
                     ->label('Tanggal Pembayaran')
                     ->native(false)
@@ -170,13 +207,7 @@ class SalaryForm
             ]);
     }
 
-    /**
-     * 🔢 Fungsi menghitung total gaji
-     * 
-     * Formula:
-     * Total = Transport + (Pertemuan × Nominal/Pertemuan) + (Atlet × Nominal/Atlet) + Kesehatan + Bonus
-     */
-    protected static function calculateTotal(Get $get, ?float $memberCount = null): float
+    protected static function calculateTotal(Get $get): float
     {
         // Ambil nilai dari form
         $trainingSessions = (float) ($get('training_sessions') ?? 0);
@@ -186,14 +217,11 @@ class SalaryForm
         $health = (float) ($get('health_fee') ?? 0);
         $bonus = (float) ($get('bonus') ?? 0);
         
-        // Gunakan member_count yang dikirim atau ambil dari form
-        $members = $memberCount ?? (float) ($get('member_count') ?? 0);
+        $members = (float) ($get('member_count') ?? 0);
 
-        // Hitung komponen gaji
-        $meetingTotal = $trainingSessions * $perMeetingFee;  // Hasil uang pertemuan
-        $memberTotal = $members * $perMemberFee;             // Hasil uang atlet
+        $meetingTotal = $trainingSessions * $perMeetingFee;
+        $memberTotal = $members * $perMemberFee;
         
-        // Total = Transport + Pertemuan + Atlet + Kesehatan + Bonus
         return $transport + $meetingTotal + $memberTotal + $health + $bonus;
     }
 }
