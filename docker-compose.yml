@@ -9,20 +9,8 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
-    environment:
-      APP_ENV: local
-      # APP_KEY: ${APP_KEY}
-      APP_DEBUG: ${APP_DEBUG}
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-
     depends_on:
       - db
-
     networks:
       - laravel_net
 
@@ -45,9 +33,9 @@ services:
     container_name: laravel_db
     restart: always
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: db_csc
+      POSTGRES_USER: cikampekswimming
+      POSTGRES_PASSWORD: "123456"
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
