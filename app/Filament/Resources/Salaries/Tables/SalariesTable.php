@@ -21,7 +21,6 @@ class SalariesTable
     {
         return $table
             ->columns([
-                // 🧑‍🏫 Nama Pelatih
                 TextColumn::make('coach.user.name')
                     ->label('Pelatih')
                     ->searchable()
@@ -30,7 +29,6 @@ class SalariesTable
                     ->icon('heroicon-o-user-circle')
                     ->description(fn ($record) => $record->coach?->user?->email),
 
-                // 📅 Periode
                 TextColumn::make('month')
                     ->label('Periode')
                     ->searchable()
@@ -39,7 +37,6 @@ class SalariesTable
                     ->badge()
                     ->color('info'),
 
-                // 👥 Jumlah Atlet (Virtual)
                 TextColumn::make('member_count')
                     ->label('Atlet')
                     ->state(function ($record) {
@@ -48,8 +45,36 @@ class SalariesTable
                     ->icon('heroicon-o-user-group')
                     ->alignCenter()
                     ->sortable(false),
+                
+                TextColumn::make('additional_members')
+                    ->label('Atlet Tambahan')
+                    ->icon('heroicon-o-user-plus')
+                    ->alignCenter()
+                    ->state(function ($record) {
+                        $data = $record->additional_athletes;
+                        
+                        if (is_array($data)) {
+                            return count($data);
+                        } 
+                        
+                        if (is_string($data) && !empty($data)) {
+                            $decoded = json_decode($data, true);
+                            return is_array($decoded) ? count($decoded) : 0;
+                        }
 
-                // 🏋️ Pertemuan
+                        return 0;
+                    })
+                    ->badge()
+                    ->color('warning')
+                    ->formatStateUsing(fn ($state) => $state > 0 ? "+ {$state}" : '-')
+                    ->tooltip(function ($record) {
+                         $data = $record->additional_athletes;
+                         if (empty($data)) return null;
+                         
+                         if (is_string($data)) $data = json_decode($data, true);
+                         return is_array($data) ? implode(', ', $data) : null;
+                    }),
+
                 TextColumn::make('training_sessions')
                     ->label('Pertemuan')
                     ->numeric()
@@ -57,21 +82,6 @@ class SalariesTable
                     ->sortable()
                     ->icon('heroicon-o-academic-cap'),
 
-                // 💰 Total Gaji
-                // TextColumn::make('total_amount')
-                //     ->label('Total Gaji')
-                //     ->money('IDR')
-                //     ->sortable()
-                //     ->weight('bold')
-                //     ->color('success')
-                //     ->icon('heroicon-o-banknotes')
-                //     ->summarize([
-                //         \Filament\Tables\Columns\Summarizers\Sum::make()
-                //             ->money('IDR')
-                //             ->label('Total Keseluruhan'),
-                //     ]),
-
-                // 📋 Status
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -92,7 +102,6 @@ class SalariesTable
                     })
                     ->sortable(),
 
-                // 📅 Tanggal Bayar
                 TextColumn::make('paid_at')
                     ->label('Tgl Bayar')
                     ->date('d M Y')
@@ -101,7 +110,6 @@ class SalariesTable
                     ->icon('heroicon-o-calendar-days')
                     ->toggleable(),
 
-                // 🕒 Timestamps
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y H:i')
@@ -115,7 +123,6 @@ class SalariesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Filter by Status
                 SelectFilter::make('status')
                     ->label('Status Pembayaran')
                     ->options([
@@ -124,7 +131,6 @@ class SalariesTable
                     ])
                     ->placeholder('Semua Status'),
 
-                // Filter by Month
                 Filter::make('month')
                     ->form([
                         \Filament\Forms\Components\TextInput::make('month')
@@ -164,28 +170,24 @@ class SalariesTable
                     ->button()
                     ->tooltip('Delete')
                     ->icon('heroicon-o-trash')
-                    ->color('danger')
+                    ->color('warning')
                     ->size('sm')
                     ->requiresConfirmation()
                     ->extraAttributes([
                         'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2']),
 
-                // 📄 Export PDF Action
                 Action::make('exportPdf')
                     ->label(' ')
                     ->button()
-                    ->tooltip('Print')
+                    ->tooltip('Print PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('danger')
                     ->action(function ($record) {
                         return response()->streamDownload(function () use ($record) {
-                            // Load relasi yang diperlukan
                             $record->load('coach.user');
                             
-                            // Hitung member count
                             $memberCount = $record->coach?->members()->count() ?? 0;
                             
-                            // Generate PDF
                             $pdf = Pdf::loadView('pdf.salary-slip', [
                                 'salary' => $record,
                                 'memberCount' => $memberCount,
