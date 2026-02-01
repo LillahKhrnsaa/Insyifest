@@ -38,27 +38,48 @@ class SalaryInfolist
                                     ->badge()
                                     ->color('info'),
 
-                                TextEntry::make('member_count')
-                                    ->label('Jumlah Atlet')
+                                TextEntry::make('member_count_display')
+                                    ->label('Total Atlet')
                                     ->icon('heroicon-o-user-group')
-                                    ->state(function ($record) {
-                                        return $record->coach?->members()->count() ?? 0;
-                                    })
                                     ->badge()
                                     ->color('success')
-                                    ->suffix(' Orang'),
+                                    ->state(function ($record) {
+                                        $original = $record->coach?->members()->count() ?? 0;
+
+                                        $additionalData = $record->additional_athletes;
+
+                                        $additionalCount = 0;
+                                        
+                                        if (is_array($additionalData)) {
+                                            $additionalCount = count($additionalData);
+                                        } elseif (is_string($additionalData) && !empty($additionalData)) {
+                                            $decoded = json_decode($additionalData, true);
+                                            $additionalCount = is_array($decoded) ? count($decoded) : 0;
+                                        }
+
+                                        $total = $original + $additionalCount;
+
+                                        return "{$total} Orang ({$original} Binaan + {$additionalCount} Tambahan)";
+                                    }),
+
+                                TextEntry::make('additional_athletes')
+                                    ->label('Daftar Atlet Tambahan')
+                                    ->icon('heroicon-o-users')
+                                    ->badge()
+                                    ->color('warning')
+                                    ->separator(',')
+                                    ->visible(fn ($record) => !empty($record->additional_athletes))
+                                    ->columnSpanFull(),
                             ]),
                     ])
                     ->collapsible(),
 
-                // 💰 Section: Komponen Gaji
                 Section::make('Komponen Gaji')
                     ->icon('heroicon-o-calculator')
                     ->description('Rincian perhitungan gaji pelatih')
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                                // Left Column
                                 TextEntry::make('training_sessions')
                                     ->label('Jumlah Pertemuan')
                                     ->icon('heroicon-o-academic-cap')
@@ -98,22 +119,24 @@ class SalaryInfolist
                     ])
                     ->collapsible(),
 
-                // 🧮 Section: Total & Perhitungan
                 Section::make('Total Gaji')
                     ->icon('heroicon-o-calculator')
                     ->schema([
                         TextEntry::make('calculation_detail')
                             ->label('Rincian Perhitungan')
                             ->state(function ($record) {
-                                $memberCount = $record->coach?->members()->count() ?? 0;
+                                $original = $record->coach?->members()->count() ?? 0;
+                                $additional = is_array($record->additional_athletes) ? count($record->additional_athletes) : 0;
+                                $totalMembers = $original + $additional;
+                                
                                 $meetingTotal = $record->training_sessions * $record->per_meeting_fee;
-                                $memberTotal = $memberCount * $record->per_member_fee;
+                                $memberTotal = $totalMembers * $record->per_member_fee;
                                 
                                 return "
                                     <div style='line-height: 1.8;'>
                                         <div>🚗 Transport: <strong>Rp " . number_format($record->transport_fee, 0, ',', '.') . "</strong></div>
                                         <div>🏋️ Pertemuan: {$record->training_sessions} × Rp " . number_format($record->per_meeting_fee, 0, ',', '.') . " = <strong>Rp " . number_format($meetingTotal, 0, ',', '.') . "</strong></div>
-                                        <div>👥 Atlet: {$memberCount} × Rp " . number_format($record->per_member_fee, 0, ',', '.') . " = <strong>Rp " . number_format($memberTotal, 0, ',', '.') . "</strong></div>
+                                        <div>👥 Atlet: <strong>{$totalMembers}</strong> ({$original} + {$additional}) × Rp " . number_format($record->per_member_fee, 0, ',', '.') . " = <strong>Rp " . number_format($memberTotal, 0, ',', '.') . "</strong></div>
                                         <div>❤️ Kesehatan: <strong>Rp " . number_format($record->health_fee, 0, ',', '.') . "</strong></div>
                                         <div>🎁 Bonus: <strong>Rp " . number_format($record->bonus, 0, ',', '.') . "</strong></div>
                                     </div>
@@ -132,7 +155,6 @@ class SalaryInfolist
                     ])
                     ->collapsed(false),
 
-                // 📊 Section: Status Pembayaran
                 Section::make('Status Pembayaran')
                     ->icon('heroicon-o-check-badge')
                     ->schema([
@@ -167,7 +189,6 @@ class SalaryInfolist
                     ])
                     ->collapsible(),
 
-                // 🕐 Section: Timestamps
                 Section::make('Informasi Sistem')
                     ->icon('heroicon-o-information-circle')
                     ->schema([
