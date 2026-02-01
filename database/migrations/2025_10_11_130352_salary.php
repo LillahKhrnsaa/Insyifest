@@ -14,23 +14,20 @@ return new class extends Migration
         Schema::create('salaries', function (Blueprint $table) {
             $table->id();
 
-            // Relasi ke pelatih
             $table->foreignId('coach_id')->constrained('coaches')->onDelete('cascade');
 
-            // Komponen perhitungan
-            $table->integer('training_sessions')->default(0); // Jumlah pertemuan latihan
+            $table->integer('training_sessions')->default(0);
+            $table->json('additional_athletes')->nullable();
             $table->decimal('transport_fee', 12, 2)->default(0);
             $table->decimal('per_meeting_fee', 12, 2)->default(0);
             $table->decimal('per_member_fee', 12, 2)->default(0);
             $table->decimal('health_fee', 12, 2)->default(0);
             $table->decimal('bonus', 12, 2)->default(0);
 
-            // Jumlah total (hasil kalkulasi)
             $table->decimal('total_amount', 14, 2)->default(0);
 
-            // Info tambahan
             $table->string('month')->nullable();
-            $table->string('status')->nullable(); // misal: pending, paid
+            $table->string('status')->nullable();
             $table->date('paid_at')->nullable();
 
             $table->timestamps();
