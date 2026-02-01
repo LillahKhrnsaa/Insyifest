@@ -13,6 +13,7 @@ class Salary extends Model
         'coach_id',
         'training_sessions',
         'transport_fee',
+        'additional_athletes',
         'per_meeting_fee',
         'per_member_fee',
         'health_fee',
@@ -25,23 +26,22 @@ class Salary extends Model
 
     protected $casts = [
         'paid_at' => 'date',
+        'additional_athletes' => 'array',
     ];
 
-    // Relasi ke coach
     public function coach()
     {
         return $this->belongsTo(Coach::class);
     }
 
-    // Ambil jumlah member dari pivot table
-    public function getMemberCountAttribute()
+    public function getTotalMemberCountAttribute()
     {
-        return $this->coach
-            ? $this->coach->members()->count()
-            : 0;
+        $originalCount = $this->coach ? $this->coach->members()->count() : 0;
+        $additionalCount = is_array($this->additional_athletes) ? count($this->additional_athletes) : 0;
+        
+        return $originalCount + $additionalCount;
     }
 
-    // Hitung total otomatis (optional)
     public function calculateTotal()
     {
         $memberCount = $this->getMemberCountAttribute();
