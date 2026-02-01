@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('coach_id')->constrained('coaches')->onDelete('cascade');
 
             $table->integer('training_sessions')->default(0);
-            $table->json('additional_athletes')->nullable();
             $table->decimal('transport_fee', 12, 2)->default(0);
             $table->decimal('per_meeting_fee', 12, 2)->default(0);
             $table->decimal('per_member_fee', 12, 2)->default(0);
