@@ -40,6 +40,9 @@ RUN npm install && npm run build
 # 9. Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
+# Force PHP-FPM listen to all interfaces
+RUN sed -i 's/^listen = .*/listen = 0.0.0.0:9000/' /usr/local/etc/php-fpm.d/www.conf
+
 # 10. Expose port 9000
 EXPOSE 9000
 CMD ["php-fpm"]
