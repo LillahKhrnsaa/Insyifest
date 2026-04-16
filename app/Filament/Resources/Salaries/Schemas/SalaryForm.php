@@ -11,6 +11,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
+use App\Models\Attendance; 
+use Carbon\Carbon;
 
 class SalaryForm
 {
@@ -46,6 +48,10 @@ class SalaryForm
                             
                             $currentAdditional = count($get('additional_athletes') ?? []);
                             $set('member_count', $memberCount + $currentAdditional);
+
+                            $monthStr = $get('month');
+                            $sessions = self::getAttendanceCount($state, $monthStr);
+                            $set('training_sessions', $sessions);
                             
                             $set('total_amount', self::calculateTotal($get));
                         } else {
@@ -104,6 +110,7 @@ class SalaryForm
                     ->numeric()
                     ->default(0)
                     ->required()
+                    ->helperText('Otomatis dihitung dari data presensi (Bisa diedit manual)')
                     ->minValue(0)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
@@ -186,7 +193,20 @@ class SalaryForm
                     ->label('Periode (Bulan)')
                     ->placeholder('Contoh: Oktober 2025')
                     ->required()
-                    ->maxLength(50),
+                    ->maxLength(50)
+                    // 👇👇 TAMBAHAN BARU DARI SINI 👇👇
+                    ->live(onBlur: true) // Biar trigger saat selesai ketik
+                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        $coachId = $get('coach_id');
+                        // Jika pelatih sudah dipilih & bulan diisi, hitung absennya
+                        if ($coachId && $state) {
+                            $sessions = self::getAttendanceCount($coachId, $state);
+                            $set('training_sessions', $sessions);
+                            
+                            // Update total uang juga
+                            $set('total_amount', self::calculateTotal($get));
+                        }
+                    }),
 
                 Select::make('status')
                     ->label('Status')
@@ -223,5 +243,23 @@ class SalaryForm
         $memberTotal = $members * $perMemberFee;
         
         return $transport + $meetingTotal + $memberTotal + $health + $bonus;
+    }
+
+    protected static function getAttendanceCount($coachId, $monthString): int
+    {
+        if (!$coachId || empty($monthString)) return 0;
+
+        try {
+            $date = Carbon::parse("1 " . $monthString);
+            
+            return Attendance::query()
+                ->where('coach_id', $coachId)
+                ->whereMonth('date', $date->month)
+                ->whereYear('date', $date->year)
+                ->count();
+                
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 }
