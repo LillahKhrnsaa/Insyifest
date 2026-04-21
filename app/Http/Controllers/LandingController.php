@@ -23,8 +23,8 @@ class LandingController extends Controller
         // Mengambil semua Paket Latihan
         $packages = TrainingPackage::orderBy('price')->get();
 
-        // Mengambil Postingan (General Materials) terbaru
-        $posts = GeneralMaterial::latest()->take(5)->get();
+        // Mengambil Postingan (General Materials) terbaru yang statusnya aktif
+        $posts = GeneralMaterial::where('status', 'active')->latest()->take(5)->get();
 
         // Mengambil daftar member aktif
         $members = Member::with('user')->where('status', 'AKTIF')->latest()->take(12)->get();

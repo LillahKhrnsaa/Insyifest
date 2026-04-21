@@ -129,7 +129,7 @@
 
                 <p class="text-sm text-slate-600 text-center">
                     Belum memiliki akun?
-                    <a href="{{ route('member.register.store') }}" class="font-semibold text-cyan-600 hover:text-cyan-700">
+                    <a href="{{ route('member.register.create') }}" class="font-semibold text-cyan-600 hover:text-cyan-700">
                         Daftar member baru
                     </a>
                 </p>

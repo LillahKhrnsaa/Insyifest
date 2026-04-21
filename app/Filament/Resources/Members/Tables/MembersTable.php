@@ -105,6 +105,41 @@ class MembersTable
                     ->tooltip(fn ($state) => $state)
                     ->wrap(),
 
+                TextColumn::make('user.father_job')
+                    ->label('Pekerjaan Ayah')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-briefcase')
+                    ->color('slate')
+                    ->toggleable(),
+
+                TextColumn::make('training_summary')
+                    ->label('Coach & Jadwal')
+                    ->state(function ($record) {
+                        $schedules = \App\Models\MemberSchedule::where('member_id', $record->id)
+                            ->with(['coach.user', 'trainingSchedule'])
+                            ->get();
+                        
+                        if ($schedules->isEmpty()) return 'Belum diatur';
+
+                        return $schedules->map(fn($s) => 
+                            "{$s->coach->user->name}: " . 
+                            match (strtoupper($s->trainingSchedule->day)) {
+                                'MONDAY', 'SENIN' => 'Senin',
+                                'TUESDAY', 'SELASA' => 'Selasa',
+                                'WEDNESDAY', 'RABU' => 'Rabu',
+                                'THURSDAY', 'KAMIS' => 'Kamis',
+                                'FRIDAY', 'JUMAT' => 'Jumat',
+                                'SATURDAY', 'SABTU' => 'Sabtu',
+                                'SUNDAY', 'MINGGU' => 'Minggu',
+                                default => $s->trainingSchedule->day,
+                            } . " " . \Carbon\Carbon::parse($s->trainingSchedule->time)->format('H:i')
+                        )->implode(', ');
+                    })
+                    ->wrap()
+                    ->color('info')
+                    ->size('xs'),
+
                 TextColumn::make('trainingPackage.name')
                     ->label('Paket Latihan')
                     ->badge()

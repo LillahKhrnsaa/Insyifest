@@ -25,24 +25,15 @@ Livewire::setUpdateRoute(function ($handle) {
 // });
 
 
-Route::get('/form/pendaftaran/{slug}', [FormExternalController::class, 'show'])
-    ->name('form.external.show');
-Route::post('/form/pendaftaran/{slug}', [FormExternalController::class, 'submit'])
-    ->name('form.external.submit');
-
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-
-Route::get('/form/{slug}', [FormEksternalController::class, 'show'])->name('form.show');
-Route::post('/form/{slug}', [FormEksternalController::class, 'submit'])->name('form.submit');
 
 // Rute untuk menampilkan form registrasi member
 Route::get('/register/member', [MemberRegistrationController::class, 'create'])
     ->middleware('guest')
     ->name('member.register.create');
 
-Route::post('/register/member', [MemberRegistrationController::class, 'store'])
-    ->middleware('guest')
-    ->name('member.register.store');
+Route::get('/pendaftar', [MemberRegistrationController::class, 'pendaftar'])
+    ->name('pendaftar');
 
 // Route untuk menampilkan halaman login (GET request)
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])
