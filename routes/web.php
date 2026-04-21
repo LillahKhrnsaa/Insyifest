@@ -83,6 +83,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/raport/coaches', [CoachDashboardController::class, 'getCoachesList'])
         ->name('api.raport.coaches');
     
+    // Coach Physical Test API Routes
+    Route::get('/api/physical/data', [CoachDashboardController::class, 'getPhysicalData'])
+        ->name('api.physical.data');
+    Route::post('/api/physical/store', [CoachDashboardController::class, 'storePhysicalTest'])
+        ->name('api.physical.store');
+    Route::put('/api/physical/update/{id}', [CoachDashboardController::class, 'updatePhysicalTest'])
+        ->name('api.physical.update');
+    Route::delete('/api/physical/delete/{id}', [CoachDashboardController::class, 'deletePhysicalTest'])
+        ->name('api.physical.delete');
+    
     // ═══════════════════════════════════════════════════════════════
     // MEMBER DASHBOARD ROUTES - TAMBAHKAN INI
     // ═══════════════════════════════════════════════════════════════
@@ -100,4 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/member/status/toggle', [MemberDashboardController::class, 'toggleStatus'])
         ->name('member.toggle-status');
+
+    Route::get('/api/member/physical-data', [MemberDashboardController::class, 'getPhysicalData'])
+        ->name('api.member.physical.data');
 });

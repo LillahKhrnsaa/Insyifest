@@ -184,9 +184,13 @@ class MemberDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Member not found'], 404);
         }
 
-        $history = PhysicalTest::where('member_id', $member->id)
-            ->where('year', $request->year)
-            ->orderByRaw("CASE month 
+        $year = $request->input('year');
+        $month = $request->input('month');
+
+        $query = PhysicalTest::where('member_id', $member->id)
+            ->where('year', $year);
+
+        $history = (clone $query)->orderByRaw("CASE month 
                 WHEN 'januari' THEN 1 WHEN 'februari' THEN 2 WHEN 'maret' THEN 3 
                 WHEN 'april' THEN 4 WHEN 'mei' THEN 5 WHEN 'juni' THEN 6 
                 WHEN 'juli' THEN 7 WHEN 'agustus' THEN 8 WHEN 'september' THEN 9 
@@ -194,20 +198,25 @@ class MemberDashboardController extends Controller
                 ELSE 13 END")
             ->get();
 
-        $latest = $history->last();
+        if ($month) {
+            $selected = (clone $query)->where('month', $month)->first();
+        } else {
+            $selected = $history->last();
+        }
 
-        $radarData = $latest ? [
-            round(max(0, min(5, 5 - ($latest->sprint_20m / 2))), 2),
-            round(min(5, $latest->push_up / 10), 2),
-            round(min(5, $latest->vo2max / 10), 2),
-            round(min(5, $latest->v_sit_reach / 6), 2),
-            round(max(0, min(5, 10 - $latest->shuttle_run)), 2),
+        $radarData = $selected ? [
+            round(max(0, min(5, 5 - ($selected->sprint_20m / 2))), 2),
+            round(min(5, $selected->push_up / 10), 2),
+            round(min(5, $selected->vo2max / 10), 2),
+            round(min(5, $selected->v_sit_reach / 6), 2),
+            round(max(0, min(5, 10 - $selected->shuttle_run)), 2),
         ] : [0,0,0,0,0];
 
         return response()->json([
             'success' => true,
             'history' => $history,
-            'radarData' => $radarData
+            'radarData' => $radarData,
+            'selectedMonth' => $selected ? $selected->month : null
         ]);
     }
 

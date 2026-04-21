@@ -406,9 +406,13 @@ class CoachDashboardController extends Controller
     // --- KHUSUS FISIK ---
     public function getPhysicalData(Request $request)
     {
-        $history = \App\Models\PhysicalTest::where('member_id', $request->member_id)
-            ->where('year', $request->year)
-            ->orderByRaw("CASE month 
+        $year = $request->input('year');
+        $month = $request->input('month');
+
+        $query = PhysicalTest::where('member_id', $request->member_id)
+            ->where('year', $year);
+
+        $history = (clone $query)->orderByRaw("CASE month 
                 WHEN 'januari' THEN 1 WHEN 'februari' THEN 2 WHEN 'maret' THEN 3 
                 WHEN 'april' THEN 4 WHEN 'mei' THEN 5 WHEN 'juni' THEN 6 
                 WHEN 'juli' THEN 7 WHEN 'agustus' THEN 8 WHEN 'september' THEN 9 
@@ -416,28 +420,39 @@ class CoachDashboardController extends Controller
                 ELSE 13 END")
             ->get();
 
-        $latest = $history->last();
+        // Cari data spesifik untuk radar chart (jika month ada, ambil itu. Jika tidak, ambil yang terbaru di tahun itu)
+        if ($month) {
+            $selected = (clone $query)->where('month', $month)->first();
+        } else {
+            $selected = $history->last();
+        }
 
         // Normalisasi Skor Radar 1-5
-        $radarData = $latest ? [
-            round(max(0, min(5, 5 - ($latest->sprint_20m / 2))), 2),
-            round(min(5, $latest->push_up / 10), 2),
-            round(min(5, $latest->vo2max / 10), 2),
-            round(min(5, $latest->v_sit_reach / 6), 2),
-            round(max(0, min(5, 10 - $latest->shuttle_run)), 2),
+        $radarData = $selected ? [
+            round(max(0, min(5, 5 - ($selected->sprint_20m / 2))), 2), // Speed
+            round(min(5, $selected->push_up / 10), 2),              // Strength
+            round(min(5, $selected->vo2max / 10), 2),               // Endurance
+            round(min(5, $selected->v_sit_reach / 6), 2),           // Flexibility
+            round(max(0, min(5, 10 - $selected->shuttle_run)), 2),  // Agility
         ] : [0,0,0,0,0];
 
         return response()->json([
             'success' => true,
             'history' => $history,
-            'radarData' => $radarData
+            'radarData' => $radarData,
+            'selectedMonth' => $selected ? $selected->month : null
         ]);
     }
 
     public function storePhysicalTest(Request $request)
     {
+        $coach = Auth::user()->coach;
+        if (!$coach) {
+            return response()->json(['success' => false, 'message' => 'Hanya pelatih yang dapat menyimpan data fisik.'], 403);
+        }
+
         $data = $request->all();
-        $data['coach_id'] = Auth::user()->coach->id; // Auto set coach
+        $data['coach_id'] = $coach->id;
         
         $phys = PhysicalTest::updateOrCreate(
             ['member_id' => $request->member_id, 'year' => $request->year, 'month' => $request->month],
@@ -445,6 +460,32 @@ class CoachDashboardController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'Data fisik berhasil disimpan!']);
+    }
+
+    public function updatePhysicalTest(Request $request, $id)
+    {
+        $coach = Auth::user()->coach;
+        if (!$coach) {
+            return response()->json(['success' => false, 'message' => 'Hanya pelatih yang dapat mengupdate data fisik.'], 403);
+        }
+
+        $phys = PhysicalTest::where('coach_id', $coach->id)->findOrFail($id);
+        $phys->update($request->all());
+
+        return response()->json(['success' => true, 'message' => 'Data fisik berhasil diperbarui!']);
+    }
+
+    public function deletePhysicalTest($id)
+    {
+        $coach = Auth::user()->coach;
+        if (!$coach) {
+            return response()->json(['success' => false, 'message' => 'Hanya pelatih yang dapat menghapus data fisik.'], 403);
+        }
+
+        $phys = PhysicalTest::where('coach_id', $coach->id)->findOrFail($id);
+        $phys->delete();
+
+        return response()->json(['success' => true, 'message' => 'Data fisik berhasil dihapus!']);
     }
 
     public function updateAttendance(Request $request, $id)
