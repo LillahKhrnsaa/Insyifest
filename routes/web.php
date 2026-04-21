@@ -19,7 +19,7 @@ Livewire::setUpdateRoute(function ($handle) {
 // Route::get('/debug-scheme', function () {
 //     return [
 //         'is_secure' => request()->isSecure(),
-//         'scheme' => request()->getScheme(),
+//         'scheme' => request()->getScheme(),  
 //         'url' => request()->fullUrl(),
 //     ];
 // });
