@@ -14,9 +14,18 @@
 
             <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
                 <div class="flex flex-wrap gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 items-end">
-                    <div class="flex-1 min-w-[200px]">
+                    <div class="flex-1 min-w-[150px]">
                         <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Tahun Evaluasi</label>
                         <input type="number" id="phys_year" value="{{ now()->year }}" class="input-field w-full py-2 bg-white rounded-xl">
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Bulan (Untuk Grafik)</label>
+                        <select id="phys_month" class="input-field w-full py-2 bg-white border border-slate-200 rounded-xl">
+                            <option value="">Terbaru</option>
+                            @foreach(['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'] as $m)
+                                <option value="{{ $m }}">{{ ucfirst($m) }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <button onclick="loadPhysicalData()" class="px-6 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-100 transition-all flex items-center gap-2">
                         <i data-feather="refresh-cw" class="w-4 h-4"></i> Muat

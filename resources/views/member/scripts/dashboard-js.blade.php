@@ -163,24 +163,29 @@
 
         function loadPhysicalData() {
             const year = document.getElementById('phys_year').value;
-            fetch(`/api/physical/data?member_id=${currentMemberId}&year=${year}`)
+            const month = document.getElementById('phys_month').value;
+            fetch(`/api/member/physical-data?year=${year}&month=${month}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        updatePhysicalTable(data.history);
+                        updatePhysicalTable(data.history, data.selectedMonth);
                         renderRadarChart(data.radarData);
                     }
                 });
         }
 
-        function updatePhysicalTable(history) {
+        function updatePhysicalTable(history, selectedMonth) {
             const tbody = document.querySelector('#phys-table tbody');
             tbody.innerHTML = history.length ? '' : '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada data fisik.</td></tr>';
             
             history.forEach(h => {
+                const isSelected = h.month === selectedMonth;
                 tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                        <td class="px-4 py-4 font-bold text-slate-800 capitalize">${h.month}</td>
+                    <tr class="transition-colors border-b border-slate-100 ${isSelected ? 'bg-rose-50/50' : 'hover:bg-slate-50'}">
+                        <td class="px-4 py-4 font-bold text-slate-800 capitalize">
+                            ${h.month}
+                            ${isSelected ? '<span class="ml-2 text-[8px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full uppercase">Selected</span>' : ''}
+                        </td>
                         <td class="px-4 py-4 text-rose-600 font-black">${h.vo2max || '-'}</td>
                         <td class="px-4 py-4 text-slate-600">${h.sprint_20m || '-'}s</td>
                         <td class="px-4 py-4 text-slate-600">${h.push_up || 0}/${h.sit_up || 0}</td>

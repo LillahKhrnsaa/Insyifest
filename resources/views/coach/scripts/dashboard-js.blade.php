@@ -29,6 +29,25 @@
 
         const formRaport = document.getElementById('raportForm');
         if(formRaport) formRaport.addEventListener('submit', handleFormSubmit);
+
+        // Filter Pencarian Coach
+        const coachSearch = document.getElementById('coach_search');
+        if (coachSearch) {
+            coachSearch.addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase();
+                const coachSelect = document.getElementById('coach_id');
+                const filtered = coaches.filter(c => c.name.toLowerCase().includes(term));
+                
+                // Simpan nilai yang sedang terpilih agar tidak hilang jika masih ada dalam filter
+                const currentVal = coachSelect.value;
+                
+                coachSelect.innerHTML = '<option value="">-- Pilih Coach --</option>';
+                filtered.forEach(c => {
+                    const selected = c.id == currentVal ? 'selected' : '';
+                    coachSelect.insertAdjacentHTML('beforeend', `<option value="${c.id}" ${selected}>${c.name}</option>`);
+                });
+            });
+        }
     });
 
     function openRaportModal(memberId, memberName) {
@@ -428,8 +447,10 @@
     }
 
     function loadCoachesList() {
+        if (coaches.length > 0) return;
         fetch('/api/raport/coaches').then(r => r.json()).then(d => {
             if(d.success) {
+                coaches = d.coaches;
                 const s = document.getElementById('coach_id');
                 s.innerHTML = '<option value="">-- Pilih Coach --</option>';
                 d.coaches.forEach(c => s.innerHTML += `<option value="${c.id}">${c.name}</option>`);
@@ -485,31 +506,47 @@
 
     function loadPhysicalData() {
         const year = document.getElementById('phys_year').value;
-        fetch(`/api/physical/data?member_id=${currentMemberId}&year=${year}`)
+        const month = document.getElementById('phys_month').value;
+        fetch(`/api/physical/data?member_id=${currentMemberId}&year=${year}&month=${month}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    updatePhysicalTable(data.history);
+                    updatePhysicalTable(data.history, data.selectedMonth);
                     renderRadarChart(data.radarData);
                 }
             });
     }
 
-    function updatePhysicalTable(history) {
+    function updatePhysicalTable(history, selectedMonth) {
         const tbody = document.querySelector('#phys-table tbody');
-        tbody.innerHTML = history.length ? '' : '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada data fisik.</td></tr>';
+        tbody.innerHTML = history.length ? '' : '<tr><td colspan="6" class="px-4 py-10 text-center text-slate-400">Belum ada data fisik.</td></tr>';
         
         history.forEach(h => {
+            const isSelected = h.month === selectedMonth;
             tbody.insertAdjacentHTML('beforeend', `
-                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                    <td class="px-4 py-4 font-bold text-slate-800 capitalize">${h.month}</td>
+                <tr class="transition-colors border-b border-slate-100 ${isSelected ? 'bg-rose-50/50' : 'hover:bg-slate-50'}">
+                    <td class="px-4 py-4 font-bold text-slate-800 capitalize">
+                        ${h.month}
+                        ${isSelected ? '<span class="ml-2 text-[8px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full uppercase">Selected</span>' : ''}
+                    </td>
                     <td class="px-4 py-4 text-rose-600 font-black">${h.vo2max || '-'}</td>
                     <td class="px-4 py-4 text-slate-600">${h.sprint_20m || '-'}s</td>
                     <td class="px-4 py-4 text-slate-600">${h.push_up || 0}/${h.sit_up || 0}</td>
                     <td class="px-4 py-4 text-slate-600">${h.shuttle_run || '-'}s</td>
+                    <td class="px-4 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick='editPhysicalData(${JSON.stringify(h)})' class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                <i data-feather="edit-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="deletePhysicalData(${h.id})" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
+                                <i data-feather="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             `);
         });
+        if (typeof feather !== 'undefined') feather.replace();
     }
 
     function renderRadarChart(radarData) {
@@ -531,11 +568,45 @@
         });
     }
 
+    function editPhysicalData(data) {
+        openPhysForm();
+        document.getElementById('phys_id').value = data.id;
+        document.getElementById('phys_month').value = data.month;
+        document.getElementById('bleep_level').value = data.bleep_level;
+        document.getElementById('bleep_shuttle').value = data.bleep_shuttle;
+        document.getElementById('vo2max').value = data.vo2max;
+        
+        const form = document.getElementById('physForm');
+        form.querySelector('[name="sprint_20m"]').value = data.sprint_20m;
+        form.querySelector('[name="shuttle_run"]').value = data.shuttle_run;
+        form.querySelector('[name="push_up"]').value = data.push_up;
+        form.querySelector('[name="sit_up"]').value = data.sit_up;
+        
+        document.querySelector('#physFormModal h3').textContent = 'Edit Data Fisik';
+    }
+
+    function deletePhysicalData(id) {
+        if (!confirm('Yakin ingin menghapus data fisik ini?')) return;
+        fetch(`/api/physical/delete/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+        }).then(res => res.json()).then(res => {
+            if (res.success) {
+                showAlert(res.message, 'success');
+                loadPhysicalData();
+            }
+        });
+    }
+
     function handlePhysSubmit(e) {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(e.target).entries());
-        fetch('/api/physical/store', {
-            method: 'POST',
+        const id = document.getElementById('phys_id').value;
+        const url = id ? `/api/physical/update/${id}` : '/api/physical/store';
+        const method = id ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
             headers: { 
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
@@ -543,9 +614,11 @@
             body: JSON.stringify(data)
         }).then(res => res.json()).then(res => {
             if (res.success) {
-                showAlert('Data Fisik Tersimpan!', 'success');
+                showAlert(res.message, 'success');
                 document.getElementById('physFormModal').classList.add('hidden');
                 loadPhysicalData();
+            } else {
+                showAlert(res.message || 'Gagal menyimpan data', 'error');
             }
         });
     }
@@ -560,6 +633,12 @@
     function openPhysForm() {
         const form = document.getElementById('physForm');
         if (form) form.reset();
+
+        const physId = document.getElementById('phys_id');
+        if (physId) physId.value = '';
+
+        const title = document.querySelector('#physFormModal h3');
+        if (title) title.textContent = 'Input Data Fisik';
 
         const vo2Field = document.getElementById('vo2max');
         if (vo2Field) vo2Field.value = '';

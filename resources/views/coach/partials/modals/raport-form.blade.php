@@ -51,9 +51,17 @@
                         <input type="number" name="peaking" id="peaking" class="input-field w-full" placeholder="Nilai Peaking">
                     </div>
 
-                     <div>
+                    <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Coach Penilai</label>
-                        <select name="coach_id" id="coach_id" class="input-field w-full" required>
+                        <div class="relative mb-2 group">
+                            <input type="text" id="coach_search" 
+                                   class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all outline-none" 
+                                   placeholder="Cari nama coach...">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
+                                <i data-feather="search" class="w-3.5 h-3.5"></i>
+                            </div>
+                        </div>
+                        <select name="coach_id" id="coach_id" class="input-field w-full bg-white" required>
                             <option value="">-- Pilih Coach --</option>
                         </select>
                     </div>

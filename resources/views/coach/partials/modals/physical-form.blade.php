@@ -13,6 +13,7 @@
 
             <form id="physForm" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
                 @csrf
+                <input type="hidden" name="id" id="phys_id">
                 <input type="hidden" name="member_id" id="phys_form_member_id">
                 <input type="hidden" name="year" id="phys_form_year">
                 
