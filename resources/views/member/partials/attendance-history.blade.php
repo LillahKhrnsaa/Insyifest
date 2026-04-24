@@ -1,29 +1,45 @@
-<div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
-    <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
-        <h3 class="font-bold text-slate-800 flex items-center gap-2">
-            <i data-feather="clock" class="w-5 h-5 text-blue-600"></i> Riwayat Kehadiran
-        </h3>
+<div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+    <div class="px-8 py-6 border-b border-slate-50 bg-white">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <i data-feather="clock" class="w-5 h-5 text-blue-600"></i>
+            </div>
+            <div>
+                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Riwayat Kehadiran</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Sesi Terakhir</p>
+            </div>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="table-header text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
-                <tr>
-                    <th class="px-5 py-3">Tanggal</th>
-                    <th class="px-5 py-3">Lokasi</th>
+    <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] border-b border-slate-50 bg-slate-50/30">
+                    <th class="px-8 py-5">Tanggal</th>
+                    <th class="px-8 py-5">Lokasi Latihan</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-slate-50">
                 @forelse($attendances->take(5) as $attendance)
-                    <tr class="table-row hover:bg-slate-50 transition-colors">
-                        <td class="px-5 py-4 font-bold text-slate-800 text-sm">
-                            {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('D MMM Y') }}
+                    <tr class="hover:bg-blue-50/30 transition-all group">
+                        <td class="px-8 py-6 font-black text-slate-700 group-hover:text-blue-600 transition-colors leading-tight">
+                            {{ \Carbon\Carbon::parse($attendance->date)->isoFormat('dddd, D MMM Y') }}
                         </td>
-                        <td class="px-5 py-4 text-slate-600 text-sm">
-                            {{ $attendance->place ?? '-' }}
+                        <td class="px-8 py-6 text-slate-400 font-bold italic">
+                            <div class="flex items-center gap-2">
+                                <i data-feather="map-pin" class="w-3.5 h-3.5 opacity-50"></i>
+                                {{ $attendance->place ?? '-' }}
+                            </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="2" class="px-5 py-8 text-center text-slate-400">Belum ada riwayat</td></tr>
+                    <tr>
+                        <td colspan="2" class="px-8 py-16 text-center">
+                            <div class="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                                <i data-feather="user-x" class="w-8 h-8 text-slate-200"></i>
+                            </div>
+                            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Belum ada riwayat hadir</p>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>

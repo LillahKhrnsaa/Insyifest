@@ -14,43 +14,91 @@
     <style>
         body { font-family: 'Nunito', sans-serif; }
         [x-cloak] { display: none !important; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #0891b2; }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(8, 145, 178, 0.15); }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-        .status-badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .status-active { background-color: #f0fdf4; color: #16a34a; }
-        .status-active::before { background-color: #16a34a; }
-        .status-inactive { background-color: #f1f5f9; color: #64748b; }
-        .status-inactive::before { background-color: #64748b; }
-        .btn-primary { background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%); color: white; font-weight: 700; padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(8, 145, 178, 0.3); }
-        .input-field { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; font-size: 14px; transition: all 0.3s ease; }
-        .input-field:focus { outline: none; border-color: #0891b2; background: white; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1); }
-        .modal-overlay { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); }
+        
+        /* Custom Scrollbar Premium */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { 
+            background: #e2e8f0; 
+            border-radius: 10px;
+            border: 2px solid #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: #e2e8f0; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .btn-primary { 
+            background: #2563eb; 
+            color: white; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-primary:hover { 
+            background: #1d4ed8;
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3); 
+        }
+
+        .input-field { 
+            background: #f8fafc; 
+            border: 1px solid #f1f5f9; 
+            border-radius: 1rem; 
+            padding: 0.875rem 1.25rem; 
+            font-size: 0.875rem; 
+            font-weight: 600;
+            transition: all 0.3s ease; 
+        }
+        .input-field:focus { 
+            outline: none; 
+            border-color: #3b82f6; 
+            background: white; 
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); 
+        }
     </style>
     @stack('styles')
+    @livewireStyles
 </head>
-<body class="h-full text-slate-700 antialiased">
+<body class="h-full text-slate-700 antialiased bg-slate-50">
+    @include('components.demo-badge')
     
-    @auth
-        @include('member.partials.navbar')
-    @endauth
-
     <div x-data="{}" class="min-h-screen">
+        @include('components.loading-screen')
         @yield('content')
     </div>
 
+    <script src="https://unpkg.com/feather-icons"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') feather.replace();
         });
+        
+        // Re-replace feather icons for dynamic content
+        window.addEventListener('content-updated', () => {
+            if (typeof feather !== 'undefined') feather.replace();
+        });
     </script>
     @stack('scripts')
+    @livewireScripts
 </body>
 </html>

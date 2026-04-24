@@ -1,25 +1,34 @@
-<div class="bg-white rounded-xl border border-slate-200 overflow-hidden card-hover">
-    <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
-        <h3 class="font-bold text-slate-800 flex items-center gap-2">
-            <i data-feather="calendar" class="w-5 h-5 text-purple-600"></i> Jadwal Latihan
-        </h3>
+<div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+    <div class="px-8 py-6 border-b border-slate-50 bg-white">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <i data-feather="calendar" class="w-5 h-5 text-blue-600"></i>
+            </div>
+            <div>
+                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Jadwal Latihan</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Sesi Rutin Mingguan</p>
+            </div>
+        </div>
     </div>
-    <div class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+    <div class="divide-y divide-slate-50 max-h-[500px] overflow-y-auto custom-scrollbar">
         @forelse($trainingSchedules as $schedule)
-            <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
-                <div class="flex justify-between items-start mb-1">
-                    <h4 class="font-bold text-slate-800">{{ ucfirst($schedule->day) }}</h4>
-                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                        {{ $schedule->time ? \Carbon\Carbon::parse($schedule->time)->format('H:i') : '-' }}
+            <div class="px-8 py-5 hover:bg-blue-50/30 transition-all group">
+                <div class="flex justify-between items-center mb-1">
+                    <h4 class="font-black text-slate-700 group-hover:text-blue-600 transition-colors text-sm uppercase tracking-tight">{{ ucfirst($schedule->day) }}</h4>
+                    <span class="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest border border-blue-100 shadow-sm">
+                        {{ $schedule->time ? \Carbon\Carbon::parse($schedule->time)->format('H:i') : '--:--' }} WIB
                     </span>
                 </div>
-                <div class="text-xs text-slate-500 flex items-center gap-1 mb-2">
-                    <i data-feather="map-pin" class="w-3 h-3"></i> {{ $schedule->place ?? 'Kolam Utama' }}
+                <div class="text-[11px] font-bold text-slate-400 flex items-center gap-2 mt-1">
+                    <i data-feather="map-pin" class="w-3.5 h-3.5 opacity-50"></i> {{ $schedule->place ?? 'Kolam Utama' }}
                 </div>
             </div>
         @empty
-            <div class="px-5 py-8 text-center text-slate-400">
-                <p>Tidak ada jadwal</p>
+            <div class="px-8 py-16 text-center">
+                <div class="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                    <i data-feather="calendar" class="w-8 h-8 text-slate-200"></i>
+                </div>
+                <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Tidak ada jadwal terdaftar</p>
             </div>
         @endforelse
     </div>
