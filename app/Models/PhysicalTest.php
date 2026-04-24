@@ -13,7 +13,12 @@ class PhysicalTest extends Model
     protected $fillable = [
         'member_id', 'coach_id', 'year', 'month', 'vo2max', 
         'bleep_level', 'bleep_shuttle', 'sprint_20m', 'push_up', 
-        'sit_up', 'shuttle_run', 'v_sit_reach', 'run_300m', 'note'
+        'sit_up', 'shuttle_run', 'v_sit_reach', 'run_300m', 'note',
+        'results'
+    ];
+
+    protected $casts = [
+        'results' => 'array'
     ];
 
     public function member(): BelongsTo

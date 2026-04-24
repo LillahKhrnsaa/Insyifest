@@ -110,4 +110,6 @@ class Member extends Model
     {
         $this->attributes['status'] = $value ? 'AKTIF' : 'TIDAK_AKTIF';
     }
+
+
 }

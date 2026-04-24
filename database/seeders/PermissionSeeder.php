@@ -103,6 +103,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'create.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Create Form Registrations',  'display_name' => 'Create Form Registrations'],
             ['name' => 'update.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Update Form Registrations',  'display_name' => 'Update Form Registrations'],
             ['name' => 'delete.form_registrations',  'guard_name' => 'web', 'description' => 'Akses Delete Form Registrations',  'display_name' => 'Delete Form Registrations'],
+
+            // ==== MEMBER ARCHIVES (New Feature) ====
+            ['name' => 'viewAny.member_archives', 'guard_name' => 'web', 'description' => 'Akses ViewAny Arsip Member', 'display_name' => 'ViewAny Member Archives'],
+            ['name' => 'view.member_archives',    'guard_name' => 'web', 'description' => 'Akses View Detail Arsip Member', 'display_name' => 'View Member Archives'],
+            ['name' => 'delete.member_archives',  'guard_name' => 'web', 'description' => 'Akses Hapus Arsip Member', 'display_name' => 'Delete Member Archives'],
+            
+            // ==== SPECIAL ACTIONS ====
+            ['name' => 'close_period.members',    'guard_name' => 'web', 'description' => 'Akses Tombol Tutup Periode Bulanan', 'display_name' => 'Close Monthly Period'],
         ];
 
         $now = Carbon::now();
@@ -120,16 +128,17 @@ class PermissionSeeder extends Seeder
             );
         }
 
-        // Assign semua permission ke role "staff"
-        $staffRole = Role::firstOrCreate(
-            ['name' => 'staff', 'guard_name' => 'web'],
-            ['created_at' => $now, 'updated_at' => $now]
-        );
+        // Assign semua permission ke role "staff", "admin", dan "owner"
+        $rolesToSync = ['staff', 'admin', 'owner'];
+        
+        foreach ($rolesToSync as $roleName) {
+            $role = Role::firstOrCreate(
+                ['name' => $roleName, 'guard_name' => 'web'],
+                ['created_at' => $now, 'updated_at' => $now]
+            );
 
-        $newPermissions = Permission::whereDoesntHave('roles', function ($q) use ($staffRole) {
-            $q->where('roles.id', $staffRole->id);
-        })->get();
-
-        $staffRole->givePermissionTo($newPermissions);
+            $allPermissions = Permission::all();
+            $role->syncPermissions($allPermissions);
+        }
     }
 }
