@@ -55,6 +55,79 @@
                     this.autoFill();
                 }
             });
+        },
+
+        // MEMBER MANAGEMENT STATE
+        showMemberModal: false,
+        memberModalMode: 'create', // create or edit
+        memberId: null,
+        memberForm: {
+            name: '',
+            email: '',
+            password: '',
+            phone: '',
+            gender: '',
+            training_package_id: '',
+            status: 'AKTIF'
+        },
+
+        async submitMemberForm() {
+            const url = this.memberModalMode === 'create' 
+                ? '{{ route("coach.member.store") }}' 
+                : `/coach/member/update/${this.memberId}`;
+            
+            const method = this.memberModalMode === 'create' ? 'POST' : 'PUT';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST', // Use POST with _method for PUT
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.memberForm,
+                        _method: method
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    let errorMessage = result.message || 'Terjadi kesalahan';
+                    if (result.errors) {
+                        errorMessage = Object.values(result.errors).flat().join('\n');
+                    }
+                    Swal.fire('Gagal', errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+            }
+        },
+
+        editMember(data) {
+            this.memberId = data.id;
+            this.memberModalMode = 'edit';
+            this.memberForm = {
+                name: data.name,
+                email: data.email,
+                password: '', // default empty for edit
+                training_package_id: data.training_package_id,
+                training_schedule_id: data.training_schedule_id,
+                status: data.status
+            };
+            this.showMemberModal = true;
         }
     }"
     class="min-h-screen bg-slate-50"
@@ -115,6 +188,7 @@
     @include('coach.partials.modals.raport-form')
     @include('coach.partials.modals.physical-view')
     @include('coach.partials.modals.physical-form')
+    @include('coach.partials.modals.member-form')
 
 </div>
 @endsection

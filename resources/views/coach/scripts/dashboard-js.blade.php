@@ -30,6 +30,11 @@
         const formRaport = document.getElementById('raportForm');
         if(formRaport) formRaport.addEventListener('submit', handleFormSubmit);
 
+        const physForm = document.getElementById('physForm');
+        if (physForm) {
+            physForm.addEventListener('submit', handlePhysSubmit);
+        }
+
         // Filter Pencarian Coach
         const coachSearch = document.getElementById('coach_search');
         if (coachSearch) {
@@ -490,18 +495,41 @@
         setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 3000);
     }
 
+    let physicalVariables = [];
+
     function openPhysicalModal(memberId, memberName) {
         currentMemberId = memberId;
-        document.getElementById('physMemberName').textContent = memberName;
-        document.getElementById('physicalModal').classList.remove('hidden');
+        const nameEl = document.getElementById('physMemberName');
+        if (nameEl) nameEl.textContent = memberName;
+        
+        const modal = document.getElementById('physicalModal');
+        if (modal) modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        loadPhysicalData();
+        
+        // Show loading state in table
+        const thead = document.getElementById('phys-table-header');
+        if (thead) thead.innerHTML = '<th class="px-6 py-4">Bulan</th><th class="px-6 py-4 text-center">Memuat Parameter...</th>';
+        
+        loadPhysicalVariables().then(() => {
+            loadPhysicalData();
+        });
     }
 
     function closePhysicalModal() {
         document.getElementById('physicalModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
         if (chartRadar) { chartRadar.destroy(); chartRadar = null; }
+    }
+
+    function loadPhysicalVariables() {
+        return fetch('/api/physical/variables')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    physicalVariables = data.variables;
+                }
+                return data.variables;
+            });
     }
 
     function loadPhysicalData() {
@@ -512,179 +540,80 @@
             .then(data => {
                 if (data.success) {
                     updatePhysicalTable(data.history, data.selectedMonth);
-                    renderRadarChart(data.radarData);
+                    renderRadarChart(data.radarData, data.radarLabels);
                 }
             });
     }
 
     function updatePhysicalTable(history, selectedMonth) {
+        const thead = document.getElementById('phys-table-header');
         const tbody = document.querySelector('#phys-table tbody');
-        tbody.innerHTML = history.length ? '' : '<tr><td colspan="6" class="px-4 py-10 text-center text-slate-400">Belum ada data fisik.</td></tr>';
+        if (!tbody || !thead) return;
+
+        // 1. Render Headers
+        let headerHtml = '<th class="px-10 py-5">Bulan</th>';
+        physicalVariables.forEach(v => {
+            const isRose = v.name.toLowerCase().includes('vo2');
+            headerHtml += `<th class="px-10 py-5 text-center ${isRose ? 'text-rose-600' : ''}">${v.name}</th>`;
+        });
+        headerHtml += '<th class="px-10 py-5 text-center">Aksi</th>';
+        thead.innerHTML = headerHtml;
+
+        // 2. Render Rows
+        tbody.innerHTML = history.length ? '' : `<tr><td colspan="${physicalVariables.length + 2}" class="px-10 py-24 text-center text-slate-400">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-20 h-20 rounded-[2rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-4 border-white dark:border-slate-700 shadow-xl">
+                    <i data-feather="database" class="w-10 h-10 opacity-30"></i>
+                </div>
+                <div>
+                    <p class="font-black text-slate-600 dark:text-slate-400 text-sm uppercase tracking-widest">Belum ada data fisik</p>
+                    <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold">Silakan input hasil tes pertama untuk atlet ini</p>
+                </div>
+            </div>
+        </td></tr>`;
         
         history.forEach(h => {
             const isSelected = h.month === selectedMonth;
-            tbody.insertAdjacentHTML('beforeend', `
-                <tr class="transition-colors border-b border-slate-100 ${isSelected ? 'bg-rose-50/50' : 'hover:bg-slate-50'}">
-                    <td class="px-4 py-4 font-bold text-slate-800 capitalize">
-                        ${h.month}
-                        ${isSelected ? '<span class="ml-2 text-[8px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full uppercase">Selected</span>' : ''}
+            let rowHtml = `
+                <tr class="transition-colors border-b border-slate-50 dark:border-slate-700 ${isSelected ? 'bg-rose-50/40 dark:bg-rose-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}">
+                    <td class="px-10 py-6">
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-slate-700 dark:text-slate-200 capitalize text-base">${h.month}</span>
+                            ${isSelected ? '<span class="px-2 py-0.5 bg-rose-600 text-white text-[8px] font-black rounded-md shadow-lg shadow-rose-200">ACTIVE</span>' : ''}
+                        </div>
                     </td>
-                    <td class="px-4 py-4 text-rose-600 font-black">${h.vo2max || '-'}</td>
-                    <td class="px-4 py-4 text-slate-600">${h.sprint_20m || '-'}s</td>
-                    <td class="px-4 py-4 text-slate-600">${h.push_up || 0}/${h.sit_up || 0}</td>
-                    <td class="px-4 py-4 text-slate-600">${h.shuttle_run || '-'}s</td>
-                    <td class="px-4 py-4 text-center">
+            `;
+
+            physicalVariables.forEach(v => {
+                let val = '-';
+                if (h.results && h.results[v.name] !== undefined) {
+                    val = h.results[v.name];
+                } else if (h[v.name.toLowerCase().replace(' ', '_')]) {
+                    val = h[v.name.toLowerCase().replace(' ', '_')];
+                }
+                
+                rowHtml += `<td class="px-10 py-6 text-center font-black text-slate-800 dark:text-slate-200 text-lg">${val}<span class="text-[10px] ml-1 text-slate-400 font-bold uppercase tracking-tighter">${v.unit || ''}</span></td>`;
+            });
+
+            rowHtml += `
+                    <td class="px-10 py-6 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick='editPhysicalData(${JSON.stringify(h)})' class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                                <i data-feather="edit-2" class="w-3.5 h-3.5"></i>
+                            <button onclick='editPhysicalData(${JSON.stringify(h)})' class="w-10 h-10 flex items-center justify-center text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <i data-feather="edit-3" class="w-4 h-4"></i>
                             </button>
-                            <button onclick="deletePhysicalData(${h.id})" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
-                                <i data-feather="trash-2" class="w-3.5 h-3.5"></i>
+                            <button onclick="deletePhysicalData(${h.id})" class="w-10 h-10 flex items-center justify-center text-rose-600 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <i data-feather="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-            `);
+            `;
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
         });
         if (typeof feather !== 'undefined') feather.replace();
     }
 
-    function renderRadarChart(radarData) {
-        if (chartRadar) chartRadar.destroy();
-        const ctx = document.getElementById('chartRadar').getContext('2d');
-        chartRadar = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
-                datasets: [{
-                    label: 'Profil Atlet',
-                    data: radarData,
-                    backgroundColor: 'rgba(244, 63, 94, 0.2)',
-                    borderColor: 'rgb(244, 63, 94)',
-                    pointBackgroundColor: 'rgb(244, 63, 94)',
-                }]
-            },
-            options: { scales: { r: { min: 0, max: 5, ticks: { display: false } } }, plugins: { legend: { display: false } } }
-        });
-    }
-
-    function editPhysicalData(data) {
-        openPhysForm();
-        document.getElementById('phys_id').value = data.id;
-        document.getElementById('phys_month').value = data.month;
-        document.getElementById('bleep_level').value = data.bleep_level;
-        document.getElementById('bleep_shuttle').value = data.bleep_shuttle;
-        document.getElementById('vo2max').value = data.vo2max;
-        
-        const form = document.getElementById('physForm');
-        form.querySelector('[name="sprint_20m"]').value = data.sprint_20m;
-        form.querySelector('[name="shuttle_run"]').value = data.shuttle_run;
-        form.querySelector('[name="push_up"]').value = data.push_up;
-        form.querySelector('[name="sit_up"]').value = data.sit_up;
-        
-        document.querySelector('#physFormModal h3').textContent = 'Edit Data Fisik';
-    }
-
-    function deletePhysicalData(id) {
-        if (!confirm('Yakin ingin menghapus data fisik ini?')) return;
-        fetch(`/api/physical/delete/${id}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
-        }).then(res => res.json()).then(res => {
-            if (res.success) {
-                showAlert(res.message, 'success');
-                loadPhysicalData();
-            }
-        });
-    }
-
-    function handlePhysSubmit(e) {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        const id = document.getElementById('phys_id').value;
-        const url = id ? `/api/physical/update/${id}` : '/api/physical/store';
-        const method = id ? 'PUT' : 'POST';
-
-        fetch(url, {
-            method: method,
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
-            },
-            body: JSON.stringify(data)
-        }).then(res => res.json()).then(res => {
-            if (res.success) {
-                showAlert(res.message, 'success');
-                document.getElementById('physFormModal').classList.add('hidden');
-                loadPhysicalData();
-            } else {
-                showAlert(res.message || 'Gagal menyimpan data', 'error');
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const physForm = document.getElementById('physForm');
-        if (physForm) {
-            physForm.addEventListener('submit', handlePhysSubmit);
-        }
-    });
-
-    function openPhysForm() {
-        const form = document.getElementById('physForm');
-        if (form) form.reset();
-
-        const physId = document.getElementById('phys_id');
-        if (physId) physId.value = '';
-
-        const title = document.querySelector('#physFormModal h3');
-        if (title) title.textContent = 'Input Data Fisik';
-
-        const vo2Field = document.getElementById('vo2max');
-        if (vo2Field) vo2Field.value = '';
-
-        const memberField = document.getElementById('phys_form_member_id');
-        const yearField = document.getElementById('phys_form_year');
-        const physYearInput = document.getElementById('phys_year');
-
-        if (memberField) memberField.value = currentMemberId;
-        if (yearField && physYearInput) yearField.value = physYearInput.value;
-
-        const modal = document.getElementById('physFormModal');
-        if (modal) {
-            modal.classList.remove('hidden');
-        }
-        
-        if (typeof feather !== 'undefined') feather.replace();
-    }
-
-    function closePhysFormModal() {
-        const modal = document.getElementById('physFormModal');
-        if (modal) modal.classList.add('hidden');
-    }
-
-    function calculateBleep() {
-        const lvlInput = document.getElementById('bleep_level');
-        const shtInput = document.getElementById('bleep_shuttle');
-        const vo2Field = document.getElementById('vo2max');
-
-        if (!lvlInput || !shtInput || !vo2Field) return;
-
-        const lvl = parseInt(lvlInput.value) || 0;
-        const sht = parseInt(shtInput.value) || 0;
-        
-        if (lvl > 0) {
-            const shuttleTable = { 1: 9, 2: 8, 3: 8, 4: 9, 5: 9, 6: 10, 7: 10, 8: 11, 9: 11, 10: 11, 11: 12, 12: 12, 13: 13 };
-            const tsl = shuttleTable[lvl] || 10;
-            
-            const vo2 = 3.46 * (lvl + (sht / tsl)) + 12.2;
-            vo2Field.value = vo2.toFixed(2);
-        } else {
-            vo2Field.value = '';
-        }
-    }
-
-    function renderRadarChart(radarData) {
+    function renderRadarChart(radarData, labels) {
         const canvas = document.getElementById('chartRadar');
         if (!canvas) return;
 
@@ -694,7 +623,7 @@
         chartRadar = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
+                labels: labels && labels.length ? labels : ['Speed', 'Strength', 'Endurance', 'Flexibility', 'Agility'],
                 datasets: [{
                     label: 'Profil Atlet',
                     data: radarData || [0,0,0,0,0],
@@ -722,6 +651,255 @@
                 plugins: { legend: { display: false } }
             }
         });
+    }
+
+    function openPhysForm() {
+        const container = document.getElementById('dynamic-variables-container');
+        container.innerHTML = '<div class="flex justify-center p-4"><i data-feather="loader" class="animate-spin"></i></div>';
+        if (typeof feather !== 'undefined') feather.replace();
+
+        loadPhysicalVariables().then(vars => {
+            renderDynamicFormFields(vars);
+            
+            const form = document.getElementById('physForm');
+            if (form) {
+                // If not in edit mode (triggered by openPhysForm from button)
+                if (!document.getElementById('phys_id').value) {
+                    form.reset();
+                    document.getElementById('phys_id').value = '';
+                    document.querySelector('#physFormModal h3').textContent = 'Input Data Fisik';
+                }
+            }
+
+            document.getElementById('phys_form_member_id').value = currentMemberId;
+            document.getElementById('phys_form_year').value = document.getElementById('phys_year').value;
+            
+            document.getElementById('physFormModal').classList.remove('hidden');
+            if (typeof feather !== 'undefined') feather.replace();
+        });
+    }
+
+    function renderDynamicFormFields(vars, values = {}) {
+        const container = document.getElementById('dynamic-variables-container');
+        if (vars.length === 0) {
+            container.innerHTML = `
+                <div class="p-6 bg-amber-50 rounded-2xl border border-amber-100 text-center">
+                    <p class="text-amber-700 text-xs font-bold uppercase mb-2">Variabel Belum Diatur</p>
+                    <p class="text-[10px] text-amber-600 mb-3">Silakan atur variabel tes fisik terlebih dahulu melalui ikon gear di atas.</p>
+                    <button type="button" onclick="openConfigModal()" class="px-4 py-2 bg-amber-600 text-white rounded-lg text-[10px] font-black uppercase">Atur Sekarang</button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        
+        // Cek apakah ada variabel khusus Bleep Test
+        const hasBleep = vars.some(v => v.name.toLowerCase().includes('bleep'));
+        
+        if (hasBleep) {
+            html += `
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div class="text-[10px] font-black text-rose-600 uppercase mb-1 flex items-center gap-2">
+                        <i data-feather="zap" class="w-3 h-3"></i> Bleep Test (VO2 Max)
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase">Level</label>
+                            <input type="number" name="results[Bleep Level]" id="bleep_level" oninput="calculateBleep()" value="${values['Bleep Level'] || ''}" placeholder="8" class="input-field w-full py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase">Shuttle</label>
+                            <input type="number" name="results[Bleep Shuttle]" id="bleep_shuttle" oninput="calculateBleep()" value="${values['Bleep Shuttle'] || ''}" placeholder="5" class="input-field w-full py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 font-bold uppercase">Hasil Estimasi VO2 Max</label>
+                        <input type="text" id="vo2max" readonly value="${values['VO2 Max'] || ''}" class="input-field w-full py-2 bg-rose-50 dark:bg-rose-900/20 border-none font-black text-rose-600 text-center rounded-xl">
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render variabel lainnya
+        html += '<div class="grid grid-cols-2 gap-3">';
+        vars.forEach(v => {
+            if (v.name.toLowerCase().includes('bleep') || v.name.toLowerCase() === 'vo2 max') return;
+            
+            html += `
+                <div class="col-span-1">
+                    <label class="text-[10px] text-slate-500 font-bold uppercase">${v.name} ${v.unit ? '('+v.unit+')' : ''}</label>
+                    <input type="number" step="0.01" name="results[${v.name}]" value="${values[v.name] || ''}" class="input-field w-full py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        container.innerHTML = html;
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+
+    function editPhysicalData(data) {
+        document.getElementById('phys_id').value = data.id;
+        document.getElementById('phys_month').value = data.month;
+        document.getElementById('phys_note').value = data.note || '';
+        
+        loadPhysicalVariables().then(vars => {
+            renderDynamicFormFields(vars, data.results || {});
+            document.querySelector('#physFormModal h3').textContent = 'Edit Data Fisik';
+            document.getElementById('phys_form_member_id').value = currentMemberId;
+            document.getElementById('phys_form_year').value = document.getElementById('phys_year').value;
+            document.getElementById('physFormModal').classList.remove('hidden');
+        });
+    }
+
+    function handlePhysSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const id = document.getElementById('phys_id').value;
+        const url = id ? `/api/physical/update/${id}` : '/api/physical/store';
+        const method = id ? 'PUT' : 'POST';
+        
+        // Convert FormData to nested object for 'results'
+        const obj = {
+            results: {},
+            note: formData.get('note'),
+            month: formData.get('month'),
+            member_id: formData.get('member_id'),
+            year: formData.get('year')
+        };
+        
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('results[')) {
+                const realKey = key.match(/\[(.*?)\]/)[1];
+                obj.results[realKey] = value;
+            }
+        }
+
+        fetch(url, {
+            method: method,
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+            },
+            body: JSON.stringify(obj)
+        }).then(res => res.json()).then(res => {
+            if (res.success) {
+                showAlert(res.message, 'success');
+                closePhysFormModal();
+                loadPhysicalData();
+            } else {
+                showAlert(res.message || 'Gagal menyimpan data', 'error');
+            }
+        });
+    }
+
+    // --- CONFIGURATION FUNCTIONS ---
+    function openConfigModal() {
+        document.getElementById('configPhysModal').classList.remove('hidden');
+        loadPhysicalVariables().then(vars => {
+            const list = document.getElementById('config-variables-list');
+            list.innerHTML = '';
+            if (vars.length === 0) {
+                // Add default placeholders
+                ['Bleep Level', 'Bleep Shuttle', 'Sprint 20m', 'Push Up', 'Sit Up', 'Agility'].forEach(name => {
+                    addVariableRow({ name: name, goal_value: name.includes('Sprint') || name.includes('Agility') ? 5 : 50, unit: name.includes('s') ? 's' : 'x' });
+                });
+            } else {
+                vars.forEach(v => addVariableRow(v));
+            }
+        });
+    }
+
+    function closeConfigModal() {
+        document.getElementById('configPhysModal').classList.add('hidden');
+    }
+
+    function addVariableRow(data = { name: '', goal_value: 100, unit: '' }) {
+        const list = document.getElementById('config-variables-list');
+        const id = 'var-' + Date.now() + Math.floor(Math.random() * 1000);
+        const row = `
+            <div id="${id}" class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 relative group transition-all hover:border-indigo-300">
+                <button onclick="document.getElementById('${id}').remove()" class="absolute -top-2 -right-2 w-8 h-8 bg-white dark:bg-slate-800 shadow-lg rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 transition-colors border border-slate-100 dark:border-slate-700">
+                    <i data-feather="x" class="w-4 h-4"></i>
+                </button>
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 md:col-span-6">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nama Parameter</label>
+                        <input type="text" placeholder="Misal: Push Up" value="${data.name}" class="var-name w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold p-3 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                    </div>
+                    <div class="col-span-6 md:col-span-3">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Target Goal</label>
+                        <input type="number" placeholder="100" value="${data.goal_value}" class="var-goal w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-black p-3 text-center text-rose-600 focus:ring-2 focus:ring-rose-500/20 transition-all">
+                    </div>
+                    <div class="col-span-6 md:col-span-3">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Satuan (Unit)</label>
+                        <input type="text" placeholder="Misal: kali" value="${data.unit || ''}" class="var-unit w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold p-3 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                    </div>
+                </div>
+            </div>
+        `;
+        list.insertAdjacentHTML('beforeend', row);
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+
+    function savePhysicalVariables() {
+        const rows = document.querySelectorAll('#config-variables-list > div');
+        const variables = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.var-name').value.trim();
+            const goal = row.querySelector('.var-goal').value;
+            const unit = row.querySelector('.var-unit').value;
+            if (name) {
+                variables.push({ name: name, goal_value: goal, unit: unit });
+            }
+        });
+
+        if (variables.length === 0) {
+            alert('Minimal harus ada satu variabel.');
+            return;
+        }
+
+        fetch('/api/physical/variables/store', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+            },
+            body: JSON.stringify({ variables: variables })
+        }).then(res => res.json()).then(res => {
+            if (res.success) {
+                showAlert(res.message, 'success');
+                closeConfigModal();
+                loadPhysicalVariables().then(vars => {
+                    if (!document.getElementById('physFormModal').classList.contains('hidden')) {
+                        renderDynamicFormFields(vars);
+                    }
+                    loadPhysicalData();
+                });
+            }
+        });
+    }
+
+    function calculateBleep() {
+        const lvlInput = document.getElementById('bleep_level');
+        const shtInput = document.getElementById('bleep_shuttle');
+        const vo2Field = document.getElementById('vo2max');
+
+        if (!lvlInput || !shtInput || !vo2Field) return;
+
+        const lvl = parseInt(lvlInput.value) || 0;
+        const sht = parseInt(shtInput.value) || 0;
+        
+        if (lvl > 0) {
+            const shuttleTable = { 1: 9, 2: 8, 3: 8, 4: 9, 5: 9, 6: 10, 7: 10, 8: 11, 9: 11, 10: 11, 11: 12, 12: 12, 13: 13 };
+            const tsl = shuttleTable[lvl] || 10;
+            
+            const vo2 = 3.46 * (lvl + (sht / tsl)) + 12.2;
+            vo2Field.value = vo2.toFixed(2);
+        } else {
+            vo2Field.value = '';
+        }
     }
 
     function openEditAttendanceModal(id, date, time, place, notes) {
@@ -794,5 +972,39 @@
             }
         })
         .catch(err => console.error(err));
+    }
+
+    function deleteMember(id, name) {
+        Swal.fire({
+            title: 'Hapus Atlet?',
+            text: `Apakah Anda yakin ingin menghapus ${name}? Semua data raport, fisik, dan jadwal terkait akan dihapus.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                fetch(`/coach/member/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        Swal.fire('Terhapus!', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Gagal!', data.message, 'error');
+                    }
+                });
+            }
+        });
     }
 </script>

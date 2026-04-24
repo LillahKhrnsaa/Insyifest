@@ -1,18 +1,27 @@
-<div class="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden md:overflow-visible card-hover">
+<div class="mb-6 bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
     {{-- Header Card --}}
-    <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+    <div class="px-6 py-5 border-b border-slate-50 bg-white">
         <div class="flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                <i data-feather="users" class="w-5 h-5 text-cyan-600"></i>
-                Daftar Atlet Binaan
-            </h3>
-            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ $coach->members->count() }} atlet</span>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <i data-feather="users" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-tight">Atlet Binaan</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $coach->members->count() }} Anggota Terdaftar</p>
+                </div>
+            </div>
+            <button @click="showMemberModal = true; memberModalMode = 'create'; memberForm = { name: '', email: '', password: '', phone: '', gender: '', training_package_id: '', status: 'AKTIF' }" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                <i data-feather="plus" class="w-4 h-4"></i>
+                <span>Tambah</span>
+            </button>
         </div>
     </div>
                 
     {{-- Body List --}}
-    <div class="overflow-x-auto md:overflow-visible">
-        <div class="min-w-[520px] divide-y divide-slate-100">
+    <div class="overflow-x-auto">
+        <div class="min-w-full divide-y divide-slate-50">
             @php
                 $sortedMembers = $coach->members->sortBy(function($member) {
                     return $member->user->name;
@@ -20,58 +29,58 @@
             @endphp
 
             @forelse($sortedMembers as $member)
-            <div class="px-5 py-4 hover:bg-slate-50 transition-colors relative min-h-[72px] flex items-center">
-                <div class="flex items-center justify-between">
-                    {{-- Sisi Kiri --}}
-                    <div class="flex items-center gap-4">
-                        <span class="text-slate-400 font-bold text-sm min-w-[20px]">{{ $loop->iteration }}.</span>
-                        <div class="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
-                            @if ($member->user->photo_url)
-                                <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover" alt="Atlet Photo">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <i data-feather="user" class="w-5 h-5 text-slate-400"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm truncate max-w-[200px]">{{ $member->user->name }}</h4>
-                            <p class="text-xs text-slate-500 truncate max-w-[200px]">{{ $member->user->email }}</p> 
-                        </div>
+            <div class="px-6 py-4 hover:bg-blue-50/30 transition-all group flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 shadow-sm group-hover:scale-110 transition-all duration-500">
+                        @if ($member->user->photo_url)
+                            <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover" alt="Atlet Photo">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center bg-slate-50 text-slate-300">
+                                <i data-feather="user" class="w-5 h-5"></i>
+                            </div>
+                        @endif
                     </div>
+                    <div>
+                        <h4 class="font-black text-slate-700 group-hover:text-blue-600 transition-colors text-sm">{{ $member->user->name }}</h4>
+                        <p class="text-xs font-medium text-slate-400 italic">{{ $member->user->email }}</p> 
+                    </div>
+                </div>
 
-                    {{-- Sisi Kanan --}}
-                    <div class="flex items-center gap-3">
-                        <span class="status-badge {{ $member->status == 'AKTIF' ? 'status-active' : 'status-inactive' }}">
-                            {{ $member->status }}
-                        </span>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm
+                        {{ $member->status == 'AKTIF' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200' }}">
+                        {{ $member->status }}
+                    </span>
+                    <div class="flex gap-1 ml-2">
                         <button onclick="openRaportModal({{ $member->id }}, '{{ $member->user->name }}')" 
-                                class="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                class="w-9 h-9 bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-100 rounded-xl transition-all flex items-center justify-center"
                                 title="Lihat Raport">
-                            <i data-feather="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <i data-feather="bar-chart-2" class="w-4 h-4"></i>
                         </button>
                         <button onclick="openPhysicalModal({{ $member->id }}, '{{ $member->user->name }}')" 
-                            class="p-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition-colors"
-                            title="Tes Fisik">
+                                class="w-9 h-9 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-100 rounded-xl transition-all flex items-center justify-center"
+                                title="Tes Fisik">
                             <i data-feather="activity" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
             </div>
             @empty
-            <div class="px-5 py-8 text-center text-slate-400">
-                <i data-feather="user-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-                <p>Tidak ada atlet terdaftar</p>
+            <div class="px-6 py-12 text-center">
+                <div class="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                    <i data-feather="users" class="w-8 h-8 text-slate-200"></i>
+                </div>
+                <p class="text-xs font-black text-slate-300 uppercase tracking-widest">Belum ada atlet</p>
             </div>
             @endforelse
         </div>
     </div>
     
     {{-- Footer Card --}}
-    <div class="px-5 py-3 border-t border-slate-100 bg-slate-50">
-        <button @click="showAllMembers = true" class="w-full text-sm font-bold text-cyan-600 hover:text-cyan-700 flex items-center justify-center gap-1 transition-colors">
-            <span>Lihat Semua Atlet</span>
-            <i data-feather="chevron-right" class="w-4 h-4"></i>
+    <div class="px-6 py-4 border-t border-slate-50 bg-white">
+        <button @click="showAllMembers = true" class="w-full py-3 rounded-2xl bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2">
+            <span>Seluruh Atlet</span>
+            <i data-feather="arrow-right" class="w-4 h-4"></i>
         </button>
     </div>
 </div>

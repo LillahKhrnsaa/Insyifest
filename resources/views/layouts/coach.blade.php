@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=nunito:400,500,600,700,800,900&display=swap" rel="stylesheet">
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         body { font-family: 'Nunito', sans-serif; }
         [x-cloak] { display: none !important; }
@@ -36,10 +39,13 @@
         .modal-overlay { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
     </style>
+    @livewireStyles
 </head>
 <body class="h-full text-slate-700 antialiased">
+    @include('components.demo-badge')
     @auth
         @include('coach.partials.navbar')
+        @include('components.loading-screen')
     @endauth
 
     @yield('content')
@@ -50,5 +56,6 @@
         });
     </script>
     @stack('scripts')
+    @livewireScripts
 </body>
 </html>
