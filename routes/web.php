@@ -27,8 +27,38 @@ Livewire::setUpdateRoute(function ($handle) {
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
-// Rute untuk menampilkan form registrasi member
+// ═══════════════════════════════════════════════════════════════
+// EXTERNAL FORM ROUTES (Public)
+// ═══════════════════════════════════════════════════════════════
+
+// Intelligent Route for /form/{slug} - Supports both RegistrationForm and FormEksternal
+Route::get('/form/{slug}', function($slug) {
+    if (\App\Models\RegistrationForm::where('slug', $slug)->exists()) {
+        return app(\App\Http\Controllers\FormExternalController::class)->show($slug);
+    }
+    if (\App\Models\FormEksternal::where('slug', $slug)->exists()) {
+        return app(\App\Http\Controllers\FormEksternalController::class)->show($slug);
+    }
+    abort(404);
+})->name('form.external.show');
+
+Route::post('/form/{slug}', function(\Illuminate\Http\Request $request, $slug) {
+    if (\App\Models\RegistrationForm::where('slug', $slug)->exists()) {
+        return app(\App\Http\Controllers\FormExternalController::class)->submit($request, $slug, app(\App\Services\Registration\RegistrationSubmissionService::class));
+    }
+    if (\App\Models\FormEksternal::where('slug', $slug)->exists()) {
+        return app(\App\Http\Controllers\FormEksternalController::class)->submit($request, $slug);
+    }
+    abort(404);
+})->name('form.external.submit');
+
+// Route for FormEksternal (Indonesian/Simple)
+Route::get('/f/{slug}', [FormEksternalController::class, 'show'])->name('form.eksternal.show');
+Route::post('/f/{slug}', [FormEksternalController::class, 'submit'])->name('form.submit');
+
+// Rute untuk menampilkan form registrasi member default
 Route::get('/register/member', [MemberRegistrationController::class, 'create'])
+
     ->middleware('guest')
     ->name('member.register.create');
 
@@ -63,6 +93,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::delete('/attendance/delete/{id}', [CoachDashboardController::class, 'destroyAttendance'])
         ->name('attendance.destroy');
+
+    // Member Management Routes for Coach
+    Route::post('/coach/member/store', [CoachDashboardController::class, 'storeMember'])
+        ->name('coach.member.store');
+    Route::put('/coach/member/update/{id}', [CoachDashboardController::class, 'updateMember'])
+        ->name('coach.member.update');
+    Route::delete('/coach/member/delete/{id}', [CoachDashboardController::class, 'deleteMember'])
+        ->name('coach.member.delete');
     
     // Coach Raport API Routes
     Route::get('/api/raport/chart-data', [CoachDashboardController::class, 'getChartData'])
@@ -92,6 +130,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('api.physical.update');
     Route::delete('/api/physical/delete/{id}', [CoachDashboardController::class, 'deletePhysicalTest'])
         ->name('api.physical.delete');
+    Route::get('/api/physical/variables', [CoachDashboardController::class, 'getPhysicalVariables'])
+        ->name('api.physical.variables');
+    Route::post('/api/physical/variables/store', [CoachDashboardController::class, 'storePhysicalVariables'])
+        ->name('api.physical.variables.store');
     
     // ═══════════════════════════════════════════════════════════════
     // MEMBER DASHBOARD ROUTES - TAMBAHKAN INI
@@ -114,3 +156,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/member/physical-data', [MemberDashboardController::class, 'getPhysicalData'])
         ->name('api.member.physical.data');
 });
+
+// Catch-all route for slugs at the root level
+Route::get('/{slug}', function($slug) {
+    // Try FormEksternal first
+    $form1 = \App\Models\FormEksternal::where('slug', $slug)->first();
+    if ($form1) {
+        return app(\App\Http\Controllers\FormEksternalController::class)->show($slug);
+    }
+    
+    // Try RegistrationForm next
+    $form2 = \App\Models\RegistrationForm::where('slug', $slug)->first();
+    if ($form2) {
+        return app(\App\Http\Controllers\FormExternalController::class)->show($slug);
+    }
+    
+    abort(404);
+})->name('form.slug.catchall');

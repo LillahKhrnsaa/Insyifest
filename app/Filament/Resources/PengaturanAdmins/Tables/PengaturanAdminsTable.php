@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\PengaturanAdmins\Tables;
 
-use App\Models\MemberSchedule;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -45,9 +44,9 @@ class PengaturanAdminsTable
                 TextColumn::make('usage_count')
                     ->label('Terisi')
                     ->state(function ($record) {
-                        return MemberSchedule::where('coach_id', $record->coach_id)
-                            ->where('training_schedule_id', $record->training_schedule_id)
-                            ->count();
+                        return \App\Models\Member::whereHas('coaches', function ($query) use ($record) {
+                            $query->where('coaches.id', $record->coach_id);
+                        })->count();
                     })
                     ->alignCenter()
                     ->color(fn ($state, $record) => $state >= $record->quota ? 'danger' : 'success'),

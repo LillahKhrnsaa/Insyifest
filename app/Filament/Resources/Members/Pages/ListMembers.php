@@ -55,6 +55,24 @@ class ListMembers extends ListRecords
                 ])
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Tutup'),
+            Action::make('tutup_periode')
+                ->label('Tutup Periode Bulan Ini')
+                ->icon('heroicon-o-archive-box')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Konfirmasi Penutupan Periode')
+                ->modalDescription('Apakah Anda yakin ingin menutup periode bulan ini? Semua member aktif akan diarsipkan sebagai data histori dan status mereka akan diubah menjadi tidak aktif.')
+                ->modalSubmitActionLabel('Ya, Tutup Periode')
+                ->action(function () {
+                    $count = app(\App\Actions\ArchiveMembersAction::class)->execute();
+                    
+                    \Filament\Notifications\Notification::make()
+                        ->title('Periode Berhasil Ditutup')
+                        ->body("$count member berhasil diarsipkan dan status telah di-reset.")
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => auth()->user()->can('close_period.members')),
             CreateAction::make(),
         ];
     }

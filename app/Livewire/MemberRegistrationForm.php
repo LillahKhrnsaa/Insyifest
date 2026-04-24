@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\Coach;
 use App\Models\CoachSchedule;
 use App\Models\Member;
-use App\Models\MemberSchedule;
 use App\Models\TrainingPackage;
 use App\Models\TrainingSchedule;
 use App\Models\User;
@@ -72,10 +71,10 @@ class MemberRegistrationForm extends Component
         foreach ($coachSchedules as $schedule) {
             $translatedDay = $this->translateDay($schedule->day);
             
-            // Calculate usage
-            $usage = MemberSchedule::where('coach_id', $coachId)
-                ->where('training_schedule_id', $schedule->id)
-                ->count();
+            // Calculate usage (all members assigned to this coach)
+            $usage = Member::whereHas('coaches', function ($query) use ($coachId) {
+                $query->where('coaches.id', $coachId);
+            })->count();
 
             $this->schedulesByDay[$translatedDay][] = [
                 'id' => $schedule->id,
@@ -112,7 +111,7 @@ class MemberRegistrationForm extends Component
             'tanggalLahir' => 'required|date',
             'paketLatihan' => 'required|exists:training_packages,id',
             'namaCoach' => 'required|exists:coaches,id',
-            'selectedSchedules' => 'required|array|min:1',
+            // 'selectedSchedules' => 'required|array|min:1', // No longer required as per-coach
         ]);
 
         try {
@@ -144,16 +143,8 @@ class MemberRegistrationForm extends Component
             // 3. Assign Coach (Pivot member_training_assignments)
             $member->coaches()->attach($this->namaCoach);
 
-            // 4. Assign Schedules (New Pivot member_schedules)
-            foreach ($this->selectedSchedules as $day => $scheduleId) {
-                if ($scheduleId) {
-                    MemberSchedule::create([
-                        'member_id' => $member->id,
-                        'coach_id' => $this->namaCoach,
-                        'training_schedule_id' => $scheduleId,
-                    ]);
-                }
-            }
+            // 4. Schedules are inherited from coach, no need to create MemberSchedule records
+
 
             // ✅ Kirim notifikasi ke Admin/Staff
             $admins = User::role(['admin', 'staff'])->get();

@@ -116,25 +116,26 @@ class MembersTable
                 TextColumn::make('training_summary')
                     ->label('Coach & Jadwal')
                     ->state(function ($record) {
-                        $schedules = \App\Models\MemberSchedule::where('member_id', $record->id)
-                            ->with(['coach.user', 'trainingSchedule'])
-                            ->get();
+                        $coaches = $record->coaches()->with('trainingSchedules')->get();
                         
-                        if ($schedules->isEmpty()) return 'Belum diatur';
+                        if ($coaches->isEmpty()) return 'Belum diatur';
 
-                        return $schedules->map(fn($s) => 
-                            "{$s->coach->user->name}: " . 
-                            match (strtoupper($s->trainingSchedule->day)) {
-                                'MONDAY', 'SENIN' => 'Senin',
-                                'TUESDAY', 'SELASA' => 'Selasa',
-                                'WEDNESDAY', 'RABU' => 'Rabu',
-                                'THURSDAY', 'KAMIS' => 'Kamis',
-                                'FRIDAY', 'JUMAT' => 'Jumat',
-                                'SATURDAY', 'SABTU' => 'Sabtu',
-                                'SUNDAY', 'MINGGU' => 'Minggu',
-                                default => $s->trainingSchedule->day,
-                            } . " " . \Carbon\Carbon::parse($s->trainingSchedule->time)->format('H:i')
-                        )->implode(', ');
+                        return $coaches->map(function($coach) {
+                            $scheduleInfo = $coach->trainingSchedules->map(fn($s) => 
+                                match (strtoupper($s->day)) {
+                                    'MONDAY', 'SENIN' => 'Senin',
+                                    'TUESDAY', 'SELASA' => 'Selasa',
+                                    'WEDNESDAY', 'RABU' => 'Rabu',
+                                    'THURSDAY', 'KAMIS' => 'Kamis',
+                                    'FRIDAY', 'JUMAT' => 'Jumat',
+                                    'SATURDAY', 'SABTU' => 'Sabtu',
+                                    'SUNDAY', 'MINGGU' => 'Minggu',
+                                    default => $s->day,
+                                } . " " . \Carbon\Carbon::parse($s->time)->format('H:i')
+                            )->implode(', ');
+
+                            return "{$coach->user->name}: " . ($scheduleInfo ?: 'Tanpa Jadwal');
+                        })->implode(' | ');
                     })
                     ->wrap()
                     ->color('info')
@@ -179,175 +180,203 @@ class MembersTable
             ])
 
             ->recordActions([
-                ActionGroup::make([
-                        Action::make('lihat_raport')
-                            ->label('Lihat Rapor')
-                            ->tooltip('Lihat Raport')
-                            ->icon('heroicon-o-chart-bar')
-                            ->color('info')
-                            ->modalHeading(fn ($record) => 'Raport Member: ' . ($record->user->name ?? 'N/A'))
-                            ->modalWidth('5xl')
-                            ->form(function ($record) {
-                                
-                                $memberId = $record->id; 
-                                $refreshHandler = fn ($livewire) => $livewire->dispatch('refresh-raport-chart');
-                                
-                                return [
-                                    Section::make('Filter Grafik')
-                                        ->description('Pilih gaya renang dan tahun untuk melihat grafik performa')
+                Action::make('lihat_coach')
+                    ->label('')
+                    ->tooltip('Lihat Coach')
+                    ->icon('heroicon-o-users')
+                    ->color('warning')
+                    ->button()
+                    ->modalHeading(fn ($record) => 'Coach untuk: ' . ($record->user->name ?? 'Atlet'))
+                    ->modalWidth('2xl')
+                    ->infolist(function ($record): array {
+                        $coaches = $record->coaches;
+                        
+                        if ($coaches->isEmpty()) {
+                            return [
+                                \Filament\Schemas\Components\Section::make()
+                                    ->schema([
+                                        \Filament\Infolists\Components\TextEntry::make('empty')
+                                            ->label('')
+                                            ->state('Belum ada coach yang ditugaskan untuk atlet ini.')
+                                            ->color('warning'),
+                                    ]),
+                            ];
+                        }
+
+                        return [
+                            \Filament\Schemas\Components\Section::make('Daftar Coach')
+                                ->schema([
+                                    \Filament\Infolists\Components\RepeatableEntry::make('coaches')
+                                        ->label('')
                                         ->schema([
-                                            Grid::make(2)->schema([
-                                                Select::make('gaya')
-                                                    ->label('Gaya Renang & Jarak')
-                                                    ->options([
-                                                        'gaya_bebas_50' => 'Gaya Bebas 50m',
-                                                        'gaya_bebas_100' => 'Gaya Bebas 100m',
-                                                        'gaya_bebas_200' => 'Gaya Bebas 200m',
-                                                        'gaya_bebas_400' => 'Gaya Bebas 400m',
-                                                        'gaya_bebas_800' => 'Gaya Bebas 800m',
-                                                        'gaya_bebas_1500' => 'Gaya Bebas 1500m',
-                                                        'gaya_dada_50' => 'Gaya Dada 50m',
-                                                        'gaya_dada_100' => 'Gaya Dada 100m',
-                                                        'gaya_dada_200' => 'Gaya Dada 200m',
-                                                        'gaya_punggung_50' => 'Gaya Punggung 50m',
-                                                        'gaya_punggung_100' => 'Gaya Punggung 100m',
-                                                        'gaya_punggung_200' => 'Gaya Punggung 200m',
-                                                        'gaya_kupu_50' => 'Gaya Kupu 50m',
-                                                        'gaya_kupu_100' => 'Gaya Kupu 100m',
-                                                        'gaya_kupu_200' => 'Gaya Kupu 200m',
-                                                        'gaya_ganti_200' => 'Gaya Ganti 200m',
-                                                        'gaya_ganti_400' => 'Gaya Ganti 400m',
-                                                    ])
-                                                    ->searchable()
-                                                    ->default('gaya_bebas_50')
-                                                    ->required()
-                                                    ->live()
-                                                    ->afterStateUpdated($refreshHandler),
-
-                                                TextInput::make('year')
-                                                    ->label('Tahun')
-                                                    ->numeric()
-                                                    ->default(now()->year)
-                                                    ->minValue(2000)
-                                                    ->maxLength(4)
-                                                    ->required()
-                                                    ->live()
-                                                    ->afterStateUpdated($refreshHandler),
-                                            ]),
-                                        ])->columnSpanFull(),
-                                    
-                                    Placeholder::make('raport_info')
-                                        ->label('Detail Data Raport Terpilih')
-                                        ->content(function ($get) use ($memberId) { 
-                                            $gaya = $get('gaya') ?? 'gaya_bebas_50';
-                                            $year = $get('year') ?? now()->year;
-
-                                            $raports = Raport::where('member_id', $memberId)
-                                                ->where('gaya', $gaya)
-                                                ->where('year', $year)
-                                                ->orderBy('month')
-                                                ->get();
-
-                                            if ($raports->isEmpty()) {
-                                                return 'Tidak ada data raport untuk gaya dan tahun yang dipilih.';
-                                            }
-
-                                            $output = '<div class="space-y-2">';
-                                            $output .= '<p class="text-sm font-semibold">Total Data: ' . $raports->count() . ' bulan</p>';
-                                            $output .= '<div class="grid grid-cols-3 gap-4">';
-                                            
-                                            foreach ($raports as $raport) {
-                                                $minutes = floor($raport->value / 60);
-                                                $seconds = $raport->value - ($minutes * 60);
-                                                $formattedTime = sprintf('%02d:%05.2f', $minutes, $seconds);
-                                                
-                                                $output .= '<div class="border rounded p-2">';
-                                                $output .= '<p class="font-bold text-primary-600">' . ucfirst($raport->month) . '</p>';
-                                                $output .= '<p class="text-sm">⏱️ Waktu: ' . $formattedTime . '</p>';
-                                                $output .= '<p class="text-sm">📊 Volume: ' . ($raport->volume ?? '-') . 'm</p>';
-                                                $output .= '</div>';
-                                            }
-                                            
-                                            $output .= '</div></div>';
-
-                                            return new HtmlString($output);
-                                        })
+                                            \Filament\Infolists\Components\ImageEntry::make('user.photo_path')
+                                                ->label('Foto')
+                                                ->circular(),
+                                            \Filament\Infolists\Components\TextEntry::make('user.name')
+                                                ->label('Nama Coach')
+                                                ->weight('bold'),
+                                            \Filament\Infolists\Components\TextEntry::make('user.phone')
+                                                ->label('No. Telepon')
+                                                ->icon('heroicon-o-phone')
+                                                ->copyable(),
+                                        ])
+                                        ->columns(3)
                                         ->columnSpanFull(),
-
-                                        Livewire::make(\App\Filament\Widgets\RaportTable::class, fn (SchemaComponent $component, Get $get) => [
-                                            'memberId' => $component->getRecord()?->id ?? 0,
-                                            'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
-                                            'year'     => $get('year') ?? now()->year,
-                                        ])
-                                        ->key(fn($r, $get) => 'table-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                        ->lazy()
-                                        ->dehydrated(false)
-                                        ->live(),
-                                        
+                                ]),
+                        ];
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),
+                Action::make('lihat_raport')
+                    ->label('')
+                    ->tooltip('Lihat Raport')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('info')
+                    ->button()
+                    ->modalHeading(fn ($record) => 'Raport Member: ' . ($record->user->name ?? 'N/A'))
+                    ->modalWidth('5xl')
+                    ->form(function ($record) {
+                        
+                        $memberId = $record->id; 
+                        $refreshHandler = fn ($livewire) => $livewire->dispatch('refresh-raport-chart');
+                        
+                        return [
+                            Section::make('Filter Grafik')
+                                ->description('Pilih gaya renang dan tahun untuk melihat grafik performa')
+                                ->schema([
                                     Grid::make(2)->schema([
+                                        Select::make('gaya')
+                                            ->label('Gaya Renang & Jarak')
+                                            ->options([
+                                                'gaya_bebas_50' => 'Gaya Bebas 50m',
+                                                'gaya_bebas_100' => 'Gaya Bebas 100m',
+                                                'gaya_bebas_200' => 'Gaya Bebas 200m',
+                                                'gaya_bebas_400' => 'Gaya Bebas 400m',
+                                                'gaya_bebas_800' => 'Gaya Bebas 800m',
+                                                'gaya_bebas_1500' => 'Gaya Bebas 1500m',
+                                                'gaya_dada_50' => 'Gaya Dada 50m',
+                                                'gaya_dada_100' => 'Gaya Dada 100m',
+                                                'gaya_dada_200' => 'Gaya Dada 200m',
+                                                'gaya_punggung_50' => 'Gaya Punggung 50m',
+                                                'gaya_punggung_100' => 'Gaya Punggung 100m',
+                                                'gaya_punggung_200' => 'Gaya Punggung 200m',
+                                                'gaya_kupu_50' => 'Gaya Kupu 50m',
+                                                'gaya_kupu_100' => 'Gaya Kupu 100m',
+                                                'gaya_kupu_200' => 'Gaya Kupu 200m',
+                                                'gaya_ganti_200' => 'Gaya Ganti 200m',
+                                                'gaya_ganti_400' => 'Gaya Ganti 400m',
+                                            ])
+                                            ->searchable()
+                                            ->default('gaya_bebas_50')
+                                            ->required()
+                                            ->live()
+                                            ->afterStateUpdated($refreshHandler),
 
-                                        Livewire::make(\App\Filament\Widgets\RaportChart::class, fn (SchemaComponent $component, Get $get) => [
-                                            'memberId' => $component->getRecord()?->id ?? 0,
-                                            'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
-                                            'year'     => $get('year') ?? now()->year,
-                                        ])
-                                        ->key(fn($r, $get) => 'chart-value-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                        ->lazy()
-                                        ->dehydrated(false)
-                                        ->live(),
+                                        TextInput::make('year')
+                                            ->label('Tahun')
+                                            ->numeric()
+                                            ->default(now()->year)
+                                            ->minValue(2000)
+                                            ->maxLength(4)
+                                            ->required()
+                                            ->live()
+                                            ->afterStateUpdated($refreshHandler),
+                                    ]),
+                                ])->columnSpanFull(),
+                            
+                            Placeholder::make('raport_info')
+                                ->label('Detail Data Raport Terpilih')
+                                ->content(function ($get) use ($memberId) { 
+                                    $gaya = $get('gaya') ?? 'gaya_bebas_50';
+                                    $year = $get('year') ?? now()->year;
 
-                                        Livewire::make(\App\Filament\Widgets\RaportVolumeChart::class, 
-                                            fn($component, $get) => [
-                                                'memberId' => $component->getRecord()?->id ?? 0,
-                                                'gaya' => $get('gaya'),
-                                                'year' => $get('year'),
-                                            ]
-                                        )
-                                        ->key(fn($r, $get) => 'chart-volume-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
-                                        ->lazy()
-                                        ->dehydrated(false)
-                                        ->live(),
-                                            
-                                    ])->columnSpanFull(), 
+                                    $raports = Raport::where('member_id', $memberId)
+                                        ->where('gaya', $gaya)
+                                        ->where('year', $year)
+                                        ->orderBy('month')
+                                        ->get();
 
-                                ];
-                            })
-                            ->before(function ($livewire) {
-                                $livewire->dispatch('refresh-raport-chart');
-                            })
-                            ->modalSubmitAction(false)
-                            ->modalCancelActionLabel('Tutup'),
+                                    if ($raports->isEmpty()) {
+                                        return 'Tidak ada data raport untuk gaya dan tahun yang dipilih.';
+                                    }
 
-                        ViewAction::make()
-                            ->label('Lihat Detail')
-                            ->tooltip('Lihat detail')
-                            ->icon('heroicon-o-eye')
-                            ->extraAttributes([
-                                'class' => 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg px-3 py-2']),
+                                    $output = '<div class="space-y-2">';
+                                    $output .= '<p class="text-sm font-semibold">Total Data: ' . $raports->count() . ' bulan</p>';
+                                    $output .= '<div class="grid grid-cols-3 gap-4">';
+                                    
+                                    foreach ($raports as $raport) {
+                                        $minutes = floor($raport->value / 60);
+                                        $seconds = $raport->value - ($minutes * 60);
+                                        $formattedTime = sprintf('%02d:%05.2f', $minutes, $seconds);
+                                        
+                                        $output .= '<div class="border rounded p-2">';
+                                        $output .= '<p class="font-bold text-primary-600">' . ucfirst($raport->month) . '</p>';
+                                        $output .= '<p class="text-sm">⏱️ Waktu: ' . $formattedTime . '</p>';
+                                        $output .= '<p class="text-sm">📊 Volume: ' . ($raport->volume ?? '-') . 'm</p>';
+                                        $output .= '</div>';
+                                    }
+                                    
+                                    $output .= '</div></div>';
 
-                        EditAction::make()
-                            ->label('Edit Member')
-                            ->tooltip('Edit Member')
-                            ->icon('heroicon-o-pencil-square')
-                            ->extraAttributes([
-                                'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2'
-                            ]),
+                                    return new HtmlString($output);
+                                })
+                                ->columnSpanFull(),
 
-                        DeleteAction::make()
-                            ->label('Hapus Member')
-                            ->tooltip('Hapus Member')
-                            ->icon('heroicon-o-trash')
-                            ->color('danger')
-                            ->requiresConfirmation()
-                            ->modalHeading('Hapus Member')
-                            ->modalDescription('Yakin ingin menghapus member ini? Data user terkait juga akan terhapus!')
-                            ->modalSubmitActionLabel('Ya, Hapus')
-                            ->extraAttributes([
-                                'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2'
-                            ])
-                            ->before(fn ($record) => $record->user?->delete()),
-                        ])
-                ])
+                                Livewire::make(\App\Filament\Widgets\RaportTable::class, fn (SchemaComponent $component, Get $get) => [
+                                    'memberId' => $component->getRecord()?->id ?? 0,
+                                    'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
+                                    'year'     => $get('year') ?? now()->year,
+                                ])
+                                ->key(fn($r, $get) => 'table-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
+                                
+                            Grid::make(2)->schema([
+
+                                Livewire::make(\App\Filament\Widgets\RaportChart::class, fn (SchemaComponent $component, Get $get) => [
+                                    'memberId' => $component->getRecord()?->id ?? 0,
+                                    'gaya'     => $get('gaya') ?? 'gaya_bebas_50',
+                                    'year'     => $get('year') ?? now()->year,
+                                ])
+                                ->key(fn($r, $get) => 'chart-value-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
+
+                                Livewire::make(\App\Filament\Widgets\RaportVolumeChart::class, 
+                                    fn($component, $get) => [
+                                        'memberId' => $component->getRecord()?->id ?? 0,
+                                        'gaya' => $get('gaya'),
+                                        'year' => $get('year'),
+                                    ]
+                                )
+                                ->key(fn($r, $get) => 'chart-volume-' . ($r?->id ?? '0') . '-' . $get('gaya') . '-' . $get('year'))
+                                ->lazy()
+                                ->dehydrated(false)
+                                ->live(),
+                                    
+                            ])->columnSpanFull(), 
+
+                        ];
+                    })
+                    ->before(function ($livewire) {
+                        $livewire->dispatch('refresh-raport-chart');
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),
+
+                ViewAction::make()->label('')->button()->tooltip('Lihat detail')->icon('heroicon-o-eye'),
+                EditAction::make()->label('')->button()->tooltip('Edit Member')->icon('heroicon-o-pencil-square'),
+                DeleteAction::make()->label('')->button()->tooltip('Hapus Member')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Member')
+                    ->modalDescription('Yakin ingin menghapus member ini? Data user terkait juga akan terhapus!')
+                    ->modalSubmitActionLabel('Ya, Hapus')
+                    ->before(fn ($record) => $record->user?->delete()),
+            ])
                 
             ->toolbarActions([
                 BulkActionGroup::make([

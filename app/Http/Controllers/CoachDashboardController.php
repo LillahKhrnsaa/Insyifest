@@ -7,7 +7,13 @@ use App\Models\Coach;
 use App\Models\Member;
 use App\Models\Attendance;
 use App\Models\PhysicalTest;
+use App\Models\PhysicalTestVariable;
 use App\Models\Raport;
+use App\Models\TrainingPackage;
+use App\Models\TrainingSchedule;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -67,6 +73,10 @@ class CoachDashboardController extends Controller
                             ->orderBy('date', 'desc') 
                             ->get();
 
+        // 7. Get Packages and Schedules for Member Creation
+        $packages = TrainingPackage::all();
+        $allSchedules = $coach->trainingSchedules;
+
         return view('coach.dashboard', compact(
             'coach', 
             'totalMembers', 
@@ -76,7 +86,9 @@ class CoachDashboardController extends Controller
             'activeRegularMembers', 
             'allOtherMembers',
             'attendances', 
-            'existingStyles' // <-- Array manual dikirim ke view
+            'existingStyles', // <-- Array manual dikirim ke view
+            'packages',
+            'allSchedules'
         ));
     }
 
@@ -404,6 +416,32 @@ class CoachDashboardController extends Controller
     }
 
     // --- KHUSUS FISIK ---
+    public function getPhysicalVariables()
+    {
+        return response()->json([
+            'success' => true,
+            'variables' => PhysicalTestVariable::all()
+        ]);
+    }
+
+    public function storePhysicalVariables(Request $request)
+    {
+        $request->validate([
+            'variables' => 'required|array',
+            'variables.*.name' => 'required|string',
+            'variables.*.goal_value' => 'required|numeric',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            PhysicalTestVariable::truncate();
+            foreach ($request->variables as $var) {
+                PhysicalTestVariable::create($var);
+            }
+        });
+
+        return response()->json(['success' => true, 'message' => 'Variabel fisik berhasil diperbarui!']);
+    }
+
     public function getPhysicalData(Request $request)
     {
         $year = $request->input('year');
@@ -420,27 +458,38 @@ class CoachDashboardController extends Controller
                 ELSE 13 END")
             ->get();
 
-        // Cari data spesifik untuk radar chart (jika month ada, ambil itu. Jika tidak, ambil yang terbaru di tahun itu)
+        // Cari data spesifik untuk radar chart
         if ($month) {
             $selected = (clone $query)->where('month', $month)->first();
         } else {
             $selected = $history->last();
         }
 
-        // Normalisasi Skor Radar 1-5
-        $radarData = $selected ? [
-            round(max(0, min(5, 5 - ($selected->sprint_20m / 2))), 2), // Speed
-            round(min(5, $selected->push_up / 10), 2),              // Strength
-            round(min(5, $selected->vo2max / 10), 2),               // Endurance
-            round(min(5, $selected->v_sit_reach / 6), 2),           // Flexibility
-            round(max(0, min(5, 10 - $selected->shuttle_run)), 2),  // Agility
-        ] : [0,0,0,0,0];
+        $variables = PhysicalTestVariable::all();
+        $radarLabels = $variables->pluck('name')->toArray();
+        $radarData = [];
+
+        if ($selected && $variables->count() > 0) {
+            $results = $selected->results ?? [];
+            foreach ($variables as $var) {
+                $val = $results[$var->name] ?? 0;
+                // Skala 1-5 berdasarkan goal_value
+                $score = ($var->goal_value > 0) ? round(($val / $var->goal_value) * 5, 2) : 0;
+                $radarData[] = min(5, max(0, $score));
+            }
+        } else {
+            // Fallback ke data lama jika belum ada dynamic variables (opsional)
+            // Tapi user minta dynamic, jadi kalau ga ada ya kosongin aja
+            $radarData = array_fill(0, count($radarLabels) ?: 5, 0);
+        }
 
         return response()->json([
             'success' => true,
             'history' => $history,
             'radarData' => $radarData,
-            'selectedMonth' => $selected ? $selected->month : null
+            'radarLabels' => $radarLabels,
+            'selectedMonth' => $selected ? $selected->month : null,
+            'variables' => $variables
         ]);
     }
 
@@ -451,8 +500,23 @@ class CoachDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Hanya pelatih yang dapat menyimpan data fisik.'], 403);
         }
 
-        $data = $request->all();
+        $data = $request->only(['member_id', 'year', 'month', 'note']);
         $data['coach_id'] = $coach->id;
+        $data['results'] = $request->input('results', []);
+
+        // Calculate VO2 Max if level and shuttle are provided in results
+        if (isset($data['results']['Bleep Level']) && isset($data['results']['Bleep Shuttle'])) {
+             $level = $data['results']['Bleep Level'];
+             $shuttle = $data['results']['Bleep Shuttle'];
+             $shuttleTable = [
+                1=>9, 2=>8, 3=>8, 4=>9, 5=>9, 6=>10, 7=>10, 
+                8=>11, 9=>11, 10=>11, 11=>12, 12=>12, 13=>13
+            ];
+            $tsl = $shuttleTable[$level] ?? 10;
+            $vo2max = round(3.46 * ($level + ($shuttle / $tsl)) + 12.2, 2);
+            $data['results']['VO2 Max'] = $vo2max;
+            $data['vo2max'] = $vo2max;
+        }
         
         $phys = PhysicalTest::updateOrCreate(
             ['member_id' => $request->member_id, 'year' => $request->year, 'month' => $request->month],
@@ -541,6 +605,154 @@ class CoachDashboardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal hapus: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * MEMBER MANAGEMENT (CRUD)
+     * ═══════════════════════════════════════════════════════════════
+     */
+
+    public function storeMember(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'phone' => 'required|string|unique:users,phone',
+            'gender' => 'required|in:MALE,FEMALE',
+            'training_package_id' => 'required|exists:training_packages,id',
+
+            'status' => 'required|in:AKTIF,TIDAK_AKTIF',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $coach = Auth::user()->coach;
+
+                // 1. Create User
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'phone' => $request->phone,
+                    'gender' => $request->gender,
+                ]);
+
+                // 2. Assign Role (assuming role name is 'Member')
+                $memberRole = \App\Models\Role::where('name', 'member')->first();
+                if ($memberRole) {
+                    $user->roles()->attach($memberRole);
+                }
+
+                // 3. Create Member Profile
+                $member = Member::create([
+                    'user_id' => $user->id,
+                    'training_package_id' => $request->training_package_id,
+                    'status' => $request->status,
+                    'start_date' => now(),
+                ]);
+
+                // 4. Assign to Coach
+                $member->coaches()->attach($coach->id);
+
+
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Member berhasil ditambahkan dan ditugaskan ke Anda.',
+                    'member' => $member->load('user')
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menambahkan member: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function updateMember(Request $request, $id)
+    {
+        $member = Member::findOrFail($id);
+        $user = $member->user;
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+            'phone' => 'required|string|unique:users,phone,' . $user->id,
+            'gender' => 'required|in:MALE,FEMALE',
+            'training_package_id' => 'required|exists:training_packages,id',
+
+            'status' => 'required|in:AKTIF,TIDAK_AKTIF',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $member, $user) {
+                $coach = Auth::user()->coach;
+
+                // 1. Update User
+                $userData = [
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'gender' => $request->gender,
+                ];
+                if ($request->filled('password')) {
+                    $userData['password'] = Hash::make($request->password);
+                }
+                $user->update($userData);
+
+                // 2. Update Member Profile
+                $member->update([
+                    'training_package_id' => $request->training_package_id,
+                    'status' => $request->status,
+                ]);
+
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Member berhasil diperbarui.',
+                'member' => $member->load('user')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui member: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteMember($id)
+    {
+        try {
+            $member = Member::findOrFail($id);
+            $user = $member->user;
+
+            DB::transaction(function () use ($member, $user) {
+
+                // Remove coach assignments
+                $member->coaches()->detach();
+                // Delete member profile
+                $member->delete();
+                // Delete user (optional, depending on business rule)
+                if ($user) {
+                    $user->delete();
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Member berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus member: ' . $e->getMessage()], 500);
         }
     }
 }

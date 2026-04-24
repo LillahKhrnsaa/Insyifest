@@ -159,9 +159,88 @@ class CoachesTable
                             'class' => 'border border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg px-3 py-2',
                         ]),
 
+                    Action::make('viewMembers')
+                        ->label('View Member')
+                        ->icon('heroicon-o-users')
+                        ->color('info')
+                        ->modalHeading(fn ($record) => 'Member yang Di-assign')
+                        ->modalDescription(fn ($record) => 'Coach: ' . ($record->name ?? '-'))
+                        ->infolist(function ($record): array {
+                            if ($record->members->isEmpty()) {
+                                return [
+                                    Section::make()
+                                        ->schema([
+                                            TextEntry::make('empty')
+                                                ->label('')
+                                                ->state('Belum ada member yang di-assign ke coach ini.')
+                                                ->color('warning'),
+                                        ]),
+                                ];
+                            }
+    
+                            return [
+                                Section::make('Daftar Member')
+                                    ->schema([
+                                        RepeatableEntry::make('members')
+                                            ->label('')
+                                            ->schema([
+                                                TextEntry::make('user.name')
+                                                    ->label('Nama Member')
+                                                    ->weight('bold')
+                                                    ->icon('heroicon-o-user')
+                                                    ->default('-'),
+                                                TextEntry::make('user.email')
+                                                    ->label('Email')
+                                                    ->icon('heroicon-o-envelope')
+                                                    ->copyable()
+                                                    ->default('-'),
+                                                TextEntry::make('created_at')
+                                                    ->label('Bergabung Sejak')
+                                                    ->icon('heroicon-o-calendar')
+                                                    ->dateTime('d M Y')
+                                                    ->default('-'),
+                                            ])
+                                            ->columns(3)
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsible()
+                                    ->collapsed(false),
+                            ];
+                        })
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Tutup')
+                        ->slideOver()
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner','coach'])),
 
-
-
+                    Action::make('assignMember')
+                        ->label('Atlet Binaan')
+                        ->icon('heroicon-o-users')
+                        ->form([
+                            Select::make('members')
+                                ->label('Member')
+                                ->placeholder('Pilih member yang akan dihandle')
+                                ->options(Member::query()
+                                    ->with('user')
+                                    ->get()
+                                    ->mapWithKeys(function ($member) {
+                                        $label = $member->user?->name ?? "Member #{$member->id}";
+                                        
+                                        if ($member->user?->email) {
+                                            $label .= " ({$member->user->email})";
+                                        }
+                                    
+                                        return [$member->id => $label];
+                                    })
+                                )
+                                ->multiple()
+                                ->preload()
+                                ->searchable()
+                                ->default(fn (Coach $record) => $record->members->pluck('id')->toArray()),
+                        ])
+                        ->action(function (Coach $record, array $data): void {
+                            $record->members()->sync($data['members']);
+                        })
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
 
                     ViewAction::make()
                         ->label('Lihat Detail')
@@ -198,7 +277,35 @@ class CoachesTable
                             $record->user?->delete();
                         }),
                         
-
+                    Action::make('assignSchedule')
+                        ->label('Tambahkan Jadwal')
+                        ->icon('heroicon-o-calendar-days')
+                        ->form([
+                            Select::make('schedules')
+                                ->label('Jadwal Latihan')
+                                ->placeholder('Pilih jadwal yang diajar')
+                                ->options(TrainingSchedule::pluck('day', 'id')->map(function ($day, $id) {
+                                    $translatedDay = match ($day) {
+                                        'MONDAY' => 'Senin',
+                                        'TUESDAY' => 'Selasa',
+                                        'WEDNESDAY' => 'Rabu',
+                                        'THURSDAY' => 'Kamis',
+                                        'FRIDAY' => 'Jumat',
+                                        'SATURDAY' => 'Sabtu',
+                                        'SUNDAY' => 'Minggu',
+                                        default => $day,
+                                    };
+                                    $schedule = TrainingSchedule::find($id);
+                                    return "{$translatedDay} - {$schedule->time} ({$schedule->place})";
+                                }))
+                                ->multiple()
+                                ->preload()
+                                ->default(fn (Coach $record) => $record->schedules->pluck('id')->toArray()),
+                        ])
+                        ->action(function (Coach $record, array $data): void {
+                            $record->schedules()->sync($data['schedules']);
+                        })
+                        ->visible(fn () => Auth::user()?->hasAnyRole(['staff', 'admin', 'owner'])),
                 ])
                 ->icon('heroicon-o-bars-4')
                 ->label('')

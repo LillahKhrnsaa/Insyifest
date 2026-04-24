@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\Raport;
 use App\Models\Coach;
 use App\Models\PhysicalTest;
+use App\Models\PhysicalTestVariable;
 use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -204,18 +205,27 @@ class MemberDashboardController extends Controller
             $selected = $history->last();
         }
 
-        $radarData = $selected ? [
-            round(max(0, min(5, 5 - ($selected->sprint_20m / 2))), 2),
-            round(min(5, $selected->push_up / 10), 2),
-            round(min(5, $selected->vo2max / 10), 2),
-            round(min(5, $selected->v_sit_reach / 6), 2),
-            round(max(0, min(5, 10 - $selected->shuttle_run)), 2),
-        ] : [0,0,0,0,0];
+        // Normalisasi dynamic
+        $variables = PhysicalTestVariable::all();
+        $radarLabels = $variables->pluck('name')->toArray();
+        $radarData = [];
+
+        if ($selected && $variables->count() > 0) {
+            $results = $selected->results ?? [];
+            foreach ($variables as $var) {
+                $val = $results[$var->name] ?? 0;
+                $score = ($var->goal_value > 0) ? round(($val / $var->goal_value) * 5, 2) : 0;
+                $radarData[] = min(5, max(0, $score));
+            }
+        } else {
+            $radarData = array_fill(0, count($radarLabels) ?: 5, 0);
+        }
 
         return response()->json([
             'success' => true,
             'history' => $history,
             'radarData' => $radarData,
+            'radarLabels' => $radarLabels,
             'selectedMonth' => $selected ? $selected->month : null
         ]);
     }
