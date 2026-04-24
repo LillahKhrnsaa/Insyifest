@@ -73,6 +73,7 @@
             animation: pulse-slower 8s ease-in-out infinite;
         }
     </style>
+    @livewireStyles
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased"
     x-data
@@ -86,6 +87,8 @@
         }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
     }">
+    
+    @include('components.demo-badge')
     
 <header x-data="{ open: false }" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,7 +135,10 @@
     </nav>
 </header>
 
-    <main>@yield('content')</main>
+    <main>
+        @include('components.loading-screen')
+        @yield('content')
+    </main>
 
     <footer id="footer" class="bg-gradient-to-br from-blue-600 to-cyan-700 text-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -166,5 +172,6 @@
         }, 700);
     });
 </script>
+@livewireScripts
 </body>
 </html>
