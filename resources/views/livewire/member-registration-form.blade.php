@@ -223,6 +223,47 @@
                             @error('jenisKelamin') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
+                        {{-- Password --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                Password <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </span>
+                                <input type="password" wire:model="password" required
+                                    placeholder="Minimal 6 karakter"
+                                    class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                                    style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'; this.style.background='#fff'"
+                                    onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'; this.style.background='#f8fafc'">
+                            </div>
+                            @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Konfirmasi Password --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                Konfirmasi Password <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </span>
+                                <input type="password" wire:model="password_confirmation" required
+                                    placeholder="Ulangi password"
+                                    class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                                    style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'; this.style.background='#fff'"
+                                    onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'; this.style.background='#f8fafc'">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -439,4 +480,72 @@
         </p>
 
     </div>
+
+    {{-- Success Modal --}}
+    @if($isSuccessModalOpen)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);">
+        <div class="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl animate-[slideDown_0.3s_ease-out]">
+            {{-- Modal Header --}}
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-6 text-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background: repeating-linear-gradient(45deg, transparent, transparent 15px, rgba(255,255,255,1) 15px, rgba(255,255,255,1) 30px);"></div>
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg relative z-10">
+                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white relative z-10">Pendaftaran Berhasil!</h2>
+                <p class="text-emerald-100 mt-1 relative z-10 text-sm">Selamat datang di Cikampek Swimming Club</p>
+            </div>
+
+            {{-- Modal Body --}}
+            <div class="px-8 py-6">
+                <p class="text-sm text-slate-600 text-center mb-6">Berikut adalah informasi akun Anda. Harap simpan informasi ini baik-baik untuk keperluan login.</p>
+                
+                <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 mb-6 space-y-3">
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Nama Lengkap</span>
+                        <span class="text-sm font-bold text-slate-800">{{ $registeredData['namaLengkap'] ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">No. Telepon</span>
+                        <span class="text-sm font-bold text-slate-800">{{ $registeredData['noTelepon'] ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Paket Latihan</span>
+                        <span class="text-sm font-bold text-slate-800">{{ $registeredData['paketLatihan'] ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Coach</span>
+                        <span class="text-sm font-bold text-slate-800">{{ $registeredData['namaCoach'] ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Email Login</span>
+                        <span class="text-sm font-bold text-blue-600">{{ $registeredData['email'] ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Password</span>
+                        <span class="text-sm font-bold text-blue-600">{{ $registeredData['password'] ?? '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button wire:click="downloadPdf" type="button" class="flex-1 flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-3 px-4 rounded-xl transition-colors border border-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Cetak PDF
+                    </button>
+                    <button wire:click="redirectToLogin" type="button" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-blue-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        Lanjut Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    @endif
 </div>
