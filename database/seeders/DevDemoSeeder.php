@@ -81,7 +81,7 @@ class DevDemoSeeder extends Seeder
             $userCoach = User::create([
                 'name' => "Coach Demo $i",
                 'email' => "coach$i@demo.com",
-                'phone' => "08222222220",
+                'phone' => "08222222220$i",
                 'gender' => ($i % 2 == 0) ? 'FEMALE' : 'MALE',
                 'password' => Hash::make('1234567890'),
             ]);
