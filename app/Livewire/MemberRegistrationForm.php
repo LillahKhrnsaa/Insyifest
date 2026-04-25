@@ -24,7 +24,13 @@ class MemberRegistrationForm extends Component
     public $tanggalLahir;
     public $paketLatihan;
     public $namaCoach;
+    public $password;
+    public $password_confirmation;
     public $selectedSchedules = [];
+
+    // Success Modal Data
+    public $isSuccessModalOpen = false;
+    public $registeredData = [];
 
     // Data for view
     public $coachesData = [];
@@ -105,12 +111,13 @@ class MemberRegistrationForm extends Component
     {
         $this->validate([
             'namaLengkap' => 'required|string|max:255',
-            'noTelepon' => 'required|string|max:20',
+            'noTelepon' => 'required|string|max:20|unique:users,phone',
             'pekerjaanAyah' => 'required|string|max:255',
             'jenisKelamin' => 'required|in:Laki-laki,Perempuan',
             'tanggalLahir' => 'required|date',
             'paketLatihan' => 'required|exists:training_packages,id',
             'namaCoach' => 'required|exists:coaches,id',
+            'password' => 'required|string|min:6|confirmed',
             // 'selectedSchedules' => 'required|array|min:1', // No longer required as per-coach
         ]);
 
@@ -126,7 +133,7 @@ class MemberRegistrationForm extends Component
                 'father_job' => $this->pekerjaanAyah,
                 'gender' => strtoupper($this->jenisKelamin == 'Laki-laki' ? 'MALE' : 'FEMALE'),
                 'birth_date' => $this->tanggalLahir,
-                'password' => Hash::make('password'),
+                'password' => Hash::make($this->password),
                 'active' => true,
             ]);
             $user->assignRole('member');
@@ -155,7 +162,8 @@ class MemberRegistrationForm extends Component
                     ->icon('heroicon-o-user-plus')
                     ->iconColor('success')
                     ->actions([
-                        \Filament\Notifications\Actions\Action::make('view')
+                        \Filament\Actions\Action::make('view')
+                            ->button()
                             ->label('Lihat Member')
                             ->url(\App\Filament\Resources\Members\MemberResource::getUrl('index')),
                     ])
@@ -164,13 +172,43 @@ class MemberRegistrationForm extends Component
 
             DB::commit();
 
-            session()->flash('message', 'Pendaftaran berhasil! Akun Anda telah dibuat secara otomatis.');
-            return redirect()->route('member.register.create'); // Or a success page
+            // Set data for modal
+            $this->registeredData = [
+                'namaLengkap' => $this->namaLengkap,
+                'email' => $email,
+                'noTelepon' => $this->noTelepon,
+                'password' => $this->password, // Show plain password once for the user to print
+                'jenisKelamin' => $this->jenisKelamin,
+                'tanggalLahir' => $this->tanggalLahir,
+                'paketLatihan' => TrainingPackage::find($this->paketLatihan)?->name,
+                'namaCoach' => Coach::find($this->namaCoach)?->user->name,
+                'waktuDaftar' => now()->format('d M Y H:i'),
+            ];
+
+            $this->isSuccessModalOpen = true;
 
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    public function downloadPdf()
+    {
+        if (empty($this->registeredData)) {
+            return;
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.registration-success', ['data' => $this->registeredData]);
+        
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'Bukti-Pendaftaran-' . Str::slug($this->registeredData['namaLengkap']) . '.pdf');
+    }
+
+    public function redirectToLogin()
+    {
+        return redirect()->route('login');
     }
 
     public function render()
