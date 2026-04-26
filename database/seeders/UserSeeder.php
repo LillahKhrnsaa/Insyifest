@@ -12,6 +12,7 @@ class UserSeeder extends Seeder
     {
         $users = [
             ['name' => 'Luthfi', 'email' => 'owner@cikampekswimming.gmail.com', 'phone' => '0811111111', 'gender' => 'MALE', 'role' => 'owner'],
+            ['name' => 'Admin', 'email' => 'admin@cikampekswimming.gmail.com', 'phone' => '085885060925', 'gender' => 'MALE', 'role' => 'staff'],
             ['name' => 'IT Team', 'email' => 'it@cikampekswimming.gmail.com', 'phone' => '0855555555', 'gender' => 'MALE', 'role' => 'staff'],
         ];
 

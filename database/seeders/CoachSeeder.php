@@ -133,19 +133,6 @@ class CoachSeeder extends Seeder
             ]);
         }
         
-        // --- FUNGSI TAMBAHAN SESUAI PERMINTAAN ---
-        // Assign user dengan ID=3 (yang sudah ada dari UserSeeder)
-        // untuk dibuatkan profil coach-nya juga.
-        
-        $existingUser = User::find(3);
-
-        if ($existingUser) {
-            // Menggunakan firstOrCreate untuk membuat profil jika belum ada,
-            // dan mencegah duplikasi jika seeder dijalankan lagi.
-            Coach::firstOrCreate(
-                ['user_id' => $existingUser->id],
-                ['bio' => 'Pelatih utama yang datanya sudah ada di tabel user.']
-            );
-        }
+        // --- FUNGSI TAMBAHAN DIHAPUS KARENA MENYEBABKAN IT TEAM JADI COACH ---
     }
 }
