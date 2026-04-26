@@ -130,28 +130,49 @@
             this.showMemberModal = true;
         }
     }"
-    class="min-h-screen bg-slate-50"
+    class="min-h-screen relative overflow-hidden" style="background: linear-gradient(135deg, #dbeafe 0%, #fae8ff 100%);"
 >
+    {{-- Floating Orbs --}}
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-60" style="background: radial-gradient(circle, #93c5fd, transparent); filter: blur(80px);"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-60" style="background: radial-gradient(circle, #fbcfe8, transparent); filter: blur(80px);"></div>
+        <div class="absolute top-[40%] left-[60%] w-[400px] h-[400px] rounded-full opacity-50" style="background: radial-gradient(circle, #c4b5fd, transparent); filter: blur(80px);"></div>
+    </div>
 
-    <main class="px-6 lg:px-10 py-8 space-y-8">
+    <div class="relative z-10">
+        <main class="px-6 lg:px-10 py-8 space-y-8 max-w-7xl mx-auto">
 
-        {{-- HEADER --}}
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl lg:text-3xl font-bold text-slate-800">
-                        Dashboard Pelatih
-                    </h1>
-                    <p class="mt-1 text-slate-600">
-                        Selamat datang, Coach {{ explode(' ', Auth::user()->name)[0] }}.
-                        Kelola atlet, jadwal, dan kehadiran dengan mudah.
-                    </p>
+            {{-- HEADER --}}
+            <section class="rounded-[2.5rem] shadow-xl p-8 sm:p-10 relative overflow-hidden"
+                style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border: 1px solid rgba(255,255,255,0.1);">
+                {{-- Pattern overlay --}}
+                <div class="absolute inset-0 opacity-10"
+                    style="background: repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(255,255,255,0.05) 25px, rgba(255,255,255,0.05) 50px);"></div>
+                {{-- Glow --}}
+                <div class="absolute -right-20 -top-20 w-64 h-64 rounded-full opacity-30"
+                    style="background: radial-gradient(circle, #3b82f6, transparent);"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div class="flex items-center gap-5">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] overflow-hidden bg-white/10 border-[3px] border-white/20 shadow-2xl flex-shrink-0 flex items-center justify-center backdrop-blur-md text-white/80">
+                            <i data-feather="user" class="w-8 h-8 sm:w-10 sm:h-10"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight drop-shadow-md">
+                                Dashboard Pelatih
+                            </h1>
+                            <p class="mt-2 text-blue-200 font-medium">
+                                Selamat datang, <span class="font-bold text-white">Coach {{ explode(' ', Auth::user()->name)[0] }}</span>.
+                                Kelola atlet, jadwal, dan kehadiran dengan mudah.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 text-sm font-bold text-white px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner text-center">
+                        <span class="block text-[10px] uppercase tracking-widest text-blue-300 mb-1">Tanggal Hari Ini</span>
+                        {{ now()->isoFormat('dddd, D MMMM YYYY') }}
+                    </div>
                 </div>
-                <div class="text-sm text-slate-500">
-                    {{ now()->isoFormat('dddd, D MMMM YYYY') }}
-                </div>
-            </div>
-        </section>
+            </section>
 
         {{-- ALERT --}}
         @include('coach.partials.alerts')
@@ -162,22 +183,27 @@
         </section>
 
         {{-- OPERASIONAL --}}
-        <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <section class="flex flex-col gap-6">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {{-- ATLET --}}
+                <div class="xl:col-span-2">
+                    @include('coach.partials.members-card')
+                </div>
 
-            {{-- ATLET --}}
-            <div class="xl:col-span-2">
-                @include('coach.partials.members-card')
+                {{-- JADWAL --}}
+                <div class="xl:col-span-1">
+                    @include('coach.partials.schedules-card')
+                </div>
             </div>
 
-            {{-- JADWAL & RIWAYAT --}}
-            <div class="space-y-6">
-                @include('coach.partials.schedules-card')
+            {{-- RIWAYAT ABSENSI --}}
+            <div>
                 @include('coach.partials.history-card')
             </div>
-
         </section>
 
     </main>
+    </div>
 
     {{-- MODALS --}}
     @include('coach.partials.modals.attendance-form')
