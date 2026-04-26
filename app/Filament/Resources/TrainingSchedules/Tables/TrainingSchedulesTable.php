@@ -23,6 +23,10 @@ class TrainingSchedulesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 // 1. HARI LATIHAN (Badge dengan Terjemahan)
                 TextColumn::make('day')
                     ->badge()
@@ -107,11 +111,11 @@ class TrainingSchedulesTable
                                     RepeatableEntry::make('coaches')
                                         ->label('')
                                         ->schema([
-                                            TextEntry::make('name')
+                                            TextEntry::make('user.name')
                                                 ->label('Nama Coach')
                                                 ->weight('bold')
                                                 ->icon('heroicon-o-user'),
-                                            TextEntry::make('email')
+                                            TextEntry::make('user.email')
                                                 ->label('Email')
                                                 ->icon('heroicon-o-envelope')
                                                 ->copyable(),

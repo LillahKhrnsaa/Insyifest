@@ -73,7 +73,7 @@ class ListMembers extends ListRecords
                         ->send();
                 })
                 ->visible(fn () => auth()->user()->can('close_period.members')),
-            CreateAction::make(),
+            CreateAction::make()->label('Buat ' . static::getResource()::getNavigationLabel()),
         ];
     }
 }

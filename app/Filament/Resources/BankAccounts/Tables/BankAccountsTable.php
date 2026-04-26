@@ -19,6 +19,10 @@ class BankAccountsTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('bank_name')
                     ->label('Bank')
                     ->icon('heroicon-o-building-library')

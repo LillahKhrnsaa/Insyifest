@@ -25,6 +25,10 @@ class FormEksternalsTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('title')
                     ->label('Judul Form')
                     ->icon('heroicon-o-clipboard-document-list')

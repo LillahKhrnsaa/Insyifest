@@ -17,6 +17,10 @@ class MemberArchivesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 \Filament\Tables\Columns\TextColumn::make('archive_period')
                     ->label('Periode')
                     ->sortable()

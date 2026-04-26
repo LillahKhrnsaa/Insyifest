@@ -13,7 +13,7 @@ class ManagePengaturanAdmins extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()->label('Buat ' . static::getResource()::getNavigationLabel()),
         ];
     }
 }

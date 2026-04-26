@@ -23,6 +23,10 @@ class RolesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('name')
                 ->label('Role')
                 ->searchable()

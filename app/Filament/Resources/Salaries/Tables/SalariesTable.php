@@ -21,6 +21,10 @@ class SalariesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('coach.user.name')
                     ->label('Pelatih')
                     ->searchable()

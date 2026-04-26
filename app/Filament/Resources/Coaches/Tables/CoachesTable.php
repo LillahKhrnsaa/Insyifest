@@ -36,7 +36,7 @@ class CoachesTable
         return $table
             ->columns([
                 TextColumn::make('no')
-                    ->label('No')
+                    ->label('No.')
                     ->state(function ($rowLoop, $livewire) {
                         return
                             ($livewire->getTablePage() - 1)

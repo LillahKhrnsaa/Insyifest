@@ -37,8 +37,8 @@ class MembersTable
     {
         return $table
             ->columns([
-                TextColumn::make('no')
-                    ->label('No')
+                TextColumn::make('no.')
+                    ->label('No.')
                     ->state(function ($rowLoop, $livewire) {
                         return
                             ($livewire->getTablePage() - 1)

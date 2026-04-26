@@ -56,7 +56,7 @@ class ListCoaches extends ListRecords
                 ])
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Tutup'),
-            CreateAction::make(),
+            CreateAction::make()->label('Buat ' . static::getResource()::getNavigationLabel()),
         ];
     }
 }

@@ -17,6 +17,10 @@ class TrainingPackagesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 // Kolom Nama dengan Ikon dan Deskripsi
                 TextColumn::make('name')
                     ->label('Nama Paket')

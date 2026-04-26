@@ -16,6 +16,10 @@ class PengaturanAdminsTable
     {
         return $table
             ->columns([
+                TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('coach.user.name')
                     ->label('Nama Coach')
                     ->searchable()
@@ -75,6 +79,13 @@ class PengaturanAdminsTable
                     ->color(fn ($state, $record) => $state >= $record->quota ? 'danger' : 'success'),
             ])
             ->defaultSort('coach_id')
+            ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('coach_id')
+                    ->label('Nama Pelatih')
+                    ->options(fn () => \App\Models\Coach::with('user')->get()->pluck('user.name', 'id'))
+                    ->searchable()
+                    ->preload(),
+            ])
             ->recordActions([
                 EditAction::make()
                     ->label('')

@@ -19,6 +19,10 @@ class PaymentHistoriesTable
     {
         return $table
             ->columns([
+                \Filament\Tables\Columns\TextColumn::make('row_number')
+                    ->label('No.')
+                    ->rowIndex(),
+
                 TextColumn::make('member.user.name')
                     ->label('Nama Member')
                     ->searchable(isIndividual: true)

@@ -29,7 +29,7 @@ class PengaturanAdminResource extends Resource
 
     public static function getPluralLabel(): string
     {
-        return 'Pengaturan';
+        return 'Pengaturan Jadwal & Kuota';
     }
 
     public static function getNavigationGroup(): ?string
