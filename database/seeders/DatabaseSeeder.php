@@ -22,8 +22,6 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             BankAccountSeeder::class,
             TrainingPackageSeeder::class,
-            CoachSeeder::class,
-            TrainingScheduleSeeder::class,
         ]);
     }
 }
