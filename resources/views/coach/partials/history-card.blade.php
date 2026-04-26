@@ -1,20 +1,21 @@
-<div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
+<div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-fit">
     {{-- Header Card --}}
-    <div class="px-6 py-5 border-b border-slate-50 bg-white shrink-0">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="px-6 py-5 border-b border-rose-100 relative overflow-hidden shrink-0" style="background: linear-gradient(to right, #fff1f2, #ffffff);">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-rose-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <i data-feather="clock" class="w-5 h-5 text-blue-600"></i>
+                <div class="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center shadow-inner">
+                    <i data-feather="clock" class="w-6 h-6 text-white"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-tight">Riwayat Absensi</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Arsip Sesi Latihan</p>
+                    <h3 class="font-bold text-slate-800 text-lg">Riwayat Absensi</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-0.5">Arsip Sesi Latihan</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-100">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter:</label>
+            <div class="flex items-center gap-3 bg-white/50 px-3 py-1.5 rounded-2xl border border-rose-100 backdrop-blur-sm">
+                <label class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Filter:</label>
                 <input type="month" x-model="filterMonth" 
-                    class="text-[10px] font-black border-none rounded-lg p-0 focus:ring-0 bg-transparent text-blue-600 uppercase">
+                    class="text-[10px] font-black border-none rounded-lg p-0 focus:ring-0 bg-transparent text-rose-600 uppercase">
             </div>
         </div>
     </div>
