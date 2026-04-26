@@ -111,5 +111,13 @@ class Member extends Model
         $this->attributes['status'] = $value ? 'AKTIF' : 'TIDAK_AKTIF';
     }
 
-
+    public function trainingSchedules(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            TrainingSchedule::class,
+            'member_schedules',
+            'member_id',
+            'training_schedule_id'
+        )->withTimestamps();
+    }
 }
