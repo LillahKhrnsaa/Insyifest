@@ -25,81 +25,75 @@
 
 @else
 
-<main class="min-h-screen bg-slate-50">
-    @include('member.partials.navbar')
+<main class="min-h-screen relative overflow-hidden" style="background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);">
+    {{-- Floating Orbs --}}
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-60" style="background: radial-gradient(circle, #bfdbfe, transparent); filter: blur(80px);"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-60" style="background: radial-gradient(circle, #e9d5ff, transparent); filter: blur(80px);"></div>
+        <div class="absolute top-[40%] left-[60%] w-[400px] h-[400px] rounded-full opacity-50" style="background: radial-gradient(circle, #fbcfe8, transparent); filter: blur(80px);"></div>
+    </div>
 
-    <div class="px-6 lg:px-10 py-8 space-y-8">
+    <div class="relative z-10">
+        @include('member.partials.navbar')
 
-        {{-- Member Profile Header --}}
-        <section class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div class="px-6 lg:px-10 py-8 space-y-8 max-w-7xl mx-auto">
 
-                <div class="flex items-center gap-6">
-                    <div class="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-slate-50 border-4 border-white shadow-xl flex-shrink-0 group relative">
-                        @if ($member->user->photo_url)
-                            <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center text-slate-300">
-                                <i data-feather="user" class="w-10 h-10"></i>
-                            </div>
-                        @endif
-                        <div class="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
+            {{-- Member Profile Header --}}
+            <section class="rounded-[2.5rem] shadow-xl p-8 sm:p-10 relative overflow-hidden"
+                style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);">
+                {{-- Pattern overlay --}}
+                <div class="absolute inset-0 opacity-10"
+                    style="background: repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(255,255,255,0.1) 25px, rgba(255,255,255,0.1) 50px);"></div>
+                {{-- Glow --}}
+                <div class="absolute -right-20 -top-20 w-64 h-64 rounded-full opacity-20"
+                    style="background: radial-gradient(circle, #60a5fa, transparent);"></div>
 
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h1 class="text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter">
-                                {{ Auth::user()->name }}
-                            </h1>
-                            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg tracking-widest uppercase border border-blue-100">PRO ATLET</span>
+                <div class="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-8">
+
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start xl:items-center gap-6 text-center sm:text-left">
+                        <div class="w-24 h-24 sm:w-20 sm:h-20 rounded-[1.5rem] overflow-hidden bg-white/10 border-[3px] border-white/30 shadow-2xl flex-shrink-0 group relative backdrop-blur-md">
+                            @if ($member->user->photo_url)
+                                <img src="{{ $member->user->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-white/70">
+                                    <i data-feather="user" class="w-10 h-10"></i>
+                                </div>
+                            @endif
                         </div>
-                        <p class="mt-1 text-slate-400 font-medium italic">
-                            Selamat berlatih, tetap fokus pada tujuanmu hari ini!
-                        </p>
-                    </div>
-                </div>
 
-                <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-
-                    <div class="px-6 py-4 rounded-3xl border border-slate-50 bg-slate-50/50 flex flex-col justify-center">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Paket Latihan</span>
-                        <span class="font-black text-slate-700 uppercase tracking-tight text-sm">
-                            {{ $member->trainingPackage->name ?? 'N/A' }}
-                        </span>
-                    </div>
-
-                    <div class="px-6 py-4 rounded-3xl border border-slate-50 bg-slate-50/50 flex items-center gap-6">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Status Keanggotaan</p>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full {{ $member->status === 'AKTIF' ? 'bg-emerald-500 shadow-sm shadow-emerald-200' : 'bg-rose-500' }}"></span>
-                                <span class="text-sm font-black text-slate-700 uppercase tracking-widest">{{ $member->status }}</span>
+                            <div class="flex flex-col sm:flex-row items-center gap-3">
+                                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white uppercase tracking-tight drop-shadow-md">
+                                    {{ Auth::user()->name }}
+                                </h1>
+                                <span class="px-3 py-1 bg-white/20 text-white text-[10px] font-black rounded-lg tracking-widest uppercase border border-white/30 backdrop-blur-sm shadow-sm">PRO ATLET</span>
                             </div>
-                        </div>
-
-                        <div class="h-10 w-[1px] bg-slate-200"></div>
-
-                        <div class="flex items-center gap-3">
-                            <button
-                                id="status-toggle"
-                                onclick="toggleMemberStatus()"
-                                data-status="{{ $member->status }}"
-                                class="relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300
-                                    {{ $member->status === 'AKTIF' ? 'bg-blue-600 shadow-lg shadow-blue-200' : 'bg-slate-300' }}"
-                            >
-                                <span
-                                    id="status-knob"
-                                    class="inline-block h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-md
-                                        {{ $member->status === 'AKTIF' ? 'translate-x-6' : 'translate-x-1' }}">
-                                </span>
-                            </button>
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Toggle<br>Status</span>
+                            <p class="mt-2 text-blue-100 font-medium text-sm sm:text-base">
+                                Selamat berlatih, tetap fokus pada tujuanmu hari ini!
+                            </p>
                         </div>
                     </div>
 
+                    <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-center">
+
+                        <div class="px-6 py-4 rounded-3xl border border-white/20 bg-black/10 backdrop-blur-sm flex flex-col justify-center text-center sm:text-left shadow-inner">
+                            <span class="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em] mb-1">Paket Latihan</span>
+                            <span class="font-black text-white uppercase tracking-tight text-sm drop-shadow-sm">
+                                {{ $member->trainingPackage->name ?? 'N/A' }}
+                            </span>
+                        </div>
+
+                        <div class="px-6 py-4 rounded-3xl border border-white/20 bg-black/10 backdrop-blur-sm flex flex-col justify-center text-center sm:text-left shadow-inner">
+                            <p class="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em] mb-1">Status Keanggotaan</p>
+                            <div class="flex items-center justify-center sm:justify-start gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full {{ $member->status === 'AKTIF' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]' }}"></span>
+                                <span class="text-sm font-black text-white uppercase tracking-widest drop-shadow-sm">{{ $member->status }}</span>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
         {{-- Statistics --}}
         @include('member.partials.stats-cards')
@@ -109,37 +103,45 @@
             {{-- Quick Actions --}}
             <div class="xl:col-span-1 space-y-6">
 
-                <div class="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-blue-100/30 transition-all duration-500 group">
-                    <div class="flex flex-col items-center text-center mb-8">
-                        <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 shadow-sm">
-                            <i data-feather="bar-chart-2" class="w-8 h-8 text-blue-600 group-hover:text-white transition-colors"></i>
+                {{-- Raport Performa Card --}}
+                <div class="rounded-[2rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-500 group relative overflow-hidden"
+                     style="background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    
+                    <div class="flex flex-col items-center text-center mb-8 relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-500 shadow-inner backdrop-blur-sm">
+                            <i data-feather="bar-chart-2" class="w-8 h-8 text-white"></i>
                         </div>
-                        <h3 class="font-black text-slate-800 uppercase tracking-tight text-lg">Raport Performa</h3>
-                        <p class="text-xs font-medium text-slate-400 mt-2 leading-relaxed">
+                        <h3 class="font-black text-white uppercase tracking-tight text-lg drop-shadow-sm">Raport Performa</h3>
+                        <p class="text-xs font-medium text-blue-100 mt-2 leading-relaxed">
                             Analisis grafik perkembangan waktu & volume latihan bulanan Anda.
                         </p>
                     </div>
 
                     <button onclick="openRaportModal()"
-                        class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                        class="relative z-10 w-full py-4 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg backdrop-blur-sm transition-all flex items-center justify-center gap-3">
                         <i data-feather="eye" class="w-4 h-4"></i>
                         Lihat Raport
                     </button>
                 </div>
 
-                <div class="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 group">
-                    <div class="flex flex-col items-center text-center mb-8">
-                        <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-500 shadow-sm">
-                            <i data-feather="zap" class="w-8 h-8 text-indigo-600 group-hover:text-white transition-colors"></i>
+                {{-- Hasil Tes Fisik Card --}}
+                <div class="rounded-[2rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 group relative overflow-hidden"
+                     style="background: linear-gradient(135deg, #8b5cf6 0%, #c026d3 100%);">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+
+                    <div class="flex flex-col items-center text-center mb-8 relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-500 shadow-inner backdrop-blur-sm">
+                            <i data-feather="zap" class="w-8 h-8 text-white"></i>
                         </div>
-                        <h3 class="font-black text-slate-800 uppercase tracking-tight text-lg">Hasil Tes Fisik</h3>
-                        <p class="text-xs font-medium text-slate-400 mt-2 leading-relaxed">
+                        <h3 class="font-black text-white uppercase tracking-tight text-lg drop-shadow-sm">Hasil Tes Fisik</h3>
+                        <p class="text-xs font-medium text-purple-100 mt-2 leading-relaxed">
                             Monitor hasil VO2 Max, sprint, dan agility untuk mengukur kebugaran.
                         </p>
                     </div>
 
                     <button onclick="openPhysicalModal()"
-                        class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                        class="relative z-10 w-full py-4 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg backdrop-blur-sm transition-all flex items-center justify-center gap-3">
                         <i data-feather="eye" class="w-4 h-4"></i>
                         Lihat Analisis
                     </button>
