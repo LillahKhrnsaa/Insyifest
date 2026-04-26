@@ -36,13 +36,26 @@ class MemberDashboardController extends Controller
             $assignedCoaches = $member->assignedCoaches ?? collect();
 
             $coachIds = $assignedCoaches->pluck('id');
-            $trainingSchedules = TrainingSchedule::when($coachIds->isNotEmpty(), function($query) use ($coachIds) {
-                $query->whereHas('coaches', function($q) use ($coachIds) {
-                    $q->whereIn('coaches.id', $coachIds);
-                });
-            })
-            ->with('coaches.user')
-            ->get();
+            
+            // Fetch schedules specifically assigned to the member
+            $hasSpecificSchedules = \Illuminate\Support\Facades\DB::table('member_schedules')->where('member_id', $member->id)->exists();
+
+            if ($hasSpecificSchedules) {
+                $trainingSchedules = TrainingSchedule::whereIn('id', function($query) use ($member) {
+                    $query->select('training_schedule_id')
+                          ->from('member_schedules')
+                          ->where('member_id', $member->id);
+                })->with('coaches.user')->get();
+            } else {
+                // Backward compatibility: If no specific schedule is selected, fetch all schedules from assigned coaches
+                $trainingSchedules = TrainingSchedule::when($coachIds->isNotEmpty(), function($query) use ($coachIds) {
+                    $query->whereHas('coaches', function($q) use ($coachIds) {
+                        $q->whereIn('coaches.id', $coachIds);
+                    });
+                })
+                ->with('coaches.user')
+                ->get();
+            }
 
             $attendances = $member->attendances()
                 ->with(['schedule', 'coach.user'])
