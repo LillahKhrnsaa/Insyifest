@@ -16,27 +16,60 @@
             to { opacity: 1; transform: translateY(0); } 
         }
         .bg-pattern {
-            background-color: #f8fafc;
-            background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px);
-            background-size: 24px 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 50%, #f5f3ff 100%);
         }
     </style>
 </head>
-<body class="h-full bg-pattern text-slate-700 antialiased">
+<body class="h-full bg-pattern text-slate-700 antialiased relative overflow-hidden">
 
-<div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-    {{-- Decorative Subtle Glows --}}
-    <div class="absolute -top-24 -right-24 w-[500px] h-[500px] bg-blue-100/30 rounded-full blur-[100px]"></div>
-    <div class="absolute -bottom-24 -left-24 w-[500px] h-[500px] bg-indigo-100/30 rounded-full blur-[100px]"></div>
+{{-- Floating background orbs matching registration theme --}}
+<div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute top-[-10%] left-[-5%] w-96 h-96 rounded-full opacity-40"
+        style="background: radial-gradient(circle, #bfdbfe, transparent); filter: blur(60px);"></div>
+    <div class="absolute top-[40%] right-[-8%] w-[30rem] h-[30rem] rounded-full opacity-30"
+        style="background: radial-gradient(circle, #a5f3fc, transparent); filter: blur(80px);"></div>
+    <div class="absolute bottom-[-5%] left-[25%] w-80 h-80 rounded-full opacity-30"
+        style="background: radial-gradient(circle, #ddd6fe, transparent); filter: blur(60px);"></div>
+</div>
 
-    <div class="max-w-md w-full fade-in relative z-10">
-        {{-- Brand Logo Section --}}
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-[2rem] shadow-xl shadow-blue-100/50 border border-slate-50 p-4 mb-6 group hover:scale-105 transition-transform duration-500">
-                <img src="{{ asset('images/logocsc.png') }}" alt="CSC Logo" class="w-full h-auto object-contain">
+<div class="min-h-screen flex items-center justify-center p-6 relative z-10">
+
+    <div class="max-w-xl w-full fade-in relative z-10">
+        {{-- ── Header Card ── --}}
+        <div class="relative mb-6 rounded-3xl overflow-hidden"
+            style="background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%); box-shadow: 0 20px 60px -10px rgba(29,78,216,0.35);">
+            {{-- Pattern overlay --}}
+            <div class="absolute inset-0 opacity-10"
+                style="background: repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(255,255,255,0.07) 25px, rgba(255,255,255,0.07) 50px);"></div>
+            {{-- Glow circle --}}
+            <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-20"
+                style="background: radial-gradient(circle, #93c5fd, transparent);"></div>
+
+            <div class="relative px-8 py-7 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-sky-300 animate-pulse"></div>
+                        <span class="text-sky-200 text-xs font-semibold tracking-widest uppercase">Portal Akses</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Cikampek Swimming Club</h1>
+                    <p class="mt-1 text-blue-200 text-sm font-medium">Manajemen Atlet & Pelatih CSC</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center"
+                        style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(10px);">
+                        <img src="{{ asset('images/logocsc.png') }}" class="h-12 sm:h-16 w-auto drop-shadow-xl" alt="CSC Logo">
+                    </div>
+                </div>
             </div>
-            <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-none">Cikampek</h1>
-            <h2 class="text-3xl font-black text-blue-600 uppercase tracking-tighter leading-none mt-1">Swimming Club</h2>
+
+            {{-- Security Bar --}}
+            <div class="px-8 pb-6 flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center text-xs font-bold text-blue-700 shadow"><i data-feather="lock" class="w-3.5 h-3.5"></i></div>
+                    <span class="text-white text-xs font-semibold hidden sm:block">Akses Aman Terenkripsi</span>
+                </div>
+                <div class="flex-1 h-px" style="background: rgba(255,255,255,0.35);"></div>
+            </div>
         </div>
 
         {{-- Login Card --}}
@@ -113,7 +146,7 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3">
+                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-extrabold text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/30 hover:shadow-blue-600/40 transform hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3">
                         Masuk Sekarang
                         <i data-feather="arrow-right" class="w-4 h-4"></i>
                     </button>
