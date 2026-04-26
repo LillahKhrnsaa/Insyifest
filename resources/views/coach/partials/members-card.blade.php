@@ -1,14 +1,15 @@
 <div class="mb-6 bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
     {{-- Header Card --}}
-    <div class="px-6 py-5 border-b border-slate-50 bg-white">
-        <div class="flex items-center justify-between">
+    <div class="px-6 py-5 border-b border-blue-100 relative overflow-hidden" style="background: linear-gradient(to right, #eff6ff, #ffffff);">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50"></div>
+        <div class="flex items-center justify-between relative z-10">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <i data-feather="users" class="w-5 h-5 text-blue-600"></i>
+                <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-inner">
+                    <i data-feather="users" class="w-6 h-6 text-white"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-tight">Atlet Binaan</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $coach->members->count() }} Anggota Terdaftar</p>
+                    <h3 class="font-bold text-slate-800 text-lg">Atlet Binaan</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-0.5">{{ $coach->members->count() }} Anggota Terdaftar</p>
                 </div>
             </div>
             <button @click="showMemberModal = true; memberModalMode = 'create'; memberForm = { name: '', email: '', password: '', phone: '', gender: '', training_package_id: '', status: 'AKTIF' }" 
