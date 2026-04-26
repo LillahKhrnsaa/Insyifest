@@ -19,10 +19,15 @@ class PengaturanAdminsTable
                 TextColumn::make('coach.user.name')
                     ->label('Nama Coach')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->color('primary')
+                    ->icon('heroicon-o-user'),
 
                 TextColumn::make('trainingSchedule.day')
                     ->label('Hari')
+                    ->badge()
+                    ->color('info')
                     ->formatStateUsing(fn (string $state): string => match (strtoupper($state)) {
                         'MONDAY', 'SENIN' => 'Senin',
                         'TUESDAY', 'SELASA' => 'Selasa',
@@ -37,60 +42,74 @@ class PengaturanAdminsTable
 
                 TextColumn::make('trainingSchedule.time')
                     ->label('Jam')
+                    ->icon('heroicon-o-clock')
                     ->sortable(),
 
                 TextColumn::make('trainingSchedule.place')
-                    ->label('Tempat'),
+                    ->label('Tempat')
+                    ->icon('heroicon-o-map-pin')
+                    ->wrap(),
 
                 TextColumn::make('quota')
                     ->label('Kuota')
+                    ->badge()
+                    ->color('gray')
                     ->alignCenter(),
 
                 TextColumn::make('usage_count')
                     ->label('Terisi')
+                    ->badge()
                     ->state(function ($record) {
                         return \App\Models\Member::whereHas('coaches', function ($query) use ($record) {
                             $query->where('coaches.id', $record->coach_id);
-                        })->count();
+                        })
+                        ->where(function ($query) use ($record) {
+                            $query->whereHas('trainingSchedules', function ($q) use ($record) {
+                                $q->where('training_schedules.id', $record->training_schedule_id);
+                            })
+                            ->orWhereDoesntHave('trainingSchedules');
+                        })
+                        ->count();
                     })
                     ->alignCenter()
                     ->color(fn ($state, $record) => $state >= $record->quota ? 'danger' : 'success'),
             ])
             ->defaultSort('coach_id')
             ->recordActions([
-                ActionGroup::make([
-                    EditAction::make()
-                        ->label('Edit')
-                        ->tooltip('Edit data')
-                        ->icon('heroicon-o-pencil-square')
-                        ->color('primary')
-                        ->size('sm')
-                        ->extraAttributes([
-                            'class' => 'border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 rounded-lg px-3 py-2'
-                        ]),
+                EditAction::make()
+                    ->label('')
+                    ->button()
+                    ->tooltip('Edit data')
+                    ->icon('heroicon-o-pencil-square'),
 
-                    DeleteAction::make()
-                        ->label('Hapus')
-                        ->tooltip('Hapus data')
-                        ->icon('heroicon-o-trash')
-                        ->color('danger')
-                        ->size('sm')
-                        ->requiresConfirmation()
-                        ->modalHeading('Hapus Data')
-                        ->modalDescription('Yakin ingin menghapus data ini?')
-                        ->modalSubmitActionLabel('Hapus')
-                        ->modalCancelActionLabel('Batal')
-                        ->extraAttributes([
-                            'class' => 'border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg px-3 py-2'
-                        ]),
-                ])
-                ->icon('heroicon-o-bars-4')
-                ->label('')
-                ->button()
+                DeleteAction::make()
+                    ->label('')
+                    ->button()
+                    ->tooltip('Hapus data')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Data')
+                    ->modalDescription('Yakin ingin menghapus data ini? Jadwal yang sudah dipilih oleh member untuk hari ini juga akan terhapus!')
+                    ->modalSubmitActionLabel('Ya, Hapus')
+                    ->after(function ($record) {
+                        \Illuminate\Support\Facades\DB::table('member_schedules')
+                            ->where('coach_id', $record->coach_id)
+                            ->where('training_schedule_id', $record->training_schedule_id)
+                            ->delete();
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->after(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            foreach ($records as $record) {
+                                \Illuminate\Support\Facades\DB::table('member_schedules')
+                                    ->where('coach_id', $record->coach_id)
+                                    ->where('training_schedule_id', $record->training_schedule_id)
+                                    ->delete();
+                            }
+                        }),
                 ]),
             ]);
     }
