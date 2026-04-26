@@ -22,11 +22,13 @@ class CreateMember extends CreateRecord
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
+                'father_job' => $data['father_job'],
                 'birth_date' => $data['birth_date'],
                 'gender' => $data['gender'],
                 'password' => Hash::make($data['password']),
                 'photo_path' => $data['photo_path'] ?? null,
                 'active' => $data['active'] ?? true,
+                'role' => 'member',
             ];
 
             // 2. Buat record User baru

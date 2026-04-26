@@ -21,7 +21,7 @@ class MemberInfolist
                     Section::make('Informasi Profil Member')
                         ->schema([
                             ImageEntry::make('user.photo_path')->label('')
-                                ->circular()->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'M')),
+                                ->circular()->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->user?->name ?? 'M')),
                             TextEntry::make('user.name')->label('Nama Lengkap')->weight('bold'),
                             TextEntry::make('user.email')->label('Email')->copyable()->icon('heroicon-o-envelope'),
                             TextEntry::make('user.phone')->label('Nomor Telepon')->copyable()->icon('heroicon-o-phone'),

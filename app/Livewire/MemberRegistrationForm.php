@@ -193,6 +193,7 @@ class MemberRegistrationForm extends Component
                     ->actions([
                         \Filament\Actions\Action::make('view')
                             ->button()
+
                             ->label('Lihat Member')
                             ->url(\App\Filament\Resources\Members\MemberResource::getUrl('index')),
                     ])

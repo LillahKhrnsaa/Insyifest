@@ -31,6 +31,7 @@ class EditMember extends EditRecord
             $data['name'] = $user->name;
             $data['email'] = $user->email;
             $data['phone'] = $user->phone;
+            $data['father_job'] = $user->father_job;
             $data['birth_date'] = $user->birth_date;
             $data['gender'] = $user->gender;
             $data['photo_path'] = $user->photo_path;
@@ -74,6 +75,7 @@ class EditMember extends EditRecord
                     'name'       => $data['name'],
                     'email'      => $data['email'],
                     'phone'      => $data['phone'],
+                    'father_job' => $data['father_job'],
                     'birth_date' => $data['birth_date'],
                     'gender'     => $data['gender'],
                     'photo_path' => $data['photo_path'] ?? null,

@@ -71,12 +71,12 @@ class MemberForm
                     ->description('Data diri member.')
                     ->icon('heroicon-o-identification')
                     ->schema([
-                        TextInput::make('user.phone')->label('Nomor Telepon')->tel()->required()->prefixIcon('heroicon-o-phone'),
-                        TextInput::make('user.father_job')->label('Pekerjaan Ayah')->required()->prefixIcon('heroicon-o-briefcase'),
-                        Select::make('user.gender')->label('Jenis Kelamin')
+                        TextInput::make('phone')->label('Nomor Telepon')->tel()->required()->prefixIcon('heroicon-o-phone'),
+                        TextInput::make('father_job')->label('Pekerjaan Ayah')->required()->prefixIcon('heroicon-o-briefcase'),
+                        Select::make('gender')->label('Jenis Kelamin')
                             ->options(['MALE' => 'Laki-laki', 'FEMALE' => 'Perempuan'])
                             ->native(false)->prefixIcon('heroicon-o-user'),
-                        DatePicker::make('user.birth_date')->label('Tanggal Lahir')
+                        DatePicker::make('birth_date')->label('Tanggal Lahir')
                             ->maxDate(now())->native(false)->prefixIcon('heroicon-o-cake'),
                     ])->collapsible()->columns(2),
 
