@@ -116,12 +116,25 @@ class MembersTable
                 TextColumn::make('training_summary')
                     ->label('Coach & Jadwal')
                     ->state(function ($record) {
-                        $coaches = $record->coaches()->with('trainingSchedules')->get();
+                        $coaches = $record->coaches;
                         
                         if ($coaches->isEmpty()) return 'Belum diatur';
+                        
+                        $memberSchedules = \Illuminate\Support\Facades\DB::table('member_schedules')
+                            ->join('training_schedules', 'member_schedules.training_schedule_id', '=', 'training_schedules.id')
+                            ->where('member_schedules.member_id', $record->id)
+                            ->select('training_schedules.*', 'member_schedules.coach_id')
+                            ->get();
 
-                        return $coaches->map(function($coach) {
-                            $scheduleInfo = $coach->trainingSchedules->map(fn($s) => 
+                        return $coaches->map(function($coach) use ($memberSchedules, $record) {
+                            $coachSchedules = $memberSchedules->where('coach_id', $coach->id);
+                            
+                            // Backward compatibility: If no member_schedules exist for this member, show coach's schedules
+                            if ($memberSchedules->isEmpty()) {
+                                $coachSchedules = $coach->trainingSchedules;
+                            }
+                            
+                            $scheduleInfo = $coachSchedules->map(fn($s) => 
                                 match (strtoupper($s->day)) {
                                     'MONDAY', 'SENIN' => 'Senin',
                                     'TUESDAY', 'SELASA' => 'Selasa',
@@ -161,6 +174,19 @@ class MembersTable
             ])
 
             ->filters([
+                SelectFilter::make('coach')
+                    ->label('Coach / Pelatih')
+                    ->options(fn () => \App\Models\Coach::with('user')->get()->pluck('user.name', 'id'))
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['value'])) {
+                            $query->whereHas('coaches', function ($query) use ($data) {
+                                $query->where('coaches.id', $data['value']);
+                            });
+                        }
+                    })
+                    ->searchable()
+                    ->preload(),
+
                 SelectFilter::make('status')
                     ->label('Status Member')
                     ->options(['AKTIF' => 'Aktif', 'TIDAK_AKTIF' => 'Tidak Aktif']),
