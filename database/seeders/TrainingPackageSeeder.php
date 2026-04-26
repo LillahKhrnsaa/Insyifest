@@ -11,23 +11,23 @@ class TrainingPackageSeeder extends Seeder
     {
         DB::table('training_packages')->insert([
             [
-                'name' => 'Basic Training Package',
+                'name' => '4x Pertemuan/bulan',
                 'price' => 200000.00,
-                'description' => '4x Pertemuan/bulan',
+                'description' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Advanced Training Package',
+                'name' => '8x Pertemuan/bulan',
                 'price' => 350000.00,
-                'description' => '8x Pertemuan/bulan',
+                'description' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Professional Training Package',
+                'name' => '12x Pertemuan/bulan',
                 'price' => 400000.00,
-                'description' => '12x Pertemuan/bulann',
+                'description' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
