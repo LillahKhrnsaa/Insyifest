@@ -77,9 +77,15 @@ class MemberRegistrationForm extends Component
         foreach ($coachSchedules as $schedule) {
             $translatedDay = $this->translateDay($schedule->day);
             
-            // Calculate usage (all members assigned to this coach)
+            // Calculate usage for this specific schedule
             $usage = Member::whereHas('coaches', function ($query) use ($coachId) {
                 $query->where('coaches.id', $coachId);
+            })
+            ->where(function ($query) use ($schedule) {
+                $query->whereHas('trainingSchedules', function ($q) use ($schedule) {
+                    $q->where('training_schedules.id', $schedule->id);
+                })
+                ->orWhereDoesntHave('trainingSchedules');
             })->count();
 
             $this->schedulesByDay[$translatedDay][] = [
@@ -118,7 +124,20 @@ class MemberRegistrationForm extends Component
             'paketLatihan' => 'required|exists:training_packages,id',
             'namaCoach' => 'required|exists:coaches,id',
             'password' => 'required|string|min:6|confirmed',
-            // 'selectedSchedules' => 'required|array|min:1', // No longer required as per-coach
+            'selectedSchedules' => 'required|array|min:1', 
+        ], [
+            'namaLengkap.required' => 'Mohon ketikkan nama lengkap calon atlet.',
+            'noTelepon.required' => 'Mohon ketikkan nomor telepon/WhatsApp yang bisa dihubungi.',
+            'noTelepon.unique' => 'Nomor telepon ini sudah terdaftar. Silakan gunakan nomor lain.',
+            'pekerjaanAyah.required' => 'Mohon isi kolom pekerjaan ayah.',
+            'jenisKelamin.required' => 'Mohon pilih jenis kelamin calon atlet.',
+            'tanggalLahir.required' => 'Mohon isi tanggal lahir calon atlet dengan benar.',
+            'paketLatihan.required' => 'Mohon pilih salah satu paket latihan.',
+            'namaCoach.required' => 'Mohon pilih pelatih (coach) yang tersedia.',
+            'password.required' => 'Mohon buat password untuk login nanti.',
+            'password.min' => 'Password terlalu pendek, mohon buat minimal 6 huruf/angka.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok dengan password di atas, mohon ketik ulang.',
+            'selectedSchedules.required' => 'Mohon pilih minimal 1 (satu) hari dan jam latihan yang tersedia di bawah.',
         ]);
 
         try {
@@ -150,8 +169,18 @@ class MemberRegistrationForm extends Component
             // 3. Assign Coach (Pivot member_training_assignments)
             $member->coaches()->attach($this->namaCoach);
 
-            // 4. Schedules are inherited from coach, no need to create MemberSchedule records
-
+            // 4. Save Selected Schedules
+            foreach ($this->selectedSchedules as $day => $scheduleId) {
+                if ($scheduleId) {
+                    DB::table('member_schedules')->insert([
+                        'member_id' => $member->id,
+                        'coach_id' => $this->namaCoach,
+                        'training_schedule_id' => $scheduleId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
 
             // ✅ Kirim notifikasi ke Admin/Staff
             $admins = User::role(['admin', 'staff'])->get();
@@ -177,6 +206,7 @@ class MemberRegistrationForm extends Component
                 'namaLengkap' => $this->namaLengkap,
                 'email' => $email,
                 'noTelepon' => $this->noTelepon,
+                'pekerjaanAyah' => $this->pekerjaanAyah,
                 'password' => $this->password, // Show plain password once for the user to print
                 'jenisKelamin' => $this->jenisKelamin,
                 'tanggalLahir' => $this->tanggalLahir,
