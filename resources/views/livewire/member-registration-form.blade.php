@@ -30,7 +30,7 @@
                         <span class="text-sky-200 text-xs font-semibold tracking-widest uppercase">Formulir Pendaftaran</span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Cikampek Swimming Club</h1>
-                    <p class="mt-1 text-blue-200 text-sm font-medium">Pendaftaran Atlet Aktif &mdash; {{ now()->format('F Y') }}</p>
+                    <p class="mt-1 text-blue-200 text-sm font-medium">Pendaftaran Atlet Aktif Mei 2026</p>
                 </div>
                 <div class="flex-shrink-0">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center"
@@ -224,7 +224,7 @@
                         </div>
 
                         {{-- Password --}}
-                        <div class="space-y-1.5">
+                        <div class="space-y-1.5" x-data="{ show: false }">
                             <label class="block text-xs font-semibold tracking-wide text-slate-500 uppercase">
                                 Password <span class="text-red-500">*</span>
                             </label>
@@ -234,18 +234,22 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                 </span>
-                                <input type="password" wire:model="password" required
+                                <input :type="show ? 'text' : 'password'" wire:model="password" required
                                     placeholder="Minimal 6 karakter"
-                                    class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                                    class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
                                     style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
                                     onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'; this.style.background='#fff'"
                                     onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'; this.style.background='#f8fafc'">
+                                <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors">
+                                    <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <svg x-show="show" style="display: none;" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                                </button>
                             </div>
                             @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Konfirmasi Password --}}
-                        <div class="space-y-1.5">
+                        <div class="space-y-1.5" x-data="{ show: false }">
                             <label class="block text-xs font-semibold tracking-wide text-slate-500 uppercase">
                                 Konfirmasi Password <span class="text-red-500">*</span>
                             </label>
@@ -255,12 +259,16 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                 </span>
-                                <input type="password" wire:model="password_confirmation" required
+                                <input :type="show ? 'text' : 'password'" wire:model="password_confirmation" required
                                     placeholder="Ulangi password"
-                                    class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                                    class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
                                     style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
                                     onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'; this.style.background='#fff'"
                                     onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'; this.style.background='#f8fafc'">
+                                <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors">
+                                    <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <svg x-show="show" style="display: none;" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                                </button>
                             </div>
                         </div>
 
@@ -474,10 +482,24 @@
             </form>
         </div>
 
-        {{-- Footer --}}
-        <p class="text-center text-xs text-slate-400 mt-6 pb-4">
-            &copy; {{ date('Y') }} Cikampek Swimming Club. All rights reserved.
-        </p>
+        {{-- Footer Actions --}}
+        <div class="mt-10 mb-6 pt-8 border-t border-slate-200/50 text-center relative z-10">
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Sudah memiliki akun?</p>
+            <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-8 py-3 bg-white hover:bg-blue-50 text-blue-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                Masuk Sekarang
+            </a>
+        </div>
+
+        <div class="mt-6 text-center flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pb-6 relative z-10">
+            <a href="{{ url('/') }}" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                Kembali ke Beranda
+            </a>
+            <span class="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                © {{ date('Y') }} CSC Management
+            </p>
+        </div>
 
     </div>
 
