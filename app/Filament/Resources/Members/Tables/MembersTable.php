@@ -36,6 +36,37 @@ class MembersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (\Illuminate\Database\Eloquent\Builder $query) {
+                $query->leftJoin(
+                    'member_training_assignments',
+                    'member_training_assignments.member_id',
+                    '=',
+                    'members.id'
+                )
+                ->leftJoin(
+                    'coaches',
+                    'coaches.id',
+                    '=',
+                    'member_training_assignments.coach_id'
+                )
+                ->leftJoin(
+                    'users as coach_users',
+                    'coach_users.id',
+                    '=',
+                    'coaches.user_id'
+                )
+                ->leftJoin(
+                    'users as member_users',
+                    'member_users.id',
+                    '=',
+                    'members.user_id'
+                )
+                ->select('members.*')
+                ->selectRaw("COALESCE(coach_users.name, '') as coach_user_name,
+                             COALESCE(coach_users.id, 0) as coach_user_id")
+                ->orderBy('coach_user_name', 'asc')
+                ->orderBy('member_users.name', 'asc');
+            })
             ->columns([
                 TextColumn::make('no.')
                     ->label('No.')
@@ -48,6 +79,16 @@ class MembersTable
                     ->alignCenter()
                     ->sortable(false)
                     ->searchable(false),
+
+                TextColumn::make('coach_user_name')
+                    ->label('Coach')
+                    ->state(fn ($record) => $record->coach_user_name ?: '—')
+                    ->badge()
+                    ->color('warning')
+                    ->icon('heroicon-o-academic-cap')
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->reorder()->orderBy('coach_user_name', $direction)->orderBy('member_users.name', 'asc'))
+                    ->searchable(query: fn (Builder $query, string $search) => $query->where('coach_users.name', 'like', "%{$search}%"))
+                    ->wrap(),
 
                 ImageColumn::make('user.photo_path')
                     ->label('Foto')
@@ -114,45 +155,52 @@ class MembersTable
                     ->toggleable(),
 
                 TextColumn::make('training_summary')
-                    ->label('Coach & Jadwal')
+                    ->label('Jadwal')
                     ->state(function ($record) {
-                        $coaches = $record->coaches;
-                        
-                        if ($coaches->isEmpty()) return 'Belum diatur';
-                        
+                        $coachUserId = $record->coach_user_id ?? 0;
+
+                        // Cari coach yang sesuai dengan baris ini
+                        $coach = $record->coaches->first(fn ($c) => $c->user_id == $coachUserId);
+
+                        // Fallback: jika tidak ketemu, ambil coach pertama
+                        if (! $coach && $record->coaches->isNotEmpty()) {
+                            $coach = $record->coaches->first();
+                        }
+
+                        if (! $coach) return null;
+
                         $memberSchedules = \Illuminate\Support\Facades\DB::table('member_schedules')
                             ->join('training_schedules', 'member_schedules.training_schedule_id', '=', 'training_schedules.id')
                             ->where('member_schedules.member_id', $record->id)
-                            ->select('training_schedules.*', 'member_schedules.coach_id')
+                            ->where('member_schedules.coach_id', $coach->id)
+                            ->select('training_schedules.*')
                             ->get();
 
-                        return $coaches->map(function($coach) use ($memberSchedules, $record) {
-                            $coachSchedules = $memberSchedules->where('coach_id', $coach->id);
-                            
-                            // Backward compatibility: If no member_schedules exist for this member, show coach's schedules
-                            if ($memberSchedules->isEmpty()) {
-                                $coachSchedules = $coach->trainingSchedules;
-                            }
-                            
-                            $scheduleInfo = $coachSchedules->map(fn($s) => 
-                                match (strtoupper($s->day)) {
-                                    'MONDAY', 'SENIN' => 'Senin',
-                                    'TUESDAY', 'SELASA' => 'Selasa',
-                                    'WEDNESDAY', 'RABU' => 'Rabu',
-                                    'THURSDAY', 'KAMIS' => 'Kamis',
-                                    'FRIDAY', 'JUMAT' => 'Jumat',
-                                    'SATURDAY', 'SABTU' => 'Sabtu',
-                                    'SUNDAY', 'MINGGU' => 'Minggu',
-                                    default => $s->day,
-                                } . " " . \Carbon\Carbon::parse($s->time)->format('H:i')
-                            )->implode(', ');
+                        // Fallback backward compat
+                        if ($memberSchedules->isEmpty()) {
+                            $memberSchedules = $coach->trainingSchedules ?? collect();
+                        }
 
-                            return "{$coach->user->name}: " . ($scheduleInfo ?: 'Tanpa Jadwal');
-                        })->implode(' | ');
+                        if ($memberSchedules->isEmpty()) return null;
+
+                        return $memberSchedules->map(fn ($s) =>
+                            match (strtoupper($s->day)) {
+                                'MONDAY', 'SENIN'       => 'Senin',
+                                'TUESDAY', 'SELASA'     => 'Selasa',
+                                'WEDNESDAY', 'RABU'     => 'Rabu',
+                                'THURSDAY', 'KAMIS'     => 'Kamis',
+                                'FRIDAY', 'JUMAT'       => 'Jumat',
+                                'SATURDAY', 'SABTU'     => 'Sabtu',
+                                'SUNDAY', 'MINGGU'      => 'Minggu',
+                                default                 => $s->day,
+                            } . ' ' . \Carbon\Carbon::parse($s->time)->format('H:i')
+                        )->implode(',');
                     })
-                    ->wrap()
+                    ->badge()
+                    ->separator(',')
                     ->color('info')
-                    ->size('xs'),
+                    ->icon('heroicon-o-clock')
+                    ->wrap(),
 
                 TextColumn::make('trainingPackage.name')
                     ->label('Paket Latihan')
@@ -417,7 +465,6 @@ class MembersTable
                             }
                         }),
                 ]),
-            ])
-            ->defaultSort('created_at', 'desc');
+            ]);
     }
 }

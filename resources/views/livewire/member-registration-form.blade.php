@@ -299,7 +299,7 @@
                                 Paket Latihan <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
-                                <select wire:model="paketLatihan" required
+                                <select wire:model.live="paketLatihan" required
                                     class="w-full px-4 py-3 rounded-xl text-sm text-slate-800 appearance-none outline-none transition-all pr-10"
                                     style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
                                     onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14,165,233,0.12)'; this.style.background='#fff'"
@@ -318,21 +318,30 @@
                             @error('paketLatihan') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Nama Coach --}}
-                        <div class="space-y-1.5">
+                        {{-- Kelas (UI Only) --}}
+                        <div class="space-y-1.5 {{ !$paketLatihan ? 'opacity-40 pointer-events-none' : '' }} transition-opacity">
                             <label class="block text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                                Nama Coach <span class="text-red-500">*</span>
+                                Pilih Kelas <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
-                                <select wire:model.live="namaCoach" required
+                                <select wire:model.live="kelas" required {{ !$paketLatihan ? 'disabled' : '' }}
                                     class="w-full px-4 py-3 rounded-xl text-sm text-slate-800 appearance-none outline-none transition-all pr-10"
                                     style="background: #f8fafc; border: 1.5px solid #e2e8f0;"
                                     onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14,165,233,0.12)'; this.style.background='#fff'"
                                     onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'; this.style.background='#f8fafc'">
-                                    <option value="">-- Pilih Coach --</option>
-                                    @foreach($coachesData as $coach)
-                                        <option value="{{ $coach->id }}">{{ $coach->user->name }}</option>
-                                    @endforeach
+                                    <option value="">-- Pilih Kelas --</option>
+                                    @php
+                                        $currentPackage = $packagesData->firstWhere('id', $paketLatihan);
+                                        $isBasic = $currentPackage && str_contains($currentPackage->name, '4x');
+                                    @endphp
+                                    
+                                    @if($isBasic)
+                                        <option value="Pemula">Pemula</option>
+                                        <option value="Mahir">Mahir</option>
+                                    @else
+                                        <option value="Pro">Pro</option>
+                                        <option value="Prestasi">Prestasi</option>
+                                    @endif
                                 </select>
                                 <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +349,50 @@
                                     </svg>
                                 </span>
                             </div>
-                            @error('namaCoach') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            @error('kelas') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Nama Coach (Dynamic 1 or 3) --}}
+                        <div class="sm:col-span-2 space-y-4 {{ !$kelas ? 'hidden' : 'block animate-[fadeIn_0.3s_ease-out]' }}">
+                            <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-blue-900">Pilih Pelatih (Coach)</p>
+                                    <p class="text-[10px] text-blue-600 font-medium">Anda dapat memilih {{ $maxCoaches }} coach untuk paket ini.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 {{ $maxCoaches > 1 ? 'sm:grid-cols-3' : '' }} gap-4">
+                                @for($i = 1; $i <= $maxCoaches; $i++)
+                                    <div class="space-y-1.5" wire:key="coach-select-{{ $i }}">
+                                        <label class="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                            Coach {{ $maxCoaches > 1 ? $i : '' }} <span class="text-red-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <select wire:model.live="coach{{ $i }}" required
+                                                class="w-full px-4 py-3 rounded-xl text-xs font-semibold text-slate-800 appearance-none outline-none transition-all pr-10"
+                                                style="background: #ffffff; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"
+                                                onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 4px 12px rgba(14,165,233,0.1)';"
+                                                onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
+                                                <option value="">-- Pilih Coach --</option>
+                                                @foreach($coachesData as $coach)
+                                                    <option value="{{ $coach->id }}">{{ $coach->user->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        @error('coach'.$i) <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                @endfor
+                            </div>
                         </div>
 
                     </div>
@@ -397,7 +449,7 @@
 
                                 {{-- Slots --}}
                                 <div class="p-3 space-y-2">
-                                    @if(!$namaCoach)
+                                    @if(!$coach1)
                                         <div class="flex items-center gap-2 py-2">
                                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -410,22 +462,26 @@
                                         @foreach($schedules as $slot)
                                             <label wire:key="slot-{{ $slot['id'] }}"
                                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all {{ $slot['is_full'] ? 'opacity-60 cursor-not-allowed' : 'hover:bg-white' }}"
-                                                style="{{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == $slot['id']
+                                                style="{{ isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id']
                                                     ? 'background: white; border: 1.5px solid #8b5cf6; box-shadow: 0 2px 8px rgba(139,92,246,0.15);'
                                                     : 'background: transparent; border: 1.5px solid transparent;' }}">
-                                                <input type="radio" wire:model.live="selectedSchedules.{{ $day }}" value="{{ $slot['id'] }}" class="sr-only" {{ $slot['is_full'] ? 'disabled' : '' }}>
+                                                <input type="radio" wire:model.live="selectedSchedules.{{ $day }}" value="{{ $slot['id'] }}|{{ $slot['coach_id'] }}" class="sr-only" {{ $slot['is_full'] ? 'disabled' : '' }}>
 
                                                 {{-- Custom radio --}}
                                                 <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-                                                    {{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == $slot['id'] ? 'border-violet-500 bg-violet-500' : 'border-slate-300 bg-white' }}
+                                                    {{ isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id'] ? 'border-violet-500 bg-violet-500' : 'border-slate-300 bg-white' }}
                                                     {{ $slot['is_full'] ? 'bg-slate-200 border-slate-200' : '' }}">
-                                                    @if(isset($selectedSchedules[$day]) && $selectedSchedules[$day] == $slot['id'])
+                                                    @if(isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id'])
                                                         <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
                                                     @endif
                                                 </div>
 
                                                 <div class="flex flex-col min-w-0 flex-1">
-                                                    <span class="text-xs font-semibold {{ $slot['is_full'] ? 'text-slate-400 line-through' : 'text-slate-700' }}">{{ $slot['time'] }}</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-xs font-bold {{ $slot['is_full'] ? 'text-slate-400 line-through' : 'text-slate-800' }}">{{ $slot['time'] }}</span>
+                                                        <span class="text-[9px] font-medium text-slate-400">|</span>
+                                                        <span class="text-[9px] font-bold text-blue-600 truncate uppercase tracking-tighter">{{ $slot['coach_name'] }}</span>
+                                                    </div>
                                                     <span class="text-[10px] {{ $slot['is_full'] ? 'text-red-400' : 'text-slate-400' }}">
                                                         {{ $slot['is_full'] ? 'Penuh' : 'Sisa ' . ($slot['quota'] - $slot['usage']) . ' slot' }}
                                                     </span>

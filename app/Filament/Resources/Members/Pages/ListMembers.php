@@ -55,20 +55,49 @@ class ListMembers extends ListRecords
                 ])
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Tutup'),
+            Action::make('buat_arsip')
+                ->label('Buat Arsip (Backup)')
+                ->icon('heroicon-o-cloud-arrow-up')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Konfirmasi Backup Data')
+                ->modalDescription('Apakah Anda yakin ingin membuat arsip data member saat ini? Data akan disimpan ke riwayat arsip bulanan, namun status member akan TETAP AKTIF.')
+                ->modalSubmitActionLabel('Ya, Buat Arsip')
+                ->action(function () {
+                    $count = app(\App\Actions\ArchiveMembersAction::class)->execute(false);
+                    
+                    \Filament\Notifications\Notification::make()
+                        ->title('Backup Berhasil')
+                        ->body("$count record berhasil diarsipkan. Status member tetap aktif.")
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => auth()->user()->can('close_period.members')),
+
             Action::make('tutup_periode')
-                ->label('Tutup Periode Bulan Ini')
-                ->icon('heroicon-o-archive-box')
+                ->label('Tutup Periode (Off Semua)')
+                ->icon('heroicon-o-archive-box-x-mark')
                 ->color('danger')
                 ->requiresConfirmation()
-                ->modalHeading('Konfirmasi Penutupan Periode')
-                ->modalDescription('Apakah Anda yakin ingin menutup periode bulan ini? Semua member aktif akan diarsipkan sebagai data histori dan status mereka akan diubah menjadi tidak aktif.')
-                ->modalSubmitActionLabel('Ya, Tutup Periode')
+                ->modalHeading('⚠️ PERHATIAN: KONFIRMASI TUTUP PERIODE')
+                ->modalDescription(new \Illuminate\Support\HtmlString('
+                    <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin-bottom: 10px;">
+                        <p style="color: #991b1b; font-weight: bold; margin: 0;">TINDAKAN INI HANYA UNTUK RESET STATUS!</p>
+                        <ul style="color: #b91c1c; font-size: 0.875rem; margin-top: 5px; padding-left: 20px;">
+                            <li>Semua status member yang sedang <strong>AKTIF</strong> akan otomatis diubah menjadi <strong>TIDAK AKTIF (OFF)</strong>.</li>
+                            <li>Tindakan ini <strong>TIDAK</strong> akan membuat arsip data baru.</li>
+                        </ul>
+                        <p style="color: #7f1d1d; font-size: 0.875rem; margin-top: 10px;">Pastikan Anda sudah melakukan <strong>Backup Arsip</strong> terlebih dahulu jika diperlukan.</p>
+                    </div>
+                '))
+                ->modalSubmitActionLabel('Ya, Matikan Semua Member (Off)')
                 ->action(function () {
-                    $count = app(\App\Actions\ArchiveMembersAction::class)->execute();
+                    $count = \App\Models\Member::where('status', 'AKTIF')->count();
+                    \App\Models\Member::where('status', 'AKTIF')->update(['status' => 'TIDAK_AKTIF']);
                     
                     \Filament\Notifications\Notification::make()
                         ->title('Periode Berhasil Ditutup')
-                        ->body("$count member berhasil diarsipkan dan status telah di-reset.")
+                        ->body("$count member telah diubah statusnya menjadi Tidak Aktif (Off).")
                         ->success()
                         ->send();
                 })

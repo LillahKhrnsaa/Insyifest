@@ -23,7 +23,8 @@ class MemberRegistrationForm extends Component
     public $jenisKelamin;
     public $tanggalLahir;
     public $paketLatihan;
-    public $namaCoach;
+    public $kelas; // UI-only field
+    public $coach1, $coach2, $coach3;
     public $password;
     public $password_confirmation;
     public $selectedSchedules = [];
@@ -36,12 +37,43 @@ class MemberRegistrationForm extends Component
     public $coachesData = [];
     public $packagesData = [];
     public $schedulesByDay = [];
+    public $maxCoaches = 1;
 
     public function mount()
     {
         $this->packagesData = TrainingPackage::all();
         $this->coachesData = Coach::with('user')->get();
         $this->resetSchedules();
+    }
+
+    public function updatedPaketLatihan($value)
+    {
+        $this->kelas = null;
+        $this->resetCoaches();
+        $this->resetSchedules();
+        
+        $package = TrainingPackage::find($value);
+        if ($package) {
+            // Logic max coaches based on package name
+            if (str_contains($package->name, '4x')) {
+                $this->maxCoaches = 1;
+            } else {
+                $this->maxCoaches = 3;
+            }
+        }
+    }
+
+    public function updatedKelas()
+    {
+        $this->resetCoaches();
+        $this->resetSchedules();
+    }
+
+    public function resetCoaches()
+    {
+        $this->coach1 = null;
+        $this->coach2 = null;
+        $this->coach3 = null;
     }
 
     public function resetSchedules()
@@ -58,38 +90,39 @@ class MemberRegistrationForm extends Component
         $this->selectedSchedules = [];
     }
 
-    public function updatedNamaCoach($coachId)
+    public function updatedCoach1() { $this->refreshSchedules(); }
+    public function updatedCoach2() { $this->refreshSchedules(); }
+    public function updatedCoach3() { $this->refreshSchedules(); }
+
+    public function refreshSchedules()
     {
         $this->resetSchedules();
 
-        if (!$coachId) return;
+        $coachIds = array_filter([$this->coach1, $this->coach2, $this->coach3]);
+        if (empty($coachIds)) return;
 
-        $coach = Coach::find($coachId);
-        if (!$coach) return;
-
-        // Fetch schedules assigned to this coach through pivot
+        // Fetch schedules assigned to these coaches through pivot
         $coachSchedules = DB::table('coach_training_schedule')
             ->join('training_schedules', 'coach_training_schedule.training_schedule_id', '=', 'training_schedules.id')
-            ->where('coach_training_schedule.coach_id', $coachId)
-            ->select('training_schedules.*', 'coach_training_schedule.quota')
+            ->whereIn('coach_training_schedule.coach_id', $coachIds)
+            ->select('training_schedules.*', 'coach_training_schedule.quota', 'coach_training_schedule.coach_id')
             ->get();
 
         foreach ($coachSchedules as $schedule) {
             $translatedDay = $this->translateDay($schedule->day);
             
-            // Calculate usage for this specific schedule
-            $usage = Member::whereHas('coaches', function ($query) use ($coachId) {
-                $query->where('coaches.id', $coachId);
-            })
-            ->where(function ($query) use ($schedule) {
-                $query->whereHas('trainingSchedules', function ($q) use ($schedule) {
-                    $q->where('training_schedules.id', $schedule->id);
-                })
-                ->orWhereDoesntHave('trainingSchedules');
-            })->count();
+            // Calculate usage for this specific coach & schedule
+            $usage = DB::table('member_schedules')
+                ->where('training_schedule_id', $schedule->id)
+                ->where('coach_id', $schedule->coach_id)
+                ->count();
+
+            $coachName = Coach::find($schedule->coach_id)?->user->name;
 
             $this->schedulesByDay[$translatedDay][] = [
                 'id' => $schedule->id,
+                'coach_id' => $schedule->coach_id,
+                'coach_name' => $coachName,
                 'time' => Carbon::parse($schedule->time)->format('H:i'),
                 'place' => $schedule->place,
                 'quota' => $schedule->quota,
@@ -115,17 +148,25 @@ class MemberRegistrationForm extends Component
 
     public function submit()
     {
-        $this->validate([
+        $rules = [
             'namaLengkap' => 'required|string|max:255',
             'noTelepon' => 'required|string|max:20|unique:users,phone',
             'pekerjaanAyah' => 'required|string|max:255',
             'jenisKelamin' => 'required|in:Laki-laki,Perempuan',
             'tanggalLahir' => 'required|date',
             'paketLatihan' => 'required|exists:training_packages,id',
-            'namaCoach' => 'required|exists:coaches,id',
+            'kelas' => 'required',
+            'coach1' => 'required|exists:coaches,id',
             'password' => 'required|string|min:6|confirmed',
             'selectedSchedules' => 'required|array|min:1', 
-        ], [
+        ];
+
+        if ($this->maxCoaches > 1) {
+            $rules['coach2'] = 'required|exists:coaches,id';
+            $rules['coach3'] = 'required|exists:coaches,id';
+        }
+
+        $this->validate($rules, [
             'namaLengkap.required' => 'Mohon ketikkan nama lengkap calon atlet.',
             'noTelepon.required' => 'Mohon ketikkan nomor telepon/WhatsApp yang bisa dihubungi.',
             'noTelepon.unique' => 'Nomor telepon ini sudah terdaftar. Silakan gunakan nomor lain.',
@@ -133,7 +174,10 @@ class MemberRegistrationForm extends Component
             'jenisKelamin.required' => 'Mohon pilih jenis kelamin calon atlet.',
             'tanggalLahir.required' => 'Mohon isi tanggal lahir calon atlet dengan benar.',
             'paketLatihan.required' => 'Mohon pilih salah satu paket latihan.',
-            'namaCoach.required' => 'Mohon pilih pelatih (coach) yang tersedia.',
+            'kelas.required' => 'Mohon pilih kelas (Pemula/Mahir/Pro/Prestasi).',
+            'coach1.required' => 'Mohon pilih pelatih (coach) utama.',
+            'coach2.required' => 'Untuk paket ini, mohon pilih pelatih ke-2.',
+            'coach3.required' => 'Untuk paket ini, mohon pilih pelatih ke-3.',
             'password.required' => 'Mohon buat password untuk login nanti.',
             'password.min' => 'Password terlalu pendek, mohon buat minimal 6 huruf/angka.',
             'password.confirmed' => 'Konfirmasi password tidak cocok dengan password di atas, mohon ketik ulang.',
@@ -166,15 +210,18 @@ class MemberRegistrationForm extends Component
                 'end_date' => now()->addMonth(),
             ]);
 
-            // 3. Assign Coach (Pivot member_training_assignments)
-            $member->coaches()->attach($this->namaCoach);
+            // 3. Assign Coaches
+            $coachIds = array_filter([$this->coach1, $this->coach2, $this->coach3]);
+            $member->coaches()->attach($coachIds);
 
             // 4. Save Selected Schedules
-            foreach ($this->selectedSchedules as $day => $scheduleId) {
-                if ($scheduleId) {
+            foreach ($this->selectedSchedules as $day => $data) {
+                // $data looks like "scheduleId|coachId" based on the radio value we will set in Blade
+                if ($data) {
+                    [$scheduleId, $coachId] = explode('|', $data);
                     DB::table('member_schedules')->insert([
                         'member_id' => $member->id,
-                        'coach_id' => $this->namaCoach,
+                        'coach_id' => $coachId,
                         'training_schedule_id' => $scheduleId,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -187,32 +234,26 @@ class MemberRegistrationForm extends Component
             foreach ($admins as $admin) {
                 \Filament\Notifications\Notification::make()
                     ->title('Member Baru Terdaftar')
-                    ->body("Atlet {$this->namaLengkap} telah mendaftar melalui form publik dan akun sudah otomatis aktif.")
+                    ->body("Atlet {$this->namaLengkap} telah mendaftar melalui form publik.")
                     ->icon('heroicon-o-user-plus')
                     ->iconColor('success')
-                    ->actions([
-                        \Filament\Actions\Action::make('view')
-                            ->button()
-
-                            ->label('Lihat Member')
-                            ->url(\App\Filament\Resources\Members\MemberResource::getUrl('index')),
-                    ])
                     ->sendToDatabase($admin);
             }
 
             DB::commit();
 
             // Set data for modal
+            $allCoachNames = Coach::whereIn('id', $coachIds)->get()->map(fn($c) => $c->user->name)->implode(', ');
             $this->registeredData = [
                 'namaLengkap' => $this->namaLengkap,
                 'email' => $email,
                 'noTelepon' => $this->noTelepon,
                 'pekerjaanAyah' => $this->pekerjaanAyah,
-                'password' => $this->password, // Show plain password once for the user to print
+                'password' => $this->password,
                 'jenisKelamin' => $this->jenisKelamin,
                 'tanggalLahir' => $this->tanggalLahir,
                 'paketLatihan' => TrainingPackage::find($this->paketLatihan)?->name,
-                'namaCoach' => Coach::find($this->namaCoach)?->user->name,
+                'namaCoach' => $allCoachNames,
                 'waktuDaftar' => now()->format('d M Y H:i'),
             ];
 

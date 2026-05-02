@@ -96,9 +96,10 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th width="5%">No</th>
-                    <th width="10%">Periode</th>
-                    <th width="20%">Nama Member</th>
+                    <th width="3%">No</th>
+                    <th width="12%">Coach</th>
+                    <th width="10%">Nama Member</th>
+                    <th width="8%">Periode</th>
                     <th width="15%">Email</th>
                     <th width="12%">No. HP</th>
                     <th width="18%">Paket Latihan</th>
@@ -110,8 +111,9 @@
                 @foreach($records as $index => $record)
                 <tr>
                     <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td>{{ $record->archive_period }}</td>
+                    <td style="background-color: #fef3c7; font-weight: bold;">{{ $record->coach_name ?? '—' }}</td>
                     <td style="font-weight: bold;">{{ $record->name }}</td>
+                    <td>{{ $record->archive_period }}</td>
                     <td>{{ $record->email }}</td>
                     <td>{{ $record->phone }}</td>
                     <td>{{ $record->training_package_name }}</td>

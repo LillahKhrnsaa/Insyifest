@@ -21,12 +21,25 @@ class MemberArchivesTable
                     ->label('No.')
                     ->rowIndex(),
 
-                \Filament\Tables\Columns\TextColumn::make('archive_period')
-                    ->label('Periode')
+                \Filament\Tables\Columns\TextColumn::make('coach_name')
+                    ->label('Coach')
+                    ->badge()
+                    ->color('warning')
+                    ->icon('heroicon-o-academic-cap')
+                    ->default('—')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
+
                 \Filament\Tables\Columns\TextColumn::make('name')
                     ->label('Nama Atlet')
+                    ->weight('bold')
+                    ->color('primary')
+                    ->sortable()
+                    ->searchable(),
+
+                \Filament\Tables\Columns\TextColumn::make('archive_period')
+                    ->label('Periode')
                     ->sortable()
                     ->searchable(),
                 \Filament\Tables\Columns\TextColumn::make('email')
@@ -62,25 +75,56 @@ class MemberArchivesTable
                     ->label('Export PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('danger')
-                    ->action(function () {
-                        $records = \App\Models\MemberArchive::all();
+                    ->form([
+                        \Filament\Forms\Components\Select::make('period')
+                            ->label('Pilih Periode')
+                            ->options(fn () => \App\Models\MemberArchive::distinct()->pluck('archive_period', 'archive_period')->toArray())
+                            ->placeholder('Semua Periode')
+                            ->searchable(),
+                    ])
+                    ->action(function (array $data) {
+                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')->orderBy('name', 'asc');
+                        
+                        if (!empty($data['period'])) {
+                            $query->where('archive_period', $data['period']);
+                        }
+
+                        $records = $query->get();
+                        $title = 'Daftar Arsip Member' . (!empty($data['period']) ? ' - Periode ' . $data['period'] : '');
+                        
                         $pdf = Pdf::loadView('pdf.member-archive-list', [
                             'records' => $records,
-                            'title' => 'Daftar Arsip Member'
+                            'title' => $title
                         ])->setPaper('a4', 'landscape');
+                        
+                        $fileName = 'daftar-arsip-member-' . (!empty($data['period']) ? $data['period'] : date('Y-m-d')) . '.pdf';
                         
                         return response()->streamDownload(function () use ($pdf) {
                             echo $pdf->stream();
-                        }, 'daftar-arsip-member-' . date('Y-m-d') . '.pdf');
+                        }, $fileName);
                     }),
 
                 Action::make('download_csv')
                     ->label('Export Excel (CSV)')
                     ->icon('heroicon-o-table-cells')
                     ->color('success')
-                    ->action(function () {
-                        $records = \App\Models\MemberArchive::all();
-                        $csvFileName = 'arsip_member_' . date('Y-m-d_H-i-s') . '.csv';
+                    ->form([
+                        \Filament\Forms\Components\Select::make('period')
+                            ->label('Pilih Periode')
+                            ->options(fn () => \App\Models\MemberArchive::distinct()->pluck('archive_period', 'archive_period')->toArray())
+                            ->placeholder('Semua Periode')
+                            ->searchable(),
+                    ])
+                    ->action(function (array $data) {
+                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')->orderBy('name', 'asc');
+                        
+                        if (!empty($data['period'])) {
+                            $query->where('archive_period', $data['period']);
+                        }
+
+                        $records = $query->get();
+                        $csvFileName = 'arsip_member_' . (!empty($data['period']) ? $data['period'] : date('Y-m-d_H-i-s')) . '.csv';
+                        
                         $headers = [
                             'Content-Type' => 'text/csv',
                             'Content-Disposition' => "attachment; filename=\"$csvFileName\"",
@@ -88,12 +132,14 @@ class MemberArchivesTable
 
                         $callback = function () use ($records) {
                             $file = fopen('php://output', 'w');
-                            fputcsv($file, ['Periode', 'Nama Atlet', 'Email', 'No. HP', 'Paket Latihan', 'Status Terakhir', 'Tanggal Mulai', 'Tanggal Berakhir']);
+                            fputcsv($file, ['No', 'Coach', 'Nama Atlet', 'Periode', 'Email', 'No. HP', 'Paket Latihan', 'Status Terakhir', 'Tanggal Mulai', 'Tanggal Berakhir']);
 
-                            foreach ($records as $record) {
+                            foreach ($records as $index => $record) {
                                 fputcsv($file, [
-                                    $record->archive_period,
+                                    $index + 1,
+                                    $record->coach_name ?? '—',
                                     $record->name,
+                                    $record->archive_period,
                                     $record->email,
                                     $record->phone,
                                     $record->training_package_name,
@@ -149,6 +195,7 @@ class MemberArchivesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('coach_name', 'asc');
     }
 }

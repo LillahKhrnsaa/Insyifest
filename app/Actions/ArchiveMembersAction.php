@@ -14,9 +14,9 @@ class ArchiveMembersAction
      *
      * @return int Number of members archived.
      */
-    public function execute(): int
+    public function execute(bool $shouldResetStatus = true): int
     {
-        $activeMembers = Member::with(['user', 'trainingPackage'])
+        $activeMembers = Member::with(['user', 'trainingPackage', 'coaches.user'])
             ->where('status', 'AKTIF')
             ->get();
 
@@ -26,26 +26,48 @@ class ArchiveMembersAction
 
         $period = Carbon::now()->format('Y-m');
 
-        return DB::transaction(function () use ($activeMembers, $period) {
+        return DB::transaction(function () use ($activeMembers, $period, $shouldResetStatus) {
+            $archiveCount = 0;
+
             foreach ($activeMembers as $member) {
-                MemberArchive::create([
-                    'archive_period' => $period,
-                    'member_id' => $member->id,
-                    'user_id' => $member->user_id,
-                    'name' => $member->user?->name ?? 'Unknown',
-                    'email' => $member->user?->email ?? 'unknown@example.com',
-                    'phone' => $member->user?->phone,
-                    'training_package_name' => $member->trainingPackage?->name ?? 'N/A',
-                    'status' => $member->status,
-                    'start_date' => $member->start_date,
-                    'end_date' => $member->end_date,
-                ]);
+                $baseData = [
+                    'archive_period'       => $period,
+                    'member_id'            => $member->id,
+                    'user_id'              => $member->user_id,
+                    'name'                 => $member->user?->name ?? 'Unknown',
+                    'email'                => $member->user?->email ?? 'unknown@example.com',
+                    'phone'                => $member->user?->phone,
+                    'training_package_name'=> $member->trainingPackage?->name ?? 'N/A',
+                    'status'               => $member->status,
+                    'start_date'           => $member->start_date,
+                    'end_date'             => $member->end_date,
+                ];
+
+                if ($member->coaches->isEmpty()) {
+                    // Member tanpa coach → 1 record, coach null
+                    MemberArchive::create(array_merge($baseData, [
+                        'coach_name' => null,
+                        'coach_id'   => null,
+                    ]));
+                    $archiveCount++;
+                } else {
+                    // Member dengan N coach → N record (1 per coach)
+                    foreach ($member->coaches as $coach) {
+                        MemberArchive::create(array_merge($baseData, [
+                            'coach_name' => $coach->user?->name,
+                            'coach_id'   => $coach->id,
+                        ]));
+                        $archiveCount++;
+                    }
+                }
             }
 
-            // Reset all members to inactive
-            Member::where('status', 'AKTIF')->update(['status' => 'TIDAK_AKTIF']);
-            
-            return $activeMembers->count();
+            // Reset semua member aktif jadi non-aktif jika diminta
+            if ($shouldResetStatus) {
+                Member::where('status', 'AKTIF')->update(['status' => 'TIDAK_AKTIF']);
+            }
+
+            return $archiveCount;
         });
     }
 }

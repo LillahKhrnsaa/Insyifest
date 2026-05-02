@@ -14,6 +14,8 @@ class MemberArchive extends Model
         'email',
         'phone',
         'training_package_name',
+        'coach_name',
+        'coach_id',
         'status',
         'start_date',
         'end_date',
