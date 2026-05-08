@@ -460,18 +460,18 @@
                                         <p class="text-xs text-slate-400 py-2">Tidak ada jadwal tersedia</p>
                                     @else
                                         @foreach($schedules as $slot)
-                                            <label wire:key="slot-{{ $slot['id'] }}"
+                                            <label wire:key="slot-{{ $slot['id'] }}-{{ $slot['coach_id'] }}"
                                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all {{ $slot['is_full'] ? 'opacity-60 cursor-not-allowed' : 'hover:bg-white' }}"
-                                                style="{{ isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id']
+                                                style="{{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == ($slot['id'] . '|' . $slot['coach_id'])
                                                     ? 'background: white; border: 1.5px solid #8b5cf6; box-shadow: 0 2px 8px rgba(139,92,246,0.15);'
                                                     : 'background: transparent; border: 1.5px solid transparent;' }}">
                                                 <input type="radio" wire:model.live="selectedSchedules.{{ $day }}" value="{{ $slot['id'] }}|{{ $slot['coach_id'] }}" class="sr-only" {{ $slot['is_full'] ? 'disabled' : '' }}>
 
                                                 {{-- Custom radio --}}
                                                 <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-                                                    {{ isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id'] ? 'border-violet-500 bg-violet-500' : 'border-slate-300 bg-white' }}
+                                                    {{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == ($slot['id'] . '|' . $slot['coach_id']) ? 'border-violet-500 bg-violet-500' : 'border-slate-300 bg-white' }}
                                                     {{ $slot['is_full'] ? 'bg-slate-200 border-slate-200' : '' }}">
-                                                    @if(isset($selectedSchedules[$day]) && explode('|', $selectedSchedules[$day])[0] == $slot['id'])
+                                                    @if(isset($selectedSchedules[$day]) && $selectedSchedules[$day] == ($slot['id'] . '|' . $slot['coach_id']))
                                                         <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
                                                     @endif
                                                 </div>
@@ -489,7 +489,7 @@
 
                                                 @if(!$slot['is_full'])
                                                     <span class="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                                                        style="{{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == $slot['id']
+                                                        style="{{ isset($selectedSchedules[$day]) && $selectedSchedules[$day] == ($slot['id'] . '|' . $slot['coach_id'])
                                                             ? 'background: #ede9fe; color: #7c3aed;'
                                                             : 'background: #f1f5f9; color: #94a3b8;' }}">
                                                         {{ $slot['quota'] - $slot['usage'] }}/{{ $slot['quota'] }}
