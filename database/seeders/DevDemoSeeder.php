@@ -101,13 +101,17 @@ class DevDemoSeeder extends Seeder
                 'time' => '16:00:00',
                 'place' => ($index % 2 == 0) ? 'Pucung' : 'Tirta Santika',
             ]);
-            // Assign random coach ke jadwal
-            $schedule->coaches()->attach($coaches[array_rand($coaches)]->id);
+            
+            // Assign coach secara berurutan agar semua coach kebagian jadwal
+            $coach = $coaches[$index % 5];
+            $schedule->coaches()->attach($coach->id, ['quota' => 5]); // Set Quota 5
         }
         $allSchedules = TrainingSchedule::all();
 
         // 7. Buat 5 Member & Hubungkan ke Coach
-        $this->command->info('Membuat 5 Member & Assign ke Coach...');
+        $this->command->info('Membuat 5 Member & Assign ke Coach + Jadwal...');
+        $pemulaPackage = TrainingPackage::where('name', '4x Pertemuan')->first();
+        
         for ($i = 1; $i <= 5; $i++) {
             $userMember = User::create([
                 'name' => "Member Demo $i",
@@ -120,13 +124,29 @@ class DevDemoSeeder extends Seeder
 
             $member = Member::create([
                 'user_id' => $userMember->id,
-                'training_package_id' => $allPackages->random()->id,
+                'training_package_id' => $pemulaPackage->id, // Semua Pemula
                 'status' => 'AKTIF',
                 'start_date' => now()->startOfMonth(),
             ]);
 
-            // Assign ke coach secara bergantian/acak
-            $member->coaches()->attach($coaches[$i-1]->id);
+            // Assign ke coach (1 member per coach)
+            $coach = $coaches[$i-1];
+            $member->coaches()->attach($coach->id);
+
+            // Cari jadwal yang dimiliki coach tersebut untuk di-assign ke member (member_schedules)
+            $coachSchedule = DB::table('coach_training_schedule')
+                ->where('coach_id', $coach->id)
+                ->first();
+            
+            if ($coachSchedule) {
+                DB::table('member_schedules')->insert([
+                    'member_id' => $member->id,
+                    'coach_id' => $coach->id,
+                    'training_schedule_id' => $coachSchedule->training_schedule_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         $this->command->info('DevDemoSeeder Berhasil Dijalankan!');

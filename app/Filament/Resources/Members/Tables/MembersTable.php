@@ -37,34 +37,56 @@ class MembersTable
     {
         return $table
             ->modifyQueryUsing(function (\Illuminate\Database\Eloquent\Builder $query) {
-                $query->leftJoin(
-                    'member_training_assignments',
-                    'member_training_assignments.member_id',
-                    '=',
-                    'members.id'
-                )
-                ->leftJoin(
-                    'coaches',
-                    'coaches.id',
-                    '=',
-                    'member_training_assignments.coach_id'
-                )
-                ->leftJoin(
-                    'users as coach_users',
-                    'coach_users.id',
-                    '=',
-                    'coaches.user_id'
-                )
-                ->leftJoin(
-                    'users as member_users',
-                    'member_users.id',
-                    '=',
-                    'members.user_id'
-                )
-                ->select('members.*')
-                ->selectRaw("COALESCE(coach_users.name, '') as coach_user_name,
-                             COALESCE(coach_users.id, 0) as coach_user_id")
+                // Subquery untuk mendapatkan jadwal: 
+                // Gabungan antara pilihan member (member_schedules) DAN fallback jadwal coach.
+                $resolvedSchedulesSql = "
+                    (
+                        SELECT ms.member_id, ms.coach_id, ms.training_schedule_id 
+                        FROM member_schedules ms
+                        
+                        UNION
+                        
+                        SELECT mta_inner.member_id, mta_inner.coach_id, cts.training_schedule_id
+                        FROM member_training_assignments mta_inner
+                        JOIN coach_training_schedule cts ON cts.coach_id = mta_inner.coach_id
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM member_schedules ms2 
+                            WHERE ms2.member_id = mta_inner.member_id AND ms2.coach_id = mta_inner.coach_id
+                        )
+                    ) as resolved_schedules";
+
+                // Kita join langsung ke subquery jadwal agar setiap (Member, Coach, Schedule) jadi satu baris unik
+                $query->join(\Illuminate\Support\Facades\DB::raw($resolvedSchedulesSql), 'resolved_schedules.member_id', '=', 'members.id')
+                ->leftJoin('coaches', 'coaches.id', '=', 'resolved_schedules.coach_id')
+                ->leftJoin('users as coach_users', 'coach_users.id', '=', 'coaches.user_id')
+                ->leftJoin('users as member_users', 'member_users.id', '=', 'members.user_id')
+                ->leftJoin('training_schedules', 'training_schedules.id', '=', 'resolved_schedules.training_schedule_id')
+                
+                // PENTING: Kita buat ID unik numerik agar Filament tidak melakukan deduplikasi baris
+                // Rumus: (member_id * 1.000.000) + (coach_id * 1.000) + training_schedule_id
+                ->selectRaw("
+                    (members.id * 1000000 + resolved_schedules.coach_id * 1000 + COALESCE(resolved_schedules.training_schedule_id, 0)) as id,
+                    members.id as member_real_id,
+                    coach_users.name as coach_user_name,
+                    training_schedules.day as schedule_day,
+                    training_schedules.time as schedule_time,
+                    members.user_id,
+                    members.training_package_id,
+                    members.status,
+                    members.start_date,
+                    members.end_date
+                ")
                 ->orderBy('coach_user_name', 'asc')
+                ->orderByRaw("CASE 
+                    WHEN training_schedules.day = 'SENIN' THEN 1
+                    WHEN training_schedules.day = 'SELASA' THEN 2
+                    WHEN training_schedules.day = 'RABU' THEN 3
+                    WHEN training_schedules.day = 'KAMIS' THEN 4
+                    WHEN training_schedules.day = 'JUMAT' THEN 5
+                    WHEN training_schedules.day = 'SABTU' THEN 6
+                    WHEN training_schedules.day = 'MINGGU' THEN 7
+                    ELSE 99 END ASC")
+                ->orderBy('schedule_time', 'asc')
                 ->orderBy('member_users.name', 'asc');
             })
             ->columns([
@@ -86,7 +108,7 @@ class MembersTable
                     ->badge()
                     ->color('warning')
                     ->icon('heroicon-o-academic-cap')
-                    ->sortable(query: fn (Builder $query, string $direction) => $query->reorder()->orderBy('coach_user_name', $direction)->orderBy('member_users.name', 'asc'))
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('coach_user_name', $direction))
                     ->searchable(query: fn (Builder $query, string $search) => $query->where('coach_users.name', 'like', "%{$search}%"))
                     ->wrap(),
 
@@ -154,50 +176,27 @@ class MembersTable
                     ->color('slate')
                     ->toggleable(),
 
-                TextColumn::make('training_summary')
+                TextColumn::make('schedule_day')
                     ->label('Jadwal')
                     ->state(function ($record) {
-                        $coachUserId = $record->coach_user_id ?? 0;
+                        if (!$record->schedule_day) return null;
 
-                        // Cari coach yang sesuai dengan baris ini
-                        $coach = $record->coaches->first(fn ($c) => $c->user_id == $coachUserId);
+                        $day = match (strtoupper($record->schedule_day)) {
+                            'MONDAY', 'SENIN'       => 'Senin',
+                            'TUESDAY', 'SELASA'     => 'Selasa',
+                            'WEDNESDAY', 'RABU'     => 'Rabu',
+                            'THURSDAY', 'KAMIS'     => 'Kamis',
+                            'FRIDAY', 'JUMAT'       => 'Jumat',
+                            'SATURDAY', 'SABTU'     => 'Sabtu',
+                            'SUNDAY', 'MINGGU'      => 'Minggu',
+                            default                 => $record->schedule_day,
+                        };
 
-                        // Fallback: jika tidak ketemu, ambil coach pertama
-                        if (! $coach && $record->coaches->isNotEmpty()) {
-                            $coach = $record->coaches->first();
-                        }
-
-                        if (! $coach) return null;
-
-                        $memberSchedules = \Illuminate\Support\Facades\DB::table('member_schedules')
-                            ->join('training_schedules', 'member_schedules.training_schedule_id', '=', 'training_schedules.id')
-                            ->where('member_schedules.member_id', $record->id)
-                            ->where('member_schedules.coach_id', $coach->id)
-                            ->select('training_schedules.*')
-                            ->get();
-
-                        // Fallback backward compat
-                        if ($memberSchedules->isEmpty()) {
-                            $memberSchedules = $coach->trainingSchedules ?? collect();
-                        }
-
-                        if ($memberSchedules->isEmpty()) return null;
-
-                        return $memberSchedules->map(fn ($s) =>
-                            match (strtoupper($s->day)) {
-                                'MONDAY', 'SENIN'       => 'Senin',
-                                'TUESDAY', 'SELASA'     => 'Selasa',
-                                'WEDNESDAY', 'RABU'     => 'Rabu',
-                                'THURSDAY', 'KAMIS'     => 'Kamis',
-                                'FRIDAY', 'JUMAT'       => 'Jumat',
-                                'SATURDAY', 'SABTU'     => 'Sabtu',
-                                'SUNDAY', 'MINGGU'      => 'Minggu',
-                                default                 => $s->day,
-                            } . ' ' . \Carbon\Carbon::parse($s->time)->format('H:i')
-                        )->implode(',');
+                        $time = $record->schedule_time ? \Carbon\Carbon::parse($record->schedule_time)->format('H:i') : '';
+                        
+                        return $day . ' ' . $time;
                     })
                     ->badge()
-                    ->separator(',')
                     ->color('info')
                     ->icon('heroicon-o-clock')
                     ->wrap(),

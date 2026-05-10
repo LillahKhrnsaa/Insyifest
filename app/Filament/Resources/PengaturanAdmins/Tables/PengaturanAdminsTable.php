@@ -64,16 +64,12 @@ class PengaturanAdminsTable
                     ->label('Terisi')
                     ->badge()
                     ->state(function ($record) {
-                        return \App\Models\Member::whereHas('coaches', function ($query) use ($record) {
-                            $query->where('coaches.id', $record->coach_id);
-                        })
-                        ->where(function ($query) use ($record) {
-                            $query->whereHas('trainingSchedules', function ($q) use ($record) {
-                                $q->where('training_schedules.id', $record->training_schedule_id);
-                            })
-                            ->orWhereDoesntHave('trainingSchedules');
-                        })
-                        ->count();
+                        // Kita hitung langsung dari tabel pivot member_schedules
+                        // agar konsisten dengan apa yang tampil di form registrasi
+                        return \Illuminate\Support\Facades\DB::table('member_schedules')
+                            ->where('coach_id', $record->coach_id)
+                            ->where('training_schedule_id', $record->training_schedule_id)
+                            ->count();
                     })
                     ->alignCenter()
                     ->color(fn ($state, $record) => $state >= $record->quota ? 'danger' : 'success'),

@@ -155,6 +155,16 @@
                 <td class="value">{{ $archive->training_package_name }}</td>
             </tr>
             <tr>
+                <td class="label">Coach / Pelatih</td>
+                <td class="separator">:</td>
+                <td class="value">{{ $archive->coach_name ?? '—' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Jadwal Latihan</td>
+                <td class="separator">:</td>
+                <td class="value">{{ $archive->training_day ?? '—' }} {{ $archive->training_time ?? '' }}</td>
+            </tr>
+            <tr>
                 <td class="label">Status Terakhir</td>
                 <td class="separator">:</td>
                 <td class="value">

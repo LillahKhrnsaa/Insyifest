@@ -16,7 +16,7 @@ class ArchiveMembersAction
      */
     public function execute(bool $shouldResetStatus = true): int
     {
-        $activeMembers = Member::with(['user', 'trainingPackage', 'coaches.user'])
+        $activeMembers = Member::with(['user', 'trainingPackage', 'coaches.user', 'coaches.trainingSchedules'])
             ->where('status', 'AKTIF')
             ->get();
 
@@ -28,6 +28,13 @@ class ArchiveMembersAction
 
         return DB::transaction(function () use ($activeMembers, $period, $shouldResetStatus) {
             $archiveCount = 0;
+
+            // Hapus data lama di periode yang sama untuk member yang sedang diproses
+            // Ini untuk mencegah duplikasi jika user melakukan "Arsip Ulang" di bulan yang sama
+            $memberIds = $activeMembers->pluck('id');
+            MemberArchive::where('archive_period', $period)
+                ->whereIn('member_id', $memberIds)
+                ->delete();
 
             foreach ($activeMembers as $member) {
                 $baseData = [
@@ -43,21 +50,72 @@ class ArchiveMembersAction
                     'end_date'             => $member->end_date,
                 ];
 
-                if ($member->coaches->isEmpty()) {
-                    // Member tanpa coach → 1 record, coach null
+                // Load member-specific schedules from pivot
+                $memberSpecificSchedules = DB::table('member_schedules')
+                    ->where('member_id', $member->id)
+                    ->get();
+
+                // Kita unikkan coach-nya agar jika member pilih coach yang sama berkali-kali (di paket Pro)
+                // tidak terjadi duplikasi perkalian (misal 3 coach x 3 jadwal = 9 baris)
+                $uniqueCoaches = $member->coaches->unique('id');
+
+                if ($uniqueCoaches->isEmpty()) {
+                    // Jika sama sekali tidak ada coach
                     MemberArchive::create(array_merge($baseData, [
                         'coach_name' => null,
                         'coach_id'   => null,
+                        'training_day' => null,
+                        'training_time' => null,
+                        'training_day_index' => null,
                     ]));
                     $archiveCount++;
                 } else {
-                    // Member dengan N coach → N record (1 per coach)
-                    foreach ($member->coaches as $coach) {
-                        MemberArchive::create(array_merge($baseData, [
-                            'coach_name' => $coach->user?->name,
-                            'coach_id'   => $coach->id,
-                        ]));
-                        $archiveCount++;
+                    foreach ($uniqueCoaches as $coach) {
+                        // Filter jadwal member yang spesifik untuk coach ini
+                        $specificForCoach = $memberSpecificSchedules->where('coach_id', $coach->id);
+
+                        if ($specificForCoach->isNotEmpty()) {
+                            // Gunakan jadwal yang dipilih member
+                            foreach ($specificForCoach as $ms) {
+                                $ts = \App\Models\TrainingSchedule::find($ms->training_schedule_id);
+                                if ($ts) {
+                                    MemberArchive::create(array_merge($baseData, [
+                                        'coach_name' => $coach->user?->name,
+                                        'coach_id'   => $coach->id,
+                                        'training_day' => $ts->day,
+                                        'training_time' => $ts->time,
+                                        'training_day_index' => $this->getDayIndex($ts->day),
+                                    ]));
+                                    $archiveCount++;
+                                }
+                            }
+                        } else {
+                            // FALLBACK: Gunakan semua jadwal yang dimiliki coach
+                            $coachSchedules = $coach->trainingSchedules;
+
+                            if ($coachSchedules->isNotEmpty()) {
+                                foreach ($coachSchedules as $ts) {
+                                    MemberArchive::create(array_merge($baseData, [
+                                        'coach_name' => $coach->user?->name,
+                                        'coach_id'   => $coach->id,
+                                        'training_day' => $ts->day,
+                                        'training_time' => $ts->time,
+                                        'training_day_index' => $this->getDayIndex($ts->day),
+                                    ]));
+                                    $archiveCount++;
+                                }
+                            } else {
+                                // Coach tidak punya jadwal sama sekali
+                                MemberArchive::create(array_merge($baseData, [
+                                    'coach_name' => $coach->user?->name,
+                                    'coach_id'   => $coach->id,
+                                    'training_day' => null,
+                                    'training_time' => null,
+                                    'training_day_index' => null,
+                                ]));
+                                $archiveCount++;
+                            }
+                        }
                     }
                 }
             }
@@ -69,5 +127,25 @@ class ArchiveMembersAction
 
             return $archiveCount;
         });
+    }
+
+    /**
+     * Get numeric index for Indonesian day names.
+     */
+    private function getDayIndex(?string $day): ?int
+    {
+        if (!$day) return null;
+
+        $days = [
+            'SENIN' => 1,
+            'SELASA' => 2,
+            'RABU' => 3,
+            'KAMIS' => 4,
+            'JUMAT' => 5,
+            'SABTU' => 6,
+            'MINGGU' => 7,
+        ];
+
+        return $days[strtoupper($day)] ?? 99;
     }
 }

@@ -118,6 +118,6 @@ class Member extends Model
             'member_schedules',
             'member_id',
             'training_schedule_id'
-        )->withTimestamps();
+        )->withPivot('coach_id')->withTimestamps();
     }
 }

@@ -97,14 +97,16 @@
             <thead>
                 <tr>
                     <th width="3%">No</th>
-                    <th width="12%">Coach</th>
+                    <th width="10%">Coach</th>
                     <th width="10%">Nama Member</th>
+                    <th width="8%">Hari</th>
+                    <th width="7%">Jam</th>
                     <th width="8%">Periode</th>
-                    <th width="15%">Email</th>
-                    <th width="12%">No. HP</th>
-                    <th width="18%">Paket Latihan</th>
-                    <th width="8%">Status</th>
-                    <th width="12%">Tgl Arsip</th>
+                    <th width="12%">Email</th>
+                    <th width="10%">No. HP</th>
+                    <th width="15%">Paket Latihan</th>
+                    <th width="7%">Status</th>
+                    <th width="10%">Tgl Arsip</th>
                 </tr>
             </thead>
             <tbody>
@@ -113,6 +115,8 @@
                     <td style="text-align: center;">{{ $index + 1 }}</td>
                     <td style="background-color: #fef3c7; font-weight: bold;">{{ $record->coach_name ?? '—' }}</td>
                     <td style="font-weight: bold;">{{ $record->name }}</td>
+                    <td style="text-align: center; font-weight: bold; color: #1e3a8a;">{{ $record->training_day ?? '—' }}</td>
+                    <td style="text-align: center;">{{ $record->training_time ?? '—' }}</td>
                     <td>{{ $record->archive_period }}</td>
                     <td>{{ $record->email }}</td>
                     <td>{{ $record->phone }}</td>

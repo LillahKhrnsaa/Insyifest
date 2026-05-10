@@ -60,6 +60,16 @@ class MemberArchivesTable
                         'TIDAK_AKTIF' => 'danger',
                         default => 'gray',
                     }),
+                \Filament\Tables\Columns\TextColumn::make('training_day')
+                    ->label('Hari')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
+                \Filament\Tables\Columns\TextColumn::make('training_time')
+                    ->label('Jam')
+                    ->badge()
+                    ->color('success')
+                    ->sortable(),
                 \Filament\Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal Arsip')
                     ->dateTime()
@@ -83,7 +93,10 @@ class MemberArchivesTable
                             ->searchable(),
                     ])
                     ->action(function (array $data) {
-                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')->orderBy('name', 'asc');
+                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')
+                            ->orderBy('training_day_index', 'asc')
+                            ->orderBy('training_time', 'asc')
+                            ->orderBy('name', 'asc');
                         
                         if (!empty($data['period'])) {
                             $query->where('archive_period', $data['period']);
@@ -116,7 +129,10 @@ class MemberArchivesTable
                             ->searchable(),
                     ])
                     ->action(function (array $data) {
-                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')->orderBy('name', 'asc');
+                        $query = \App\Models\MemberArchive::orderBy('coach_name', 'asc')
+                            ->orderBy('training_day_index', 'asc')
+                            ->orderBy('training_time', 'asc')
+                            ->orderBy('name', 'asc');
                         
                         if (!empty($data['period'])) {
                             $query->where('archive_period', $data['period']);
@@ -132,13 +148,15 @@ class MemberArchivesTable
 
                         $callback = function () use ($records) {
                             $file = fopen('php://output', 'w');
-                            fputcsv($file, ['No', 'Coach', 'Nama Atlet', 'Periode', 'Email', 'No. HP', 'Paket Latihan', 'Status Terakhir', 'Tanggal Mulai', 'Tanggal Berakhir']);
+                            fputcsv($file, ['No', 'Coach', 'Nama Atlet', 'Hari', 'Jam', 'Periode', 'Email', 'No. HP', 'Paket Latihan', 'Status Terakhir', 'Tanggal Mulai', 'Tanggal Berakhir']);
 
                             foreach ($records as $index => $record) {
                                 fputcsv($file, [
                                     $index + 1,
                                     $record->coach_name ?? '—',
                                     $record->name,
+                                    $record->training_day ?? '—',
+                                    $record->training_time ?? '—',
                                     $record->archive_period,
                                     $record->email,
                                     $record->phone,
@@ -196,6 +214,11 @@ class MemberArchivesTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('coach_name', 'asc');
+            ->modifyQueryUsing(function ($query) {
+                $query->orderBy('coach_name', 'asc')
+                    ->orderBy('training_day_index', 'asc')
+                    ->orderBy('training_time', 'asc')
+                    ->orderBy('name', 'asc');
+            });
     }
 }

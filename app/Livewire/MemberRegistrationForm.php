@@ -87,7 +87,9 @@ class MemberRegistrationForm extends Component
             'Sabtu' => [],
             'Minggu' => [],
         ];
-        $this->selectedSchedules = [];
+        // Kita gunakan array flat untuk menyimpan pivot_id yang dipilih
+        // agar lebih fleksibel dalam validasi dan penyimpanan
+        $this->selectedSchedules = []; 
     }
 
     public function updatedCoach1() { $this->refreshSchedules(); }
@@ -102,11 +104,21 @@ class MemberRegistrationForm extends Component
         if (empty($coachIds)) return;
 
         // Fetch schedules assigned to these coaches through pivot
+        // Kita gunakan groupBy untuk menghindari duplikasi jadwal yang sama untuk coach yang sama
         $coachSchedules = DB::table('coach_training_schedule')
             ->join('training_schedules', 'coach_training_schedule.training_schedule_id', '=', 'training_schedules.id')
             ->whereIn('coach_training_schedule.coach_id', $coachIds)
-            ->select('training_schedules.*', 'coach_training_schedule.quota', 'coach_training_schedule.coach_id')
-            ->get();
+            ->select(
+                'training_schedules.*', 
+                'coach_training_schedule.quota', 
+                'coach_training_schedule.coach_id',
+                'coach_training_schedule.id as pivot_id'
+            )
+            ->orderBy('coach_training_schedule.quota', 'desc') // Ambil yang ada kuotanya jika duplikat
+            ->get()
+            ->unique(function ($item) {
+                return $item->id . '-' . $item->coach_id;
+            });
 
         foreach ($coachSchedules as $schedule) {
             $translatedDay = $this->translateDay($schedule->day);
@@ -121,6 +133,7 @@ class MemberRegistrationForm extends Component
 
             $this->schedulesByDay[$translatedDay][] = [
                 'id' => $schedule->id,
+                'pivot_id' => $schedule->pivot_id,
                 'coach_id' => $schedule->coach_id,
                 'coach_name' => $coachName,
                 'time' => Carbon::parse($schedule->time)->format('H:i'),
@@ -129,6 +142,22 @@ class MemberRegistrationForm extends Component
                 'usage' => $usage,
                 'is_full' => $usage >= $schedule->quota,
             ];
+        }
+    }
+
+    public function toggleSchedule($day, $coachId, $scheduleId)
+    {
+        // Jika sudah terpilih, maka kita hapus (unselect)
+        if (isset($this->selectedSchedules[$day][$coachId]) && $this->selectedSchedules[$day][$coachId] == $scheduleId) {
+            unset($this->selectedSchedules[$day][$coachId]);
+            
+            // Bersihkan array day jika kosong agar tidak mengganggu validasi min:1
+            if (empty($this->selectedSchedules[$day])) {
+                unset($this->selectedSchedules[$day]);
+            }
+        } else {
+            // Jika belum terpilih, kita set
+            $this->selectedSchedules[$day][$coachId] = $scheduleId;
         }
     }
 
@@ -215,17 +244,17 @@ class MemberRegistrationForm extends Component
             $member->coaches()->attach($coachIds);
 
             // 4. Save Selected Schedules
-            foreach ($this->selectedSchedules as $day => $data) {
-                // $data looks like "scheduleId|coachId" based on the radio value we will set in Blade
-                if ($data) {
-                    [$scheduleId, $coachId] = explode('|', $data);
-                    DB::table('member_schedules')->insert([
-                        'member_id' => $member->id,
-                        'coach_id' => $coachId,
-                        'training_schedule_id' => $scheduleId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+            foreach ($this->selectedSchedules as $day => $coaches) {
+                foreach ($coaches as $coachId => $scheduleId) {
+                    if ($scheduleId) {
+                        DB::table('member_schedules')->insert([
+                            'member_id' => $member->id,
+                            'coach_id' => $coachId,
+                            'training_schedule_id' => $scheduleId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
                 }
             }
 

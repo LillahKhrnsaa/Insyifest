@@ -56,6 +56,20 @@ class MemberResource extends Resource
         ];
     }
 
+    public static function resolveRecord(int|string $key): ?\Illuminate\Database\Eloquent\Model
+    {
+        // Jika ID berupa composite numeric (misal: 6002002), bagi 1 juta untuk dapat ID member
+        if (is_numeric($key) && $key > 1000000) {
+            $key = floor($key / 1000000);
+        }
+        // Fallback untuk format string lama jika masih ada cache
+        elseif (is_string($key) && str_contains($key, '-')) {
+            $key = explode('-', $key)[0];
+        }
+        
+        return parent::resolveRecord($key);
+    }
+
     public static function getPages(): array
     {
         return [
