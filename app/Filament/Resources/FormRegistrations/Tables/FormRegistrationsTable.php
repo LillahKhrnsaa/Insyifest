@@ -186,20 +186,31 @@ class FormRegistrationsTable
                             ->orderByDesc('created_at')
                             ->get();
 
-                        return [
+                         return [
                             \Filament\Forms\Components\Placeholder::make('scroll_style')
-                                ->label('')
+                                ->hiddenLabel()
                                 ->content(new \Illuminate\Support\HtmlString('
                                     <style>
-                                        .custom-scrollable-repeater table,
-                                        .custom-scrollable-repeater .fi-fo-repeater-table,
+                                        .custom-scrollable-repeater {
+                                            display: block !important;
+                                            width: 100% !important;
+                                            max-width: 100% !important;
+                                            min-width: 0 !important;
+                                            overflow: hidden !important;
+                                        }
+                                        .custom-scrollable-repeater > div,
                                         .custom-scrollable-repeater .fi-fo-repeater-table-container,
                                         .custom-scrollable-repeater .fi-fo-repeater-items {
                                             display: block !important;
-                                            overflow-x: auto !important;
                                             width: 100% !important;
                                             max-width: 100% !important;
+                                            overflow-x: auto !important;
+                                            min-width: 0 !important;
                                             padding-bottom: 12px;
+                                        }
+                                        .custom-scrollable-repeater table {
+                                            width: max-content !important;
+                                            min-width: 100% !important;
                                         }
                                     </style>
                                 ')),
