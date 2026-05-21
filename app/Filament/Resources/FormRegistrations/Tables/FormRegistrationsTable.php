@@ -186,11 +186,19 @@ class FormRegistrationsTable
                             ->orderByDesc('created_at')
                             ->get();
 
-                         return [
+                        return [
                             \Filament\Forms\Components\Placeholder::make('scroll_style')
                                 ->hiddenLabel()
                                 ->content(new \Illuminate\Support\HtmlString('
                                     <style>
+                                        /* Constrain modal container to prevent it from stretching the main page */
+                                        .fi-modal-window, 
+                                        .fi-modal-content, 
+                                        [role="dialog"],
+                                        .fi-modal-window > div {
+                                            max-width: 95vw !important;
+                                            overflow-x: hidden !important;
+                                        }
                                         .custom-scrollable-repeater {
                                             display: block !important;
                                             width: 100% !important;
