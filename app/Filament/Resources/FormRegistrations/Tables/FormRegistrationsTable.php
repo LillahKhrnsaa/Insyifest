@@ -187,13 +187,28 @@ class FormRegistrationsTable
                             ->get();
 
                         return [
+                            \Filament\Forms\Components\Placeholder::make('scroll_style')
+                                ->label('')
+                                ->content(new \Illuminate\Support\HtmlString('
+                                    <style>
+                                        .custom-scrollable-repeater table,
+                                        .custom-scrollable-repeater .fi-fo-repeater-table,
+                                        .custom-scrollable-repeater .fi-fo-repeater-table-container,
+                                        .custom-scrollable-repeater .fi-fo-repeater-items {
+                                            display: block !important;
+                                            overflow-x: auto !important;
+                                            width: 100% !important;
+                                            max-width: 100% !important;
+                                            padding-bottom: 12px;
+                                        }
+                                    </style>
+                                ')),
                             Repeater::make('submissions')
                                 ->label('Jawaban Peserta')
                                 ->schema($schema)
                                 ->columns(4)
                                 ->extraAttributes([
-                                    'class' => 'overflow-x-auto block w-full max-w-full pb-4',
-                                    'style' => 'overflow-x: auto !important; display: block !important; width: 100% !important; max-width: 100% !important;'
+                                    'class' => 'custom-scrollable-repeater w-full'
                                 ])
                                 ->default(
                                     $submissions->map(function ($s) use ($fields) {

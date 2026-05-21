@@ -23,10 +23,33 @@
     .meta-table td { border: none; font-size: 8pt; color: #666; }
 
     /* DATA TABLE */
+    @php
+        $fieldCount = count($fields);
+        if ($fieldCount > 10) {
+            $fontSize = '5.5pt';
+            $padding = '4px 3px';
+        } elseif ($fieldCount > 7) {
+            $fontSize = '6.5pt';
+            $padding = '5px 4px';
+        } elseif ($fieldCount > 5) {
+            $fontSize = '7.5pt';
+            $padding = '6px 5px';
+        } else {
+            $fontSize = '8.5pt';
+            $padding = '8px';
+        }
+    @endphp
+
     .data-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
     .data-table thead { background: #1e40af; }
-    .data-table th { color: #fff; padding: 10px 8px; text-transform: uppercase; font-size: 8pt; letter-spacing: 0.5px; }
-    .data-table td { padding: 8px; border: 1px solid #ddd; font-size: 8.5pt; }
+    .data-table th { color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+    .data-table th, .data-table td {
+        font-size: {{ $fontSize }} !important;
+        padding: {{ $padding }} !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        border: 1px solid #ddd !important;
+    }
     .data-table tbody tr:nth-child(even) { background: #f9fafb; }
     .col-no { width: 35px; text-align: center; }
     .col-coach { width: 120px; }
