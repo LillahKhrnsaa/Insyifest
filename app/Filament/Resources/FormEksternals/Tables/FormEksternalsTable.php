@@ -143,6 +143,10 @@ class FormEksternalsTable
                             ->label('Daftar Jawaban')
                             ->table($tableColumns)
                             ->schema($schemaComponents)
+                            ->extraAttributes([
+                                'class' => 'overflow-x-auto block w-full max-w-full pb-4',
+                                'style' => 'overflow-x: auto !important; display: block !important; width: 100% !important; max-width: 100% !important;'
+                            ])
                             ->default(
                                 $submissions->map(fn ($s) => [
                                     'id' => $s->id,

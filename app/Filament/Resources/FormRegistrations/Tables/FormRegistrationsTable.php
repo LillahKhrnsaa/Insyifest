@@ -191,6 +191,10 @@ class FormRegistrationsTable
                                 ->label('Jawaban Peserta')
                                 ->schema($schema)
                                 ->columns(4)
+                                ->extraAttributes([
+                                    'class' => 'overflow-x-auto block w-full max-w-full pb-4',
+                                    'style' => 'overflow-x: auto !important; display: block !important; width: 100% !important; max-width: 100% !important;'
+                                ])
                                 ->default(
                                     $submissions->map(function ($s) use ($fields) {
                                         $row = [];
