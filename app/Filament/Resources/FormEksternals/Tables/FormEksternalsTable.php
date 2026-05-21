@@ -139,39 +139,13 @@ class FormEksternalsTable
                     $submissions = $record->submissions()->latest()->get();
 
                     return [
-                        \Filament\Forms\Components\Placeholder::make('scroll_style')
-                            ->hiddenLabel()
-                            ->content(new \Illuminate\Support\HtmlString('
-                                <style>
-                                    .custom-scrollable-repeater {
-                                        display: block !important;
-                                        width: 100% !important;
-                                        max-width: 100% !important;
-                                        min-width: 0 !important;
-                                        overflow: hidden !important;
-                                    }
-                                    .custom-scrollable-repeater > div,
-                                    .custom-scrollable-repeater .fi-fo-repeater-table-container,
-                                    .custom-scrollable-repeater .fi-fo-repeater-items {
-                                        display: block !important;
-                                        width: 100% !important;
-                                        max-width: 100% !important;
-                                        overflow-x: auto !important;
-                                        min-width: 0 !important;
-                                        padding-bottom: 12px;
-                                    }
-                                    .custom-scrollable-repeater table {
-                                        width: max-content !important;
-                                        min-width: 100% !important;
-                                    }
-                                </style>
-                            ')),
                         Repeater::make('submissions')
                             ->label('Daftar Jawaban')
                             ->table($tableColumns)
                             ->schema($schemaComponents)
                             ->extraAttributes([
-                                'class' => 'custom-scrollable-repeater w-full'
+                                'class' => 'overflow-x-auto block w-full max-w-full pb-4',
+                                'style' => 'overflow-x: auto !important; display: block !important; width: 100% !important; max-width: 100% !important;'
                             ])
                             ->default(
                                 $submissions->map(fn ($s) => [
