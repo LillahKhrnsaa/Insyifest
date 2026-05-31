@@ -315,15 +315,15 @@
             const toggle = document.getElementById('status-toggle');
             const knob = document.getElementById('status-knob');
 
-            toggle.classList.remove('bg-blue-600', 'bg-slate-300', 'shadow-lg', 'shadow-blue-200');
-            knob.classList.remove('translate-x-6', 'translate-x-1');
+            toggle.classList.remove('bg-emerald-500', 'bg-slate-400', 'shadow-[0_0_8px_rgba(52,211,153,0.8)]');
+            knob.classList.remove('translate-x-5', 'translate-x-0');
 
             if (memberStatus === 'AKTIF') {
-                toggle.classList.add('bg-blue-600', 'shadow-lg', 'shadow-blue-200');
-                knob.classList.add('translate-x-6');
+                toggle.classList.add('bg-emerald-500', 'shadow-[0_0_8px_rgba(52,211,153,0.8)]');
+                knob.classList.add('translate-x-5');
             } else {
-                toggle.classList.add('bg-slate-300');
-                knob.classList.add('translate-x-1');
+                toggle.classList.add('bg-slate-400');
+                knob.classList.add('translate-x-0');
             }
             
             // Reload page or update other elements if needed
