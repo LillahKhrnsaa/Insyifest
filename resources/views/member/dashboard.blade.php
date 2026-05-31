@@ -85,9 +85,12 @@
 
                         <div class="px-6 py-4 rounded-3xl border border-white/20 bg-black/10 backdrop-blur-sm flex flex-col justify-center text-center sm:text-left shadow-inner">
                             <p class="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em] mb-1">Status Keanggotaan</p>
-                            <div class="flex items-center justify-center sm:justify-start gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full {{ $member->status === 'AKTIF' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]' }}"></span>
-                                <span class="text-sm font-black text-white uppercase tracking-widest drop-shadow-sm">{{ $member->status }}</span>
+                            <div class="flex items-center justify-center sm:justify-start gap-3 mt-1">
+                                <button id="status-toggle" onclick="toggleMemberStatus()" type="button" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 {{ $member->status === 'AKTIF' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-slate-400' }}">
+                                    <span class="sr-only">Toggle status</span>
+                                    <span id="status-knob" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $member->status === 'AKTIF' ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                                </button>
+                                <span class="text-sm font-black text-white uppercase tracking-widest drop-shadow-sm" id="status-text">{{ str_replace('_', ' ', $member->status) }}</span>
                             </div>
                         </div>
 
